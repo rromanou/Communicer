@@ -1,0 +1,24 @@
+<!doctype html>
+<html lang="fr"><head><meta charset="utf-8"><title>Communicer!</title><meta name="viewport" content="width=device-width,initial-scale=1">
+<script>
+/* GitHub Pages : redirige les adresses courtes vers index.html
+   /@pseudo            -> /?u=pseudo
+   /group?id=CODE      -> /?go=group&id=CODE
+   /user?usr=@pseudo   -> /?go=user&usr=pseudo
+   /bots?cd=123456     -> /?go=bots&cd=123456
+   /friend-request?usr=@pseudo -> /?go=friend-request&usr=pseudo
+   /ref?cd=CODE        -> /?go=ref&cd=CODE */
+(function(){
+  var m=location.pathname.match(/^(.*?)\/@([A-Za-z0-9_]{1,30})\/?$/);
+  if(m){location.replace(m[1]+'/?u='+m[2].toLowerCase()+location.hash);return}
+  var r=location.pathname.match(/^(.*?)\/(group|user|bots|friend-request|ref)\/?$/);
+  if(r){
+    var q=new URLSearchParams(location.search),o=new URLSearchParams();o.set('go',r[2]);
+    ['id','usr','cd'].forEach(function(k){var v=q.get(k);if(v)o.set(k,k==='usr'?v.replace(/^@/,'').toLowerCase():v)});
+    location.replace(r[1]+'/?'+o.toString());return
+  }
+  document.addEventListener('DOMContentLoaded',function(){document.getElementById('b').href=location.pathname.replace(/[^\/]*$/,'')||'/'});
+})();
+</script>
+<style>body{font-family:system-ui,sans-serif;display:grid;place-items:center;min-height:100vh;margin:0;background:#f5f7fb;color:#1b1f2a}a{color:#2f6bff}</style>
+</head><body><div><h2>Page introuvable</h2><p><a id="b" href="/">Retour à Communicer!</a></p></div></body></html>
