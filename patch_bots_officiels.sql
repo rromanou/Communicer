@@ -1,12 +1,137 @@
 -- Bots officiels : LibonBOT et VlafiBOT (propriétaire @rhum). Relançable : met à jour le code à chaque exécution.
 
 insert into public.bots(name,username,prefix,description,owner_username,visibility,official,perms,commands,notes)
-values ('Libon','libonbot','!',$cm$Le bot officiel de Communicer! : gestion du groupe, bannissements, pause des jeux. Toujours présent dans les groupes.$cm$,'rhum','public',true,array['msg.send','call.join','game.control','group.manage','msg.delete','ui.html','bypass','files.write']::text[],$cm$[{"cmd": "!help", "usage": "!help", "desc": "liste des commandes"}, {"cmd": "!add", "usage": "!add [UTILISATEUR]", "desc": "ajoute une personne (ami) ou un bot au groupe"}, {"cmd": "!del", "usage": "!del [UTILISATEUR]", "desc": "retire une personne du groupe"}, {"cmd": "!del msg:", "usage": "!del msg:[NUMÉRO]", "desc": "supprime un message du groupe"}, {"cmd": "!adm", "usage": "!adm [UTILISATEUR]", "desc": "donne ou retire le rôle d'administrateur"}, {"cmd": "!rename", "usage": "!rename [NOM]", "desc": "renomme le groupe"}, {"cmd": "!droit", "usage": "!droit [UTILISATEUR]", "desc": "donne ou retire le droit d'utiliser les commandes"}, {"cmd": "!print", "usage": "!print", "desc": "informations du serveur"}, {"cmd": "!ban", "usage": "!ban u:[UTILISATEUR] t:[SECONDES]", "desc": "bannit une personne (0 = sans limite)"}, {"cmd": "!deban", "usage": "!deban [UTILISATEUR]", "desc": "lève un bannissement"}, {"cmd": "!banlist", "usage": "!banlist", "desc": "liste des personnes bannies"}, {"cmd": "!cj", "usage": "!cj [UTILISATEUR]", "desc": "casier : bannissements, retraits, suppressions, droits"}, {"cmd": "!kick", "usage": "!kick [UTILISATEUR]", "desc": "exclut quelqu'un d'un appel ou d'un jeu"}, {"cmd": "!pause", "usage": "!pause [SECONDES]", "desc": "met le jeu en pause (60 s maximum)"}, {"cmd": "!fpause", "usage": "!fpause [o/n]", "desc": "bouton de pause pour tout le monde"}, {"cmd": "!bypass", "usage": "!bypass [o/n]", "desc": "débloque tous les jeux dans ce groupe"}, {"cmd": "!mp", "usage": "/mp u:[UTILISATEUR] m:[MESSAGE]", "desc": "message privé : seule cette personne le voit."}]$cm$::jsonb,$cm$Version initiale.$cm$)
+values ('Libon','libonbot','!',$cm$Le bot officiel de Communicer! : gestion du groupe, bannissements, pause des jeux. Toujours présent dans les groupes.$cm$,'rhum','public',true,array['msg.send','call.join','game.control','group.manage','msg.delete','ui.html','bypass','files.write']::text[],$cm$[
+ {
+  "cmd": "!help",
+  "usage": "!help",
+  "desc": "liste des commandes"
+ },
+ {
+  "cmd": "!add",
+  "usage": "!add [UTILISATEUR]",
+  "desc": "ajoute une personne (ami) ou un bot au groupe"
+ },
+ {
+  "cmd": "!del",
+  "usage": "!del [UTILISATEUR]",
+  "desc": "retire une personne du groupe"
+ },
+ {
+  "cmd": "!adm",
+  "usage": "!adm [UTILISATEUR]",
+  "desc": "donne ou retire le rôle d'administrateur"
+ },
+ {
+  "cmd": "!rename",
+  "usage": "!rename [NOM]",
+  "desc": "renomme le groupe"
+ },
+ {
+  "cmd": "!droit",
+  "usage": "!droit [UTILISATEUR]",
+  "desc": "donne ou retire le droit d'utiliser les commandes"
+ },
+ {
+  "cmd": "!print",
+  "usage": "!print",
+  "desc": "informations du serveur"
+ },
+ {
+  "cmd": "!ban",
+  "usage": "!ban u:[UTILISATEUR] t:[SECONDES]",
+  "desc": "bannit une personne (0 = sans limite)"
+ },
+ {
+  "cmd": "!deban",
+  "usage": "!deban [UTILISATEUR]",
+  "desc": "lève un bannissement"
+ },
+ {
+  "cmd": "!banlist",
+  "usage": "!banlist",
+  "desc": "liste des personnes bannies"
+ },
+ {
+  "cmd": "!cj",
+  "usage": "!cj [UTILISATEUR]",
+  "desc": "casier : bannissements, retraits, suppressions, droits"
+ },
+ {
+  "cmd": "!kick",
+  "usage": "!kick [UTILISATEUR]",
+  "desc": "exclut quelqu'un d'un appel ou d'un jeu"
+ },
+ {
+  "cmd": "!pause",
+  "usage": "!pause [SECONDES]",
+  "desc": "met le jeu en pause (60 s maximum)"
+ },
+ {
+  "cmd": "!fpause",
+  "usage": "!fpause [o/n]",
+  "desc": "bouton de pause pour tout le monde"
+ },
+ {
+  "cmd": "!bypass",
+  "usage": "!bypass [o/n]",
+  "desc": "débloque tous les jeux dans ce groupe"
+ },
+ {
+  "cmd": "!mp",
+  "usage": "!mp u:[UTILISATEUR] m:[MESSAGE]",
+  "desc": "message privé : seule cette personne le voit."
+ },
+ {
+  "cmd": "!del msgn:",
+  "usage": "!del msgn:[N]",
+  "desc": "supprime les N derniers messages du groupe"
+ },
+ {
+  "cmd": "!del msg:",
+  "usage": "!del msg:[NUMÉRO]",
+  "desc": "supprime un message du groupe"
+ },
+ {
+  "cmd": "!clear",
+  "usage": "!clear",
+  "desc": "vide toute la discussion"
+ },
+ {
+  "cmd": "!inv",
+  "usage": "!inv call",
+  "desc": "réinvite tout le groupe dans l'appel ou le jeu en cours"
+ },
+ {
+  "cmd": "!wordle",
+  "usage": "!wordle fr",
+  "desc": "wordle du jour en français"
+ },
+ {
+  "cmd": "!wordle",
+  "usage": "!wordle en",
+  "desc": "wordle du jour en anglais"
+ },
+ {
+  "cmd": "!font",
+  "usage": "!font",
+  "desc": "ajoute une police .ttf pour ce groupe"
+ },
+ {
+  "cmd": "!add game",
+  "usage": "!add game",
+  "desc": "ajoute un jeu HTML pour ce groupe"
+ },
+ {
+  "cmd": "!del game:",
+  "usage": "!del game:[ID]",
+  "desc": "supprime un jeu du groupe"
+ }
+]$cm$::jsonb,$cm$Version initiale.$cm$)
 on conflict (username) do update set description=excluded.description, perms=excluded.perms, commands=excluded.commands, notes=excluded.notes, official=true, status='active', updated_at=now();
 update public.bots set owner_id=(select id from public.profiles where username='rhum') where username='libonbot' and owner_id is null;
 delete from public.bot_files where bot_id=(select id from public.bots where username='libonbot') and not runtime;
-insert into public.bot_files(bot_id,path,content,size) select id,'bot.json',$cm${"name":"Libon","entry":["main.cmm","pause.cmm","bypass.cmm"],"version":1}
-$cm$,75 from public.bots where username='libonbot' on conflict (bot_id,path) do update set content=excluded.content,size=excluded.size,updated_at=now(),runtime=false;
+insert into public.bot_files(bot_id,path,content,size) select id,'bot.json',$cm${"name": "Libon", "entry": ["main.cmm", "pause.cmm", "bypass.cmm"], "version": 2}$cm$,81 from public.bots where username='libonbot' on conflict (bot_id,path) do update set content=excluded.content,size=excluded.size,updated_at=now(),runtime=false;
 insert into public.bot_files(bot_id,path,content,size) select id,'bypass.cmm',$cm$# /bypass — débloque tous les jeux du Bloc-note, des groupes et des conversations pour CE groupe.
 # Sécurité en couches :
 #   1. seul un administrateur du groupe peut l'activer (contrôle SERVEUR dans libon_do),
@@ -68,10 +193,13 @@ fonction temps(s):
     retour s + " s"
 
 sur commande "help" (ctx):
-    dire("!add [UTILISATEUR]  ajoute une personne (vous devez être ami(e) avec elle) ou un bot\n!del [UTILISATEUR]  retire une personne du groupe\n!del msg:[NUMÉRO]  supprime un message du groupe\n!adm [UTILISATEUR]  donne ou retire le rôle d'administrateur\n!rename [NOM]  renomme le groupe\n!droit [UTILISATEUR]  donne ou retire le droit d'utiliser les commandes\n!print  informations du serveur\n!ban u:[UTILISATEUR] t:[SECONDES]  bannit (0 = sans limite)\n!deban [UTILISATEUR]  lève un bannissement\n!banlist  liste des bannis\n!cj [UTILISATEUR]  casier : bannissements, retraits, suppressions, droits\n!kick [UTILISATEUR]  exclut d'un appel ou d'un jeu\n!pause [SECONDES]  met le jeu en pause (60 s maximum)\n!fpause [o/n]  ajoute un bouton de pause pour tout le monde\n!bypass [o/n]  débloque tous les jeux dans ce groupe", {title: "LibonBOT — commandes"})
+    dire("!add [UTILISATEUR]  ajoute une personne (vous devez être ami(e) avec elle) ou un bot\n!del [UTILISATEUR]  retire une personne du groupe\n!del msg:[NUMÉRO]  supprime un message du groupe\n!adm [UTILISATEUR]  donne ou retire le rôle d'administrateur\n!rename [NOM]  renomme le groupe\n!droit [UTILISATEUR]  donne ou retire le droit d'utiliser les commandes\n!print  informations du serveur\n!ban u:[UTILISATEUR] t:[SECONDES]  bannit (0 = sans limite)\n!deban [UTILISATEUR]  lève un bannissement\n!banlist  liste des bannis\n!cj [UTILISATEUR]  casier : bannissements, retraits, suppressions, droits\n!kick [UTILISATEUR]  exclut d'un appel ou d'un jeu\n!pause [SECONDES]  met le jeu en pause (60 s maximum)\n!fpause [o/n]  ajoute un bouton de pause pour tout le monde\n!bypass [o/n]  débloque tous les jeux dans ce groupe\n!mp u:[UTILISATEUR] m:[MESSAGE]  message privé\n!clear  vide toute la discussion\n!del msgn:[N]  supprime les N derniers messages\n!inv call  réinvite tout le groupe dans l'appel ou le jeu en cours\n!wordle fr / !wordle en  mot du jour\n!font  ajoute une police (.ttf) pour ce groupe\n!add game  ajoute un jeu HTML pour ce groupe\n!del game:[ID]  supprime un jeu du groupe", {title: "LibonBOT — commandes"})
 
 sur commande "add" (ctx):
     essayer:
+        si ctx.args.trim().toLowerCase() == "game":
+            dire(attends api.group.addgame())
+            retour
         soit r = attends api.group.add(cible(ctx))
         dire(r)
     erreur e:
@@ -79,7 +207,11 @@ sur commande "add" (ctx):
 
 sur commande "del" (ctx):
     essayer:
-        si ctx.params.msg:
+        si ctx.params.msgn:
+            dire(attends api.group.delnum(ctx.params.msgn))
+        sinon si ctx.params.game:
+            dire(attends api.group.delgame(ctx.params.game))
+        sinon si ctx.params.msg:
             dire(attends api.group.delmsg(ctx.params.msg))
         sinon:
             dire(attends api.group.del(cible(ctx)))
@@ -166,7 +298,7 @@ sur commande "kick" (ctx):
     erreur e:
         dire("Impossible : " + e.message)
 
-# Message privé : /mp u:[UTILISATEUR] m:[MESSAGE]
+# Message privé : !mp u:[UTILISATEUR] m:[MESSAGE]
 # Le serveur envoie le message à cette seule personne (et à vous) puis supprime tout de suite votre commande du groupe.
 # Aucune réponse publique n'est écrite : personne d'autre ne sait qui écrit à qui.
 sur commande "mp" (ctx):
@@ -174,12 +306,42 @@ sur commande "mp" (ctx):
         soit u = ctx.params.u
         soit m = ctx.params.m
         si non u ou non m:
-            lancer "Utilisation : /mp u:[UTILISATEUR] m:[MESSAGE]"
+            lancer "Utilisation : !mp u:[UTILISATEUR] m:[MESSAGE]"
         attends api.group.mp(u, m, ctx.msgid)
         api.ui.toast("Message privé envoyé à @" + u.replace("@", ""))
     erreur e:
         api.ui.toast("Impossible : " + e.message)
-$cm$,5040 from public.bots where username='libonbot' on conflict (bot_id,path) do update set content=excluded.content,size=excluded.size,updated_at=now(),runtime=false;
+
+# ---- LibonBOT v2 ----
+sur commande "clear" (ctx):
+    essayer:
+        dire(attends api.group.clear())
+    erreur e:
+        api.ui.toast("Impossible : " + e.message)
+
+sur commande "inv" (ctx):
+    essayer:
+        si ctx.args.trim().toLowerCase() != "call":
+            lancer "Utilisation : !inv call"
+        dire(attends api.group.invall())
+    erreur e:
+        dire("Impossible : " + e.message)
+
+sur commande "wordle" (ctx):
+    essayer:
+        soit l = ctx.args.trim().toLowerCase()
+        si l != "fr" et l != "en":
+            lancer "Utilisation : !wordle fr ou !wordle en"
+        attends api.group.wordle(l)
+    erreur e:
+        dire("Impossible : " + e.message)
+
+sur commande "font" (ctx):
+    essayer:
+        dire(attends api.group.font())
+    erreur e:
+        dire("Impossible : " + e.message)
+$cm$,6539 from public.bots where username='libonbot' on conflict (bot_id,path) do update set content=excluded.content,size=excluded.size,updated_at=now(),runtime=false;
 insert into public.bot_files(bot_id,path,content,size) select id,'pause.cmm',$cm$# Pause des jeux et des appels — toute la logique est ici, en CMM.
 # L'interface (bouton en haut à droite) est dans pause.html.
 # Pendant la pause : plus personne ne touche au jeu, les minuteries, le jeu et les bots s'arrêtent ;
@@ -199,6 +361,11 @@ sur commande "pause" (ctx):
         soit ok = attends api.room.can(ctx.user)
         si non ok:
             dire("Vous n'avez pas le droit d'utiliser cette commande.")
+            retour
+        si etat.pause:
+            api.room.broadcast("unpause", {by: ctx.user})
+            attends api.group.note("fin de pause", ctx.user, "reprise par la commande")
+            dire("Le jeu reprend.")
             retour
         soit n = duree(ctx.args)
         api.room.broadcast("pause", {by: ctx.user, secs: n})
@@ -236,16 +403,19 @@ sur evenement "room:pause" (e):
     etat.par = e.by
     api.game.freeze(duree(e.secs), e.by)
     api.ui.set("pause-lbl", "Reprendre")
+    api.ui.show("pause-btn", vrai)
 
 sur evenement "room:unpause" (e):
     soit ok = attends api.room.can(e.from, "pause")
-    si non ok:
+    si non ok et e.from != etat.par:
         retour
     api.game.unfreeze()
 
 sur evenement "room:unfrozen" (e):
     etat.pause = faux
     api.ui.set("pause-lbl", "Pause")
+    soit on = attends api.store.get("fpause")
+    api.ui.show("pause-btn", on == vrai)
 
 # Bouton « Pause » (tout le monde, si !fpause o) : met en pause ou reprend.
 sur clic "pause-btn" (e):
@@ -258,7 +428,7 @@ sur clic "pause-btn" (e):
             attends api.group.note("pause", e.user, MAX_PAUSE + " s maximum")
     erreur err:
         api.ui.toast(err.message)
-$cm$,2736 from public.bots where username='libonbot' on conflict (bot_id,path) do update set content=excluded.content,size=excluded.size,updated_at=now(),runtime=false;
+$cm$,3104 from public.bots where username='libonbot' on conflict (bot_id,path) do update set content=excluded.content,size=excluded.size,updated_at=now(),runtime=false;
 insert into public.bot_files(bot_id,path,content,size) select id,'pause.css',$cm$.pausebtn{display:inline-flex;align-items:center;gap:6px;background:#ffb703;color:#2b1d00;border-radius:10px;padding:6px 12px;font-weight:700}
 $cm$,143 from public.bots where username='libonbot' on conflict (bot_id,path) do update set content=excluded.content,size=excluded.size,updated_at=now(),runtime=false;
 insert into public.bot_files(bot_id,path,content,size) select id,'pause.html',$cm$<!-- Interface ajoutée à l'appel : bouton de pause en haut à droite (caché tant que !fpause n'est pas activé) -->
@@ -271,7 +441,7 @@ insert into public.bot_files(bot_id,path,content,size) select id,'pause.html',$c
 $cm$,532 from public.bots where username='libonbot' on conflict (bot_id,path) do update set content=excluded.content,size=excluded.size,updated_at=now(),runtime=false;
 
 insert into public.bots(name,username,prefix,description,owner_username,visibility,official,perms,commands,notes)
-values ('Vlafi','vlafibot','vl/',$cm$Fait jouer de la musique dans les appels du groupe : recherche, file d'attente, vitesse, hauteur, volume, basses et 8D.$cm$,'rhum','public',true,array['msg.send','call.join','audio.play']::text[],$cm$[{"cmd": "vl/play", "usage": "vl/play m:[VOTRE MUSIQUE]", "desc": "fais jouer la musique."}, {"cmd": "vl/playadd", "usage": "vl/playadd m:[VOTRE MUSIQUE]", "desc": "ajoute la musique à la file d'attente."}, {"cmd": "vl/help", "usage": "vl/help", "desc": "liste des commandes."}, {"cmd": "vl/speed", "usage": "vl/speed [0.1 à 3]", "desc": "change la vitesse de la musique."}, {"cmd": "vl/pitch", "usage": "vl/pitch [0.1 à 5]", "desc": "rend la musique plus grave ou plus aiguë."}, {"cmd": "vl/vol", "usage": "vl/vol [1 à 200]", "desc": "change le volume."}, {"cmd": "vl/bass", "usage": "vl/bass [O/N]", "desc": "renforce les basses."}, {"cmd": "vl/8d", "usage": "vl/8d [O/N]", "desc": "active l'effet 8D."}, {"cmd": "vl/skip", "usage": "vl/skip", "desc": "passe à la musique suivante."}, {"cmd": "vl/stop", "usage": "vl/stop", "desc": "arrête la musique et vide la file."}, {"cmd": "vl/queue", "usage": "vl/queue", "desc": "affiche la file d'attente."}, {"cmd": "vl/now", "usage": "vl/now", "desc": "affiche la musique en cours."}, {"cmd": "vl/list", "usage": "vl/list", "desc": "liste tout ce que Vlafi connaît."}]$cm$::jsonb,$cm$Version initiale.$cm$)
+values ('Vlafi','vlafibot','vl/',$cm$Fait jouer de la musique dans les appels du groupe : recherche, file d'attente, vitesse, hauteur, volume, basses et 8D.$cm$,'rhum','public',true,array['msg.send','call.join','audio.play']::text[],$cm$[{"cmd": "vl/join", "usage": "vl/join", "desc": "invite Vlafi dans l'appel en cours."}, {"cmd": "vl/play", "usage": "vl/play m:[VOTRE MUSIQUE]", "desc": "fais jouer la musique."}, {"cmd": "vl/playadd", "usage": "vl/playadd m:[VOTRE MUSIQUE]", "desc": "ajoute la musique à la file d'attente."}, {"cmd": "vl/help", "usage": "vl/help", "desc": "liste des commandes."}, {"cmd": "vl/speed", "usage": "vl/speed [0.1 à 3]", "desc": "change la vitesse de la musique."}, {"cmd": "vl/pitch", "usage": "vl/pitch [0.1 à 5]", "desc": "rend la musique plus grave ou plus aiguë."}, {"cmd": "vl/vol", "usage": "vl/vol [1 à 200]", "desc": "change le volume."}, {"cmd": "vl/bass", "usage": "vl/bass [O/N]", "desc": "renforce les basses."}, {"cmd": "vl/8d", "usage": "vl/8d [O/N]", "desc": "active l'effet 8D."}, {"cmd": "vl/skip", "usage": "vl/skip", "desc": "passe à la musique suivante."}, {"cmd": "vl/stop", "usage": "vl/stop", "desc": "arrête la musique et vide la file."}, {"cmd": "vl/queue", "usage": "vl/queue", "desc": "affiche la file d'attente."}, {"cmd": "vl/now", "usage": "vl/now", "desc": "affiche la musique en cours."}, {"cmd": "vl/list", "usage": "vl/list", "desc": "liste tout ce que Vlafi connaît."}]$cm$::jsonb,$cm$Version initiale.$cm$)
 on conflict (username) do update set description=excluded.description, perms=excluded.perms, commands=excluded.commands, notes=excluded.notes, official=true, status='active', updated_at=now();
 update public.bots set owner_id=(select id from public.profiles where username='rhum') where username='vlafibot' and owner_id is null;
 delete from public.bot_files where bot_id=(select id from public.bots where username='vlafibot') and not runtime;
@@ -377,7 +547,7 @@ fonction verifierAppel():
     si non r.active:
         lancer "Aucun appel en cours. Démarrez un appel dans le groupe, puis tapez /join."
     si non r.joined:
-        lancer "Je ne suis pas dans l'appel. Tapez /join pour m'y inviter."
+        lancer "Je ne suis pas dans l'appel. Tapez vl/join pour m'y inviter."
 
 # ---------- lecture ----------
 fonction partager():
@@ -566,7 +736,20 @@ sur evenement "audio:ended" (e):
 sur evenement "room:leave" (e):
     etat.file = []
     etat.courant = nul
-$cm$,9893 from public.bots where username='vlafibot' on conflict (bot_id,path) do update set content=excluded.content,size=excluded.size,updated_at=now(),runtime=false;
+
+sur commande "join" (ctx):
+    essayer:
+        soit r = attends api.room.info()
+        si non r.active:
+            lancer "Aucun appel en cours. Démarrez un appel dans le groupe, puis tapez vl/join."
+        si r.joined:
+            dire("Je suis déjà dans l'appel.")
+            retour
+        attends api.room.join()
+        dire("Je suis dans l'appel. Tapez vl/play m:[NOM] pour lancer une musique.")
+    erreur e:
+        dire("Impossible : " + e.message)
+$cm$,10362 from public.bots where username='vlafibot' on conflict (bot_id,path) do update set content=excluded.content,size=excluded.size,updated_at=now(),runtime=false;
 insert into public.bot_files(bot_id,path,content,size) select id,'musique.json',$cm$[
 {
 "id": "ode",
