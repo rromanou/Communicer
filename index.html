@@ -953,6 +953,26 @@ button.on.ghost{background:#ffd24d;color:#111}
 .wd-r i.g,.wd-k .g{background:#2e9e57;color:#fff;border-color:#2e9e57}.wd-r i.y,.wd-k .y{background:#c9a227;color:#fff;border-color:#c9a227}.wd-r i.x,.wd-k .x{background:#555;color:#fff;border-color:#555}
 .wd-k{display:flex;flex-direction:column;gap:5px;align-items:center}.wd-k div{display:flex;gap:4px}.wd-k button{min-width:30px;padding:10px 6px;border-radius:6px;border:0;background:#8883;font-weight:600;text-transform:uppercase}
 
+/* ===== Skyjo / Tag / Blokus ===== */
+.g-sk,.g-tag,.g-blk{color:#fff;display:flex;flex-direction:column;gap:10px;align-items:center;padding:6px;width:min(96vw,900px)}
+.sk-g{display:grid;grid-template-columns:repeat(4,44px);gap:5px}.sk-g.mine{grid-template-columns:repeat(4,56px);gap:7px}
+.sk-c{width:100%;aspect-ratio:3/4;border-radius:7px;border:0;font:800 18px system-ui;color:#111;display:flex;align-items:center;justify-content:center;padding:0;min-height:0}
+.sk-c.back{background:repeating-linear-gradient(45deg,#3b4a9a,#3b4a9a 6px,#2c3980 6px,#2c3980 12px);color:#fff}
+.sk-c.gone{background:transparent;border:1px dashed rgba(255,255,255,.2)}.sk-c.ok{outline:3px solid #ffd24d;cursor:pointer;animation:glow 1.4s ease-in-out infinite}
+.sk-mid{display:flex;gap:18px;align-items:flex-end;flex-wrap:wrap;justify-content:center}.sk-pile{display:flex;flex-direction:column;align-items:center;gap:4px}.sk-pile .sk-c{width:56px}
+.sk-oth{display:flex;gap:14px;flex-wrap:wrap;justify-content:center}.sk-o{padding:6px;border-radius:10px;background:rgba(255,255,255,.06)}.sk-o.turn{outline:2px solid #2f6bff}.sk-o h5,.sk-me h4{margin:0 0 4px;font-size:13px}
+.sk-o .sk-c{font-size:12px}
+.tg-b{display:grid;grid-template-columns:repeat(var(--n),minmax(0,1fr));gap:2px;width:min(88vw,520px);aspect-ratio:1/1;background:rgba(255,255,255,.06);padding:4px;border-radius:12px}
+.tg-c1{background:rgba(255,255,255,.06);border-radius:5px;display:flex;align-items:center;justify-content:center}.tg-c1.ok{background:rgba(46,158,87,.35);cursor:pointer}
+.tg-p{width:80%;aspect-ratio:1/1;border-radius:50%;display:flex;align-items:center;justify-content:center;font:800 14px system-ui;color:#111;font-style:normal;box-shadow:0 2px 6px rgba(0,0,0,.4)}.tg-p.it{outline:3px solid #ff3b3b;animation:glow 1s ease-in-out infinite}.tg-p.me{border:2px solid #fff}
+.tg-c{display:flex;gap:12px;align-items:center;flex-wrap:wrap;justify-content:center}
+.bk-w{display:flex;gap:14px;flex-wrap:wrap;justify-content:center;align-items:flex-start}
+.bk-b{display:grid;grid-template-columns:repeat(var(--n),minmax(0,1fr));gap:1px;width:min(92vw,440px);aspect-ratio:1/1;background:#1b2140;padding:2px;border-radius:8px;--pc:#fff}
+.bk-c{background:#2a3157;border-radius:2px}.bk-c.pv{background:var(--pc) !important;opacity:.7}.bk-c.pvx{background:#ff3b3b !important;opacity:.6}
+.bk-t{display:flex;flex-direction:column;gap:8px;width:min(92vw,300px)}.bk-pcs{display:flex;flex-wrap:wrap;gap:6px;max-height:300px;overflow:auto}
+.bk-pc{background:rgba(255,255,255,.08);border:2px solid transparent;border-radius:8px;padding:6px;display:flex;align-items:center;justify-content:center;min-width:44px;min-height:44px}.bk-pc.on{border-color:#ffd24d}.bk-pc:disabled{opacity:.5}
+.bk-mp{display:grid;gap:1px}.bk-mp i{display:block;width:8px;height:8px;border-radius:1px}
+
 .comp{position:relative}
 .plusmenu{position:absolute;bottom:100%;margin-bottom:6px;background:var(--panel);border:1px solid var(--line);border-radius:12px;box-shadow:0 8px 28px rgba(0,0,0,.18);padding:4px;z-index:30;min-width:200px;animation:pmIn .14s ease-out}
 .plusmenu button{display:flex;align-items:center;gap:10px;width:100%;background:none;color:var(--text);padding:9px 12px;border-radius:9px;text-align:left}
@@ -4108,6 +4128,192 @@ const G2048=(()=>{
     return false;
   }
   return {N,init,move,can};
+})();
+
+/* ================= LOGIQUE DES JEUX, SÉRIE 7 (pure, sans DOM) : Skyjo, Tag, Blokus ================= */
+
+/* ---------- Skyjo (2 à 8 joueurs) ---------- */
+const SKY=(()=>{
+  const mkDeck=()=>{const d=[];for(let i=0;i<5;i++)d.push(-2);for(let i=0;i<10;i++)d.push(-1);for(let i=0;i<15;i++)d.push(0);for(let v=1;v<=12;v++)for(let i=0;i<10;i++)d.push(v);return shuffle(d)};
+  function deal(st,hp){
+    hp.deck=mkDeck();hp.hid={};st.grid={};
+    for(const u of st.pl){hp.hid[u]=[];for(let i=0;i<12;i++)hp.hid[u].push(hp.deck.pop());st.grid[u]=Array(12).fill(null)}
+    st.disc=[hp.deck.pop()];st.deckN=hp.deck.length;st.ph='flip';st.hold=null;st.src=null;st.step='pick';st.last=null;st.flips={};st.fin=null;
+    st.pl.forEach(u=>st.flips[u]=0);
+  }
+  function init(pl,cfg,hp){const st={pl:pl.slice(),tot:{},round:1,hist:[],turn:0,saved:null,win:null};pl.forEach(u=>st.tot[u]=0);deal(st,hp);return st}
+  const cardAt=(st,hp,u,i)=>st.grid[u][i]===null?hp.hid[u][i]:st.grid[u][i];
+  function refill(st,hp){if(hp.deck.length)return;const top=st.disc.pop();hp.deck=shuffle(st.disc.splice(0));st.disc=[top]}
+  function columns(st,u){
+    const g=st.grid[u];
+    for(let c=0;c<4;c++){const a=g[c],b=g[c+4],d=g[c+8];
+      if(typeof a==='number'&&a===b&&b===d){st.disc.push(a,b,d);g[c]=g[c+4]=g[c+8]='x'}}
+  }
+  const hidden=(st,u)=>st.grid[u].some(x=>x===null);
+  function startPlay(st){
+    let best=-99,bi=0;st.pl.forEach((u,i)=>{const s=st.grid[u].reduce((a,x)=>a+(typeof x==='number'?x:0),0);if(s>best){best=s;bi=i}});
+    st.turn=bi;st.ph='play';st.step='pick';
+  }
+  function endTurn(st,hp){
+    const u=st.pl[st.turn];
+    if(st.last===null&&!hidden(st,u))st.last=u;
+    st.hold=null;st.src=null;st.step='pick';
+    st.turn=(st.turn+1)%st.pl.length;
+    if(st.last!==null&&st.pl[st.turn]===st.last)endRound(st,hp);
+  }
+  function endRound(st,hp){
+    const sc={};
+    for(const u of st.pl){for(let i=0;i<12;i++)if(st.grid[u][i]===null)st.grid[u][i]=hp.hid[u][i];columns(st,u);
+      sc[u]=st.grid[u].reduce((a,x)=>a+(typeof x==='number'?x:0),0)}
+    const l=st.last;let pen=false;
+    if(l&&sc[l]>0&&st.pl.some(o=>o!==l&&sc[o]<=sc[l])){sc[l]*=2;pen=true}
+    st.pl.forEach(u=>st.tot[u]+=sc[u]);
+    st.hist.push({sc,last:l,pen});st.ph='rend';st.fin=l;
+    if(st.pl.some(u=>st.tot[u]>=100)){st.ph='over';const m=Math.min(...st.pl.map(u=>st.tot[u]));st.win=st.pl.filter(u=>st.tot[u]===m)}
+  }
+  function reduce(st,a,u,hp){
+    if(a.t==='saved')return false;
+    if(!st.pl.includes(u))return false;
+    if(st.ph==='flip'){
+      if(a.t!=='flip'||st.flips[u]>=2)return false;const i=+a.i;if(!(i>=0&&i<12)||st.grid[u][i]!==null)return false;
+      st.grid[u][i]=hp.hid[u][i];st.flips[u]++;if(st.pl.every(x=>st.flips[x]>=2))startPlay(st);return true}
+    if(st.ph==='rend'){if(a.t==='next'&&u===st.pl[0]){st.round++;deal(st,hp);return true}return false}
+    if(st.ph!=='play'||st.pl[st.turn]!==u)return false;
+    if(st.step==='pick'){
+      if(a.t==='draw'){refill(st,hp);st.hold=hp.deck.pop();st.deckN=hp.deck.length;st.src='deck';st.step='place';return true}
+      if(a.t==='take'&&st.disc.length){st.hold=st.disc.pop();st.src='disc';st.step='place';return true}
+      return false}
+    if(st.step==='place'){
+      if(a.t==='swap'){const i=+a.i;if(!(i>=0&&i<12)||st.grid[u][i]==='x')return false;
+        const old=cardAt(st,hp,u,i);hp.hid[u][i]=old;st.grid[u][i]=st.hold;st.disc.push(old);columns(st,u);endTurn(st,hp);return true}
+      if(a.t==='drop'&&st.src==='deck'){st.disc.push(st.hold);st.hold=null;
+        if(!hidden(st,u)){endTurn(st,hp);return true}st.step='flip';return true}
+      return false}
+    if(st.step==='flip'){
+      if(a.t!=='flip')return false;const i=+a.i;if(!(i>=0&&i<12)||st.grid[u][i]!==null)return false;
+      st.grid[u][i]=hp.hid[u][i];columns(st,u);endTurn(st,hp);return true}
+    return false;
+  }
+  function leave(st,u,hp){
+    const i=st.pl.indexOf(u);if(i<0)return false;
+    const cur=st.pl[st.turn];st.pl.splice(i,1);delete st.grid[u];delete st.tot[u];
+    if(st.pl.length<2){st.ph='over';const m=Math.min(...st.pl.map(x=>st.tot[x]));st.win=st.pl.filter(x=>st.tot[x]===m);return true}
+    if(st.last===u)st.last=null;
+    if(cur===u){st.turn=i%st.pl.length;st.hold=null;st.src=null;st.step='pick'}else st.turn=st.pl.indexOf(cur);
+    if(st.ph==='flip'&&st.pl.every(x=>st.flips[x]>=2))startPlay(st);
+    return true;
+  }
+  function result(st,nm){
+    if(st.ph!=='over')return null;
+    const rk=st.pl.slice().sort((a,b)=>st.tot[a]-st.tot[b]);
+    return{title:'Skyjo',lines:rk.map((u,i)=>`${i+1}. ${nm(u)} — ${st.tot[u]} points`).concat([`Manches jouées : ${st.hist.length}`])}
+  }
+  return{init,reduce,leave,result,deal,cardAt};
+})();
+
+/* ---------- Tag : chat perché (tour par tour) ---------- */
+const TAG=(()=>{
+  const N=9,ROUNDS=10,START=[[0,0],[N-1,N-1],[0,N-1],[N-1,0],[4,0],[4,N-1],[0,4],[N-1,4]];
+  function init(pl){
+    const st={pl:pl.slice(),pos:{},it:pl[rnd(pl.length)],turn:0,round:1,sc:{},imm:null,log:'',ph:'play',saved:null};
+    pl.forEach((u,i)=>{st.pos[u]=START[i].slice();st.sc[u]=0});return st}
+  const dist=(a,b)=>Math.abs(a[0]-b[0])+Math.abs(a[1]-b[1]);
+  function next(st){
+    st.turn++;
+    if(st.turn>=st.pl.length){st.turn=0;
+      for(const u of st.pl)if(u!==st.it)st.sc[u]++;
+      st.round++;if(st.round>ROUNDS){st.ph='over'}}
+  }
+  function reduce(st,a,u){
+    if(a.t==='saved')return false;
+    if(st.ph!=='play'||st.pl[st.turn]!==u)return false;
+    if(a.t==='pass'){st.log=`${u} passe`;next(st);return true}
+    if(a.t!=='mv')return false;
+    const x=+a.x,y=+a.y;if(!(x>=0&&x<N&&y>=0&&y<N))return false;
+    if(dist(st.pos[u],[x,y])>2)return false;
+    if(st.pl.some(o=>o!==u&&st.pos[o][0]===x&&st.pos[o][1]===y))return false;
+    st.pos[u]=[x,y];st.log='';
+    if(u===st.it){
+      const t=st.pl.find(o=>o!==u&&o!==st.imm&&dist(st.pos[o],st.pos[u])===1);
+      st.imm=null;
+      if(t){st.imm=u;st.it=t;st.log=`${t} est touché`}
+    }
+    next(st);return true;
+  }
+  function leave(st,u){
+    const i=st.pl.indexOf(u);if(i<0)return false;st.pl.splice(i,1);delete st.pos[u];delete st.sc[u];
+    if(st.pl.length<2){st.ph='over';return true}
+    if(st.it===u)st.it=st.pl[0];if(i<st.turn)st.turn--;if(st.turn>=st.pl.length)st.turn=0;return true}
+  function result(st,nm){
+    if(st.ph!=='over')return null;
+    const rk=st.pl.slice().sort((a,b)=>st.sc[b]-st.sc[a]);
+    return{title:'Tag',lines:rk.map((u,i)=>`${i+1}. ${nm(u)} — ${st.sc[u]} tour${st.sc[u]>1?'s':''} sans être touché${u===st.it?' (chat à la fin)':''}`)}
+  }
+  return{init,reduce,leave,result,N,ROUNDS,dist};
+})();
+
+/* ---------- Blokus (2 à 4 joueurs) ---------- */
+const BLK=(()=>{
+  const N=20,CORN=[[0,0],[N-1,0],[N-1,N-1],[0,N-1]];
+  const SH=['#','##','###','#.\n##','####','##\n##','.#.\n###','#..\n###','.##\n##.','.##\n##.\n.#.','#####','#...\n####','##..\n.###','##\n##\n#.','###\n.#.\n.#.','#.#\n###','#..\n#..\n###','#..\n##.\n.##','.#.\n###\n.#.','.#..\n####','##.\n.#.\n.##'];
+  const norm=c=>{const mx=Math.min(...c.map(p=>p[0])),my=Math.min(...c.map(p=>p[1]));return c.map(p=>[p[0]-mx,p[1]-my]).sort((a,b)=>a[1]-b[1]||a[0]-b[0])};
+  const key=c=>c.map(p=>p.join(',')).join(';');
+  const PIECES=SH.map(s=>{const c=[];s.split('\n').forEach((r,y)=>[...r].forEach((ch,x)=>{if(ch==='#')c.push([x,y])}));
+    const set=new Map();let cur=c;for(let f=0;f<2;f++){for(let r=0;r<4;r++){cur=norm(cur.map(p=>[-p[1],p[0]]));set.set(key(cur),cur)}cur=norm(cur.map(p=>[-p[0],p[1]]))}
+    return{n:c.length,o:[...set.values()]}});
+  function colorsFor(n){return n===2?[0,1,2,3]:n===3?[0,1,2]:[0,1,2,3]}
+  function init(pl){
+    const cols=colorsFor(pl.length),own={};cols.forEach((c,i)=>own[c]=pl[i%pl.length]);
+    const st={pl:pl.slice(),cols,own,b:Array.from({length:N},()=>Array(N).fill(-1)),used:{},pass:{},first:{},tc:0,ph:'play',last:{},saved:null};
+    cols.forEach(c=>{st.used[c]=[];st.pass[c]=false;st.first[c]=true;st.last[c]=null});return st}
+  function legal(st,c,pi,oi,x,y){
+    const cells=PIECES[pi].o[oi];let touch=false,corner=false;
+    for(const [dx,dy] of cells){const cx=x+dx,cy=y+dy;if(cx<0||cy<0||cx>=N||cy>=N||st.b[cy][cx]!==-1)return false;
+      if(st.first[c]&&cx===CORN[c][0]&&cy===CORN[c][1])corner=true;
+      for(const [ax,ay] of [[1,0],[-1,0],[0,1],[0,-1]]){const nx=cx+ax,ny=cy+ay;if(nx>=0&&ny>=0&&nx<N&&ny<N&&st.b[ny][nx]===c)return false}
+      if(!st.first[c])for(const [ax,ay] of [[1,1],[-1,1],[1,-1],[-1,-1]]){const nx=cx+ax,ny=cy+ay;if(nx>=0&&ny>=0&&nx<N&&ny<N&&st.b[ny][nx]===c)touch=true}}
+    return st.first[c]?corner:touch;
+  }
+  function canMove(st,c){
+    for(let pi=0;pi<PIECES.length;pi++){if(st.used[c].includes(pi))continue;
+      for(let oi=0;oi<PIECES[pi].o.length;oi++)for(let y=0;y<N;y++)for(let x=0;x<N;x++)if(legal(st,c,pi,oi,x,y))return true}
+    return false}
+  function advance(st){
+    for(let k=0;k<st.cols.length;k++){
+      st.tc=(st.tc+1)%st.cols.length;const c=st.cols[st.tc];
+      if(st.pass[c])continue;
+      if(!canMove(st,c)){st.pass[c]=true;continue}
+      return;
+    }
+    st.ph='over';
+  }
+  function reduce(st,a,u){
+    if(a.t==='saved')return false;
+    if(st.ph!=='play')return false;
+    const c=st.cols[st.tc];if(st.own[c]!==u)return false;
+    if(a.t==='pass'){st.pass[c]=true;advance(st);return true}
+    if(a.t!=='put')return false;
+    const pi=+a.p,oi=+a.o,x=+a.x,y=+a.y;
+    if(!PIECES[pi]||!PIECES[pi].o[oi]||st.used[c].includes(pi)||!Number.isInteger(x)||!Number.isInteger(y))return false;
+    if(!legal(st,c,pi,oi,x,y))return false;
+    for(const [dx,dy] of PIECES[pi].o[oi])st.b[y+dy][x+dx]=c;
+    st.used[c].push(pi);st.first[c]=false;st.last[c]=pi;
+    advance(st);return true;
+  }
+  function left(st,c){let n=0;PIECES.forEach((p,i)=>{if(!st.used[c].includes(i))n+=p.n});return n}
+  function score(st,u){
+    let s=0;for(const c of st.cols)if(st.own[c]===u){const l=left(st,c);s-=l;if(l===0)s+=15+(st.last[c]===0?5:0)}return s}
+  function leave(st,u){
+    const i=st.pl.indexOf(u);if(i<0)return false;st.pl.splice(i,1);
+    for(const c of st.cols)if(st.own[c]===u)st.pass[c]=true;
+    if(st.pl.length<2){st.ph='over';return true}
+    if(st.pass[st.cols[st.tc]])advance(st);return true}
+  function result(st,nm){
+    if(st.ph!=='over')return null;
+    const rk=st.pl.slice().sort((a,b)=>score(st,b)-score(st,a));
+    return{title:'Blokus',lines:rk.map((u,i)=>`${i+1}. ${nm(u)} — ${score(st,u)} point${Math.abs(score(st,u))>1?'s':''}`)}
+  }
+  return{PIECES,N,CORN,init,reduce,leave,result,legal,canMove,score,left,colorsFor};
 })();
 
 /* ================= SALLES : sessions de jeu et de dessin ================= */
@@ -8504,6 +8710,105 @@ Object.assign(GAMES,{
   wikif:{name:'WikiFight',desc:'Rejoignez la page d’arrivée de vos adversaires en cliquant sur les liens de Wikipédia, en un minimum de clics.',icon:'grid',conv:['group'],min:2,max:8,lobby:true,auto:true,init:WF.init,reduce:WF.reduce,leave:WF.leave,result:WF.result,mount:mountWikiFight,turn:st=>st.ph==='play'?Object.keys(st.runs).filter(u=>!st.runs[u].done):null}
 });
 
+/* ================= Interfaces série 7 : Skyjo, Tag, Blokus ================= */
+const SKC=v=>v<=-1?'#6aa8ff':v===0?'#9fe3f0':v<=4?'#6be08f':v<=8?'#ffd24d':'#ff8a65';
+function skCard(v,cls='',attr=''){
+  if(v==='x')return `<div class="sk-c gone"></div>`;
+  if(v===null)return `<button class="sk-c back ${cls}" ${attr}></button>`;
+  return `<button class="sk-c ${cls}" style="background:${SKC(v)}" ${attr}>${v}</button>`;
+}
+function mountSkyjo(root,api){
+  root.innerHTML='<div class="g-sk"><div class="g-status" id="skS"></div><div class="sk-mid" id="skM"></div><div class="sk-me" id="skMe"></div><div class="sk-oth" id="skO"></div></div>';
+  root.addEventListener('click',e=>{
+    const c=e.target.closest('[data-i]');if(c){const st=api.state();api.act({t:st.step==='place'&&st.ph==='play'?'swap':'flip',i:+c.dataset.i});return}
+    const b=e.target.closest('[data-a]');if(b)api.act({t:b.dataset.a});
+  });
+  const gridH=(st,u,mine)=>{
+    const g=st.grid[u],can=mine&&((st.ph==='flip'&&st.flips[u]<2)||(st.ph==='play'&&st.pl[st.turn]===u));
+    return `<div class="sk-g ${mine?'mine':''}">${g.map((v,i)=>{
+      const ok=can&&((st.ph==='flip'&&v===null)||(st.step==='place'&&v!=='x')||(st.step==='flip'&&v===null));
+      return skCard(v,ok?'ok':'',ok?`data-i="${i}"`:'disabled')}).join('')}</div>`};
+  return{update(st){
+    const S_=$('#skS',root),M=$('#skM',root),Me=$('#skMe',root),O=$('#skO',root);
+    const turnU=st.pl[st.turn],mine=turnU===api.me;
+    if(st.ph==='over'){S_.textContent='Partie terminée — '+st.win.map(api.name).join(', ')+' gagne'+(st.win.length>1?'nt':'');}
+    else if(st.ph==='rend')S_.textContent='Fin de manche '+st.round;
+    else if(st.ph==='flip')S_.textContent=st.flips[api.me]<2?'Retournez 2 cartes':'En attente des autres joueurs…';
+    else S_.textContent=mine?(st.step==='pick'?'À vous : piochez ou prenez la défausse':st.step==='place'?'Placez la carte sur votre grille'+(st.src==='deck'?' ou défaussez-la':''):'Retournez une carte cachée'):`Tour de ${api.name(turnU)}`+(st.last?` · dernier tour (${api.name(st.last)} a tout retourné)`:'');
+    const top=st.disc[st.disc.length-1];
+    M.innerHTML=`<div class="sk-pile"><small>Pioche (${st.deckN})</small>${mine&&st.ph==='play'&&st.step==='pick'?'<button class="sk-c back ok" data-a="draw"></button>':'<div class="sk-c back"></div>'}</div>
+      <div class="sk-pile"><small>Défausse</small>${mine&&st.ph==='play'&&st.step==='pick'&&top!==undefined?skCard(top,'ok','data-a="take"'):top!==undefined?skCard(top,'','disabled'):''}</div>
+      ${st.hold!==null&&st.ph==='play'?`<div class="sk-pile"><small>${api.name(turnU)} tient</small>${skCard(st.hold,'','disabled')}${mine&&st.step==='place'&&st.src==='deck'?'<button class="ghost lite" data-a="drop">Défausser</button>':''}</div>`:''}
+      ${st.ph==='rend'&&api.me===st.pl[0]?'<button data-a="next">Manche suivante</button>':st.ph==='rend'?'<span class="muted">L’hôte lance la manche suivante</span>':''}`;
+    Me.innerHTML=`<h4>${esc(who(api,api.me))} — ${st.tot[api.me]} pts</h4>`+(st.grid[api.me]?gridH(st,api.me,true):'');
+    O.innerHTML=st.pl.filter(u=>u!==api.me).map(u=>`<div class="sk-o ${u===turnU?'turn':''}"><h5>${esc(api.name(u))} — ${st.tot[u]} pts</h5>${gridH(st,u,false)}</div>`).join('');
+  }};
+}
+function mountTag(root,api){
+  const N=TAG.N;
+  root.innerHTML='<div class="g-tag"><div class="g-status" id="tgS"></div><div class="tg-b" id="tgB"></div><div class="tg-c"><button class="ghost lite" data-p="1">Passer</button><span class="muted" id="tgL"></span></div></div>';
+  const COL=['#ff5d73','#5ad1ff','#7cf08b','#ffd24d','#b388ff','#ff9f43','#2ee6c5','#ffffff'];
+  root.addEventListener('click',e=>{
+    if(e.target.closest('[data-p]'))return api.act({t:'pass'});
+    const c=e.target.closest('[data-x]');if(c)api.act({t:'mv',x:+c.dataset.x,y:+c.dataset.y});
+  });
+  return{update(st){
+    const turnU=st.pl[st.turn],mine=turnU===api.me;
+    $('#tgS',root).textContent=st.ph==='over'?'Partie terminée':`Tour ${st.round}/${TAG.ROUNDS} · ${mine?'à vous de jouer (2 cases maximum)':'tour de '+api.name(turnU)} · chat : ${who(api,st.it)}`;
+    let h='';
+    for(let y=0;y<N;y++)for(let x=0;x<N;x++){
+      const p=st.pl.find(u=>st.pos[u][0]===x&&st.pos[u][1]===y);
+      const near=mine&&st.ph==='play'&&!p&&TAG.dist(st.pos[api.me],[x,y])<=2;
+      h+=`<div class="tg-c1 ${near?'ok':''}" ${near?`data-x="${x}" data-y="${y}"`:''}>${p?`<i class="tg-p ${p===st.it?'it':''} ${p===api.me?'me':''}" style="background:${COL[st.pl.indexOf(p)%8]}" title="${esc(api.name(p))}">${esc(api.name(p).slice(0,1).toUpperCase())}</i>`:''}</div>`}
+    $('#tgB',root).style.setProperty('--n',N);$('#tgB',root).innerHTML=h;
+    $('#tgL',root).textContent=st.pl.map(u=>`${api.name(u)} ${st.sc[u]}`).join(' · ')+(st.log?' — '+api.name(st.log.split(' ')[0]):'');
+    $('[data-p]',root).disabled=!mine||st.ph!=='play';
+  }};
+}
+function mountBlokus(root,api){
+  const N=BLK.N,CL=['#2f6bff','#ffd24d','#ff5d73','#4cd964'];
+  root.innerHTML='<div class="g-blk"><div class="g-status" id="bkS"></div><div class="bk-w"><div class="bk-b" id="bkB"></div><div class="bk-t"><div class="bk-tr" id="bkT"></div><div class="row" style="justify-content:center;gap:6px"><button class="ghost lite" data-r="rot">Pivoter</button><button class="ghost lite" data-r="mir">Miroir</button><button class="ghost lite" data-r="pass">Passer</button></div></div></div></div>';
+  let sel=null,ori=0,hov=null;
+  const myCols=st=>st.cols.filter(c=>st.own[c]===api.me);
+  const curCol=st=>st.cols[st.tc];
+  const rotOf=(pi,oi,f)=>{ // cherche l'orientation obtenue par rotation (f=0) ou miroir (f=1)
+    const o=BLK.PIECES[pi].o[oi];const tr=f?o.map(p=>[-p[0],p[1]]):o.map(p=>[-p[1],p[0]]);
+    const mx=Math.min(...tr.map(p=>p[0])),my=Math.min(...tr.map(p=>p[1]));const k=tr.map(p=>[p[0]-mx,p[1]-my]).sort((a,b)=>a[1]-b[1]||a[0]-b[0]).map(p=>p.join(',')).join(';');
+    return BLK.PIECES[pi].o.findIndex(q=>q.map(p=>p.join(',')).join(';')===k)};
+  root.addEventListener('click',e=>{
+    const st=api.state();
+    const r=e.target.closest('[data-r]');if(r){const k=r.dataset.r;if(k==='pass'){if(confirm('Passer définitivement votre tour ?'))api.act({t:'pass'});return}if(sel!==null){ori=rotOf(sel,ori,k==='mir'?1:0);if(ori<0)ori=0;draw(st)}return}
+    const p=e.target.closest('[data-pc]');if(p){sel=+p.dataset.pc;ori=0;draw(st);return}
+    const c=e.target.closest('[data-c]');
+    if(c&&sel!==null){const [x,y]=c.dataset.c.split(',').map(Number);const col=curCol(st);
+      if(st.own[col]===api.me&&BLK.legal(st,col,sel,ori,x,y)){api.act({t:'put',p:sel,o:ori,x,y});sel=null;hov=null}else toast('Placement impossible')}
+  });
+  root.addEventListener('mouseover',e=>{const c=e.target.closest('[data-c]');if(c&&sel!==null){hov=c.dataset.c;paintPrev(api.state())}});
+  function paintPrev(st){
+    $$('#bkB .pv,#bkB .pvx',root).forEach(x=>x.classList.remove('pv','pvx'));
+    if(sel===null||!hov)return;const [x,y]=hov.split(',').map(Number),col=curCol(st);const ok=BLK.legal(st,col,sel,ori,x,y);
+    for(const [dx,dy] of BLK.PIECES[sel].o[ori]){const el=$(`#bkB [data-c="${x+dx},${y+dy}"]`,root);if(el)el.classList.add(ok?'pv':'pvx')}
+    const cs=$('#bkB',root);cs.style.setProperty('--pc',CL[col])}
+  function draw(st){
+    const col=curCol(st),mineTurn=st.ph==='play'&&st.own[col]===api.me;
+    $('#bkS',root).innerHTML=st.ph==='over'?'Partie terminée':`Tour de <b style="color:${CL[col]}">${esc(who(api,st.own[col]))}</b> (${['bleu','jaune','rouge','vert'][col]})`+(mineTurn?' — choisissez une pièce puis cliquez sur le plateau':'');
+    let h='';for(let y=0;y<N;y++)for(let x=0;x<N;x++){const v=st.b[y][x];const corner=BLK.CORN.some((c,i)=>st.cols.includes(i)&&st.first[i]&&c[0]===x&&c[1]===y);
+      h+=`<div class="bk-c ${corner?'start':''}" data-c="${x},${y}" ${v>=0?`style="background:${CL[v]}"`:corner?`style="box-shadow:inset 0 0 0 2px ${CL[BLK.CORN.findIndex(c=>c[0]===x&&c[1]===y)]}"`:''}></div>`}
+    $('#bkB',root).style.setProperty('--n',N);$('#bkB',root).innerHTML=h;
+    const mc=myCols(st).includes(col)?col:myCols(st)[0];
+    $('#bkT',root).innerHTML=mc===undefined?'':`<small>Pièces de ${esc(api.name(api.me))} (${['bleu','jaune','rouge','vert'][mc]}) — ${BLK.left(st,mc)} carrés restants</small><div class="bk-pcs">`+BLK.PIECES.map((p,i)=>st.used[mc].includes(i)?'':`<button class="bk-pc ${sel===i&&mc===col?'on':''}" data-pc="${i}" ${mc===col&&mineTurn?'':'disabled'} title="${p.n} carrés">${miniPiece(p.o[sel===i&&mc===col?ori:0],CL[mc])}</button>`).join('')+'</div>';
+    $$('[data-r]',root).forEach(b=>b.disabled=!mineTurn);
+    paintPrev(st);
+  }
+  const miniPiece=(cells,color)=>{const w=Math.max(...cells.map(c=>c[0]))+1,h=Math.max(...cells.map(c=>c[1]))+1;return `<span class="bk-mp" style="grid-template-columns:repeat(${w},8px);grid-template-rows:repeat(${h},8px)">${Array.from({length:w*h},(_,k)=>{const x=k%w,y=Math.floor(k/w);return `<i style="${cells.some(c=>c[0]===x&&c[1]===y)?'background:'+color:''}"></i>`}).join('')}</span>`};
+  return{update(st){if(sel!==null&&(st.ph!=='play'||st.used[curCol(st)].includes(sel)||st.own[curCol(st)]!==api.me))sel=null;draw(st)}};
+}
+Object.assign(GAMES,{
+  skyjo:{name:'Skyjo',desc:'Gardez le moins de points : échangez vos cartes, alignez trois cartes identiques. 2 à 8 joueurs.',icon:'cards',conv:['direct','group'],min:2,max:8,lobby:true,again:false,init:SKY.init,reduce:SKY.reduce,leave:SKY.leave,result:SKY.result,mount:mountSkyjo,turn:st=>st.ph==='play'?st.pl[st.turn]:st.ph==='flip'?st.pl.filter(u=>st.flips[u]<2):null},
+  tag:{name:'Tag',desc:'Chat perché au tour par tour : évitez d’être touché, 10 tours. 2 à 8 joueurs.',icon:'flame',conv:['direct','group'],min:2,max:8,lobby:true,init:TAG.init,reduce:TAG.reduce,leave:TAG.leave,result:TAG.result,mount:mountTag,turn:st=>st.ph==='play'?st.pl[st.turn]:null},
+  blokus:{name:'Blokus',desc:'Posez toutes vos pièces en ne les touchant que par les coins. 2 à 4 joueurs.',icon:'tiles',conv:['direct','group'],min:2,max:4,lobby:true,init:BLK.init,reduce:BLK.reduce,leave:BLK.leave,result:BLK.result,mount:mountBlokus,turn:st=>st.ph==='play'?st.own[st.cols[st.tc]]:null}
+});
+
 /* ================= Lot 4 : LibonBOT v2 côté site (jeux de groupe, polices, wordle, effacement, invitations) ================= */
 const GG={}, GF={};
 async function ggLoad(c,force){
@@ -8664,6 +8969,66 @@ function wordleOpen(lang,c){
   }
   paint();
 }
+
+/* ================= Lot 6 : mode économie d'énergie / données (Communicer Lite) ================= */
+var LITE={
+  on:()=>!!window.__LITE||(function(){try{return localStorage.getItem('cm_lite')==='1'}catch(e){return false}})(),
+  N:20,
+  set(v){try{localStorage.setItem('cm_lite',v?'1':'0')}catch(e){}location.reload()}
+};
+if(LITE.on()){(function(){
+  document.documentElement.classList.add('lite');
+  const st=document.createElement('style');st.textContent=`
+html.lite *,html.lite *::before,html.lite *::after{animation:none!important;transition:none!important;scroll-behavior:auto!important}
+html.lite .sys,html.lite .rmn-item,html.lite #bCam,html.lite #rmCam,html.lite .pf-bio,html.lite .pf-stats,html.lite .pf-link,html.lite .pf-info .pf-link,html.lite .devsec,html.lite .pf-games{display:none!important}
+html.lite .av img{display:none!important}
+html.lite .gif-play{position:relative;display:inline-block}html.lite .gif-play::after{content:"GIF ▶";position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);background:rgba(0,0,0,.65);color:#fff;border-radius:99px;padding:6px 12px;font:700 13px system-ui;pointer-events:none}
+html.lite label.opt:has(input[value=e2e]){display:none!important}
+html.lite .pfm-stats,html.lite .pf-prof{display:none!important}`;
+  document.head.appendChild(st);
+  // plus de messages animés : image fixe pour les GIF, lecture au toucher
+  const still=u=>String(u).replace(/\/(giphy|200w|200|100|source)\.gif/,'/$1_s.gif');
+  const fix=root=>root.querySelectorAll&&root.querySelectorAll('img.pic[src*="giphy.com"]:not([data-lite])').forEach(i=>{
+    const full=i.src;i.dataset.lite='1';i.src=still(full);i.dataset.full=full;i.parentElement&&i.parentElement.classList.add('gif-play');
+    i.addEventListener('click',e=>{if(i.dataset.full&&i.src!==i.dataset.full){e.stopImmediatePropagation();e.preventDefault();i.src=i.dataset.full;i.parentElement.classList.remove('gif-play')}},true)});
+  new MutationObserver(m=>m.forEach(x=>x.addedNodes.forEach(n=>n.nodeType===1&&fix(n)))).observe(document.documentElement,{childList:true,subtree:true});
+  // photos de profil : lettres uniquement
+  const _av=av;av=function(url,label,cls){return _av(null,label,cls)};
+  const _ca=convAv;convAv=function(c,cls){const g=c&&c.avatar_url;if(c)c={...c,avatar_url:null};return _ca(c,cls)};
+  // discussions neutres
+  const _at=applyTheme;applyTheme=function(c){return _at(null)};
+  // développeur désactivé
+  const _di=typeof devInit==='function'?devInit:null;if(_di)devInit=async function(){S.dev=false;S.staff=null;S.devBlocked=null};
+  // pas de Romanomoney
+  window.rmnReady=function(){};
+  // 20 derniers messages, 20 de plus en remontant
+  loadMsgs=async function(c){
+    const {data,error}=await sb.from('messages').select('*').eq('conversation_id',c.id).order('id',{ascending:false}).limit(LITE.N);
+    if(error){toast(error.message);return[]}
+    const rows=(data||[]).reverse();c._more=rows.length>=LITE.N;await Promise.all(rows.map(r=>decode(c,r)));return rows};
+  let busy=false;
+  document.addEventListener('scroll',async e=>{
+    const b=e.target;if(!b||b.id!=='msgs'||busy||b.scrollTop>30)return;const c=cur();if(!c||!c._more)return;
+    const l=S.msgs[c.id];if(!l||!l.length)return;busy=true;
+    try{const {data}=await sb.from('messages').select('*').eq('conversation_id',c.id).lt('id',l[0].id).order('id',{ascending:false}).limit(LITE.N);
+      const rows=(data||[]).reverse();c._more=rows.length>=LITE.N;await Promise.all(rows.map(r=>decode(c,r)));
+      if(rows.length){const h0=b.scrollHeight;S.msgs[c.id]=rows.concat(l);S.stick=false;renderMsgs(false);b.scrollTop=b.scrollHeight-h0}}
+    catch(x){}busy=false},true);
+  // jeux lourds retirés
+  setTimeout(()=>{['scrab','snd'].forEach(k=>{if(typeof GAMES!=='undefined')delete GAMES[k]})},0);
+  // peu de requêtes en arrière-plan
+  var _si=window.setInterval;window.setInterval=function(f,t){return _si.call(window,f,t<60000?Math.max(t,t<3000?t:20000):t)};
+})()}
+/* réglage dans Paramètres */
+(function(){
+  const _ds=devSettings;
+  devSettings=function(m){
+    if(!window.__LITE){const cr=m.querySelector('.credits');if(cr){const d=document.createElement('div');d.className='litesec';
+      d.innerHTML=`<label>Économie d’énergie et de données</label><div class="row"><span class="grow">Mode Lite (20 derniers messages, GIF et photos de profil non chargés, sans animations, discussions neutres)</span><input type="checkbox" id="sLite" ${LITE.on()?'checked':''}></div>`;
+      cr.before(d);const x=d.querySelector('#sLite');x.onchange=()=>{if(confirm('La page va se recharger pour appliquer le mode Lite.'))LITE.set(x.checked);else x.checked=!x.checked}}}
+    if(LITE.on()&&window.__LITE)return;
+    return _ds.apply(this,arguments)};
+})();
 
 
 /* ================= DÉMARRAGE ================= */
