@@ -972,6 +972,26 @@ button.on.ghost{background:#ffd24d;color:#111}
 .bk-t{display:flex;flex-direction:column;gap:8px;width:min(92vw,300px)}.bk-pcs{display:flex;flex-wrap:wrap;gap:6px;max-height:300px;overflow:auto}
 .bk-pc{background:rgba(255,255,255,.08);border:2px solid transparent;border-radius:8px;padding:6px;display:flex;align-items:center;justify-content:center;min-width:44px;min-height:44px}.bk-pc.on{border-color:#ffd24d}.bk-pc:disabled{opacity:.5}
 .bk-mp{display:grid;gap:1px}.bk-mp i{display:block;width:8px;height:8px;border-radius:1px}
+/* hiérarchie admin */
+.rbadge{display:inline-block;font-size:11px;padding:2px 8px;border-radius:99px;margin-left:8px;vertical-align:middle;border:1px solid var(--line,#8884);background:var(--card2,#8881);font-weight:600}
+.rbadge.r-moderator{color:#4a8}.rbadge.r-admin{color:#48c}.rbadge.r-chief{color:#c84}.rbadge.r-commander{color:#d44;border-color:#d44}
+.pgtop{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px}.pgwarn.w{color:var(--danger,#d44)}
+.pgalert{padding:8px 10px;border:1px solid var(--danger,#d44);border-radius:8px;margin:8px 0}.pgok{color:#4a8}
+.pgbar{margin:8px 0}.pgl{display:flex;justify-content:space-between;font-size:13px;margin-bottom:3px}.pgt{height:8px;border-radius:99px;background:#8883;overflow:hidden}.pgt i{display:block;height:100%;background:var(--accent,#48c);border-radius:99px;transition:width .6s}.pgt i.ok{background:#4a8}
+.pgrings{display:flex;gap:14px;flex-wrap:wrap;margin:8px 0}.pgring{display:flex;flex-direction:column;align-items:center;font-size:12px;gap:2px;max-width:80px;text-align:center}
+.pgring .rb{fill:none;stroke:#8883;stroke-width:7}.pgring .rf{fill:none;stroke:var(--accent,#48c);stroke-width:7;stroke-linecap:round;transition:stroke-dashoffset .8s}.pgring .rf.ok{stroke:#4a8}.pgring text{fill:currentColor;font-size:14px;font-weight:700}
+.quizov{position:fixed;inset:0;z-index:99999;background:var(--bg,#111);overflow:auto;padding:16px;user-select:none;-webkit-user-select:none}
+.quizov textarea,.quizov input[type=text],.quizov input:not([type]){user-select:text;-webkit-user-select:text;width:100%}
+.quizbox{max-width:760px;margin:0 auto}.qq{margin:14px 0;display:flex;flex-direction:column;gap:6px}
+/* jetons, cadres, badges */
+.tokchip{font-size:12px;padding:2px 10px;border-radius:99px;background:#f5b30133;color:#c99a00;margin-left:8px;vertical-align:middle}
+.shrow{display:flex;align-items:center;gap:10px;padding:6px 0;border-bottom:1px solid #8882}.shpv{display:flex;gap:2px;min-width:46px;justify-content:center;align-items:center}
+.bdg{vertical-align:middle;margin-left:6px}.pe{vertical-align:middle;user-select:none;-webkit-user-select:none;pointer-events:none;display:inline-block}
+.av.fr-or{box-shadow:0 0 0 2px var(--bg,#fff),0 0 0 4px #e0a800}.av.fr-glace{box-shadow:0 0 0 2px var(--bg,#fff),0 0 0 4px #7cc4f2,0 0 8px #bfe6ff}
+.av.fr-neon{box-shadow:0 0 0 2px #0b0f14,0 0 0 4px #19e6ff,0 0 12px #19e6ff}.av.fr-feu{box-shadow:0 0 0 2px var(--bg,#fff),0 0 0 4px #ff7a1a,0 0 10px #ff3d00;animation:frfeu 1.2s ease-in-out infinite alternate}
+.av.fr-arc{box-shadow:0 0 0 2px var(--bg,#fff),0 0 0 4px #f0f;animation:frarc 3s linear infinite}
+@keyframes frfeu{to{box-shadow:0 0 0 2px var(--bg,#fff),0 0 0 4px #ffb02e,0 0 16px #ff6a00}}
+@keyframes frarc{0%{box-shadow:0 0 0 2px var(--bg,#fff),0 0 0 4px #f33}25%{box-shadow:0 0 0 2px var(--bg,#fff),0 0 0 4px #fc0}50%{box-shadow:0 0 0 2px var(--bg,#fff),0 0 0 4px #3c6}75%{box-shadow:0 0 0 2px var(--bg,#fff),0 0 0 4px #39f}100%{box-shadow:0 0 0 2px var(--bg,#fff),0 0 0 4px #f33}}
 
 .comp{position:relative}
 .plusmenu{position:absolute;bottom:100%;margin-bottom:6px;background:var(--panel);border:1px solid var(--line);border-radius:12px;box-shadow:0 8px 28px rgba(0,0,0,.18);padding:4px;z-index:30;min-width:200px;animation:pmIn .14s ease-out}
@@ -8221,6 +8241,358 @@ async function stExc(m,box){
 async function stLogs(m,box){
   const {data,error}=await sb.rpc('staff_logs',{p_limit:300});if(error)throw error;
   box.innerHTML=`<div class="dev-log">${(data||[]).map(l=>`<div><span class="muted">${fmtDt(l.created_at)}</span> <b>${esc(l.action)}</b> ${esc(l.target||'')} <span class="tag">@${esc(l.staff_name||'?')}</span> <span class="muted">${esc(JSON.stringify(l.detail||{}).slice(0,200))}</span></div>`).join('')}</div>`;
+}
+
+/* ================= Patch 9 : hiérarchie de l'administration ================= */
+const ROLES={moderator:'Administrateur élève',admin:'Administrateur',chief:'Chef des administrateurs',commander:'Commandant'};
+const RANKS={moderator:1,admin:2,chief:3,commander:4};
+const RK=()=>RANKS[S.staff]||0;
+let STAFF_ROLES={},STAFF_ROLES_AT=0;
+async function staffRolesLoad(force){
+  if(!force&&Date.now()-STAFF_ROLES_AT<300000)return STAFF_ROLES;
+  try{const {data}=await sb.rpc('staff_public_roles');if(data){STAFF_ROLES=data;STAFF_ROLES_AT=Date.now()}}catch(e){}
+  return STAFF_ROLES;
+}
+/* badge de rôle dans le profil */
+const _opStaff=openProfile;
+openProfile=async function(un,push){
+  const r=await _opStaff.apply(this,arguments);
+  try{
+    const u=String(un||'').toLowerCase().replace(/^@/,'');const roles=await staffRolesLoad();const role=roles[u];
+    const hd=$('.pf-modal .pf-hd .grow');
+    if(role&&hd&&!hd.querySelector('.rbadge')){const b=document.createElement('span');b.className='rbadge r-'+role;b.textContent=ROLES[role];hd.querySelector('h3').after(b)}
+  }catch(e){}
+  return r;
+};
+/* initialisation, activité réelle et application des règles */
+const _diStaff=devInit;
+devInit=async function(){
+  await _diStaff.apply(this,arguments);
+  if(!S.staff)return;
+  S.rank=RK();staffRolesLoad(true);
+  try{await sb.rpc('staff_tick')}catch(e){}
+  try{const {data}=await sb.rpc('dev_info');if(data)S.staff=data.staff||null}catch(e){}
+  staffBeatStart();
+};
+let STAFF_LAST=Date.now(),STAFF_BEAT=null;
+function staffBeatStart(){
+  if(STAFF_BEAT)return;
+  ['mousemove','keydown','click','scroll','touchstart'].forEach(ev=>addEventListener(ev,()=>{STAFF_LAST=Date.now()},{passive:true}));
+  STAFF_BEAT=setInterval(async()=>{
+    if(!S.staff||document.visibilityState!=='visible'||!document.hasFocus()||Date.now()-STAFF_LAST>60000)return;
+    try{await sb.rpc('staff_beat',{p_secs:30})}catch(e){}
+  },30000);
+  setInterval(()=>{if(S.staff)sb.rpc('staff_tick').catch(()=>{})},600000);
+}
+/* ---------- utilitaires d'affichage ---------- */
+const stBar=(label,v,need,unit)=>{const p=Math.max(0,Math.min(100,need?v/need*100:0));return `<div class="pgbar"><div class="pgl"><span>${esc(label)}</span><b>${typeof v==='number'?Math.round(v*10)/10:v}${unit?' '+unit:''} / ${need}${unit?' '+unit:''}</b></div><div class="pgt"><i style="width:${p}%" class="${p>=100?'ok':''}"></i></div></div>`};
+const stRing=(label,v,need)=>{const p=Math.max(0,Math.min(1,need?v/need:0)),R=26,C=2*Math.PI*R;return `<div class="pgring"><svg width="68" height="68" viewBox="0 0 68 68"><circle cx="34" cy="34" r="${R}" class="rb"/><circle cx="34" cy="34" r="${R}" class="rf ${p>=1?'ok':''}" stroke-dasharray="${C}" stroke-dashoffset="${C*(1-p)}" transform="rotate(-90 34 34)"/><text x="34" y="38" text-anchor="middle">${Math.round(p*100)}%</text></svg><span>${esc(label)}</span></div>`};
+const stLeft=d=>{if(!d)return '';const s=Math.max(0,(new Date(d)-Date.now())/1000);const j=Math.floor(s/86400),h=Math.floor(s%86400/3600),mn=Math.floor(s%3600/60);return j?`${j} j ${h} h`:`${h} h ${mn} min`};
+const stWords=t=>(String(t||'').trim().match(/\S+/g)||[]).length;
+/* ---------- panneau ---------- */
+devStaff=async function(){
+  const r=RK();
+  const tabs=[['p','Progression',1],['d','Détections Ciffron',1],['b','Bots',2],['j','Journaux',1],['u','Bannissements',2],['k','Jetons',2],['i','Adresses IP',3],['e','Exceptions Ciffron',3],['r','Demandes',3],['t','Équipe',3]].filter(t=>r>=t[2]);
+  const m=modal(`<h3>Administration <span class="rbadge r-${esc(S.staff)}">${esc(ROLES[S.staff]||'')}</span></h3><div class="row" id="stT" style="flex-wrap:wrap">${tabs.map(t=>`<button class="ghost lite" data-t="${t[0]}">${t[1]}</button>`).join('')}</div><div id="stC" class="devtab"></div><div class="row end"><button class="ghost" data-x>Fermer</button></div>`,true);
+  m.classList.add('devmodal');
+  const T={p:stProgress,d:stDetections,b:stBots,u:stBans,e:stExc,j:stLogs,k:stTokens,i:stIps,r:stReqs,t:stTeam};
+  const show=async t=>{$$('#stT [data-t]',m).forEach(b=>b.classList.toggle('on',b.dataset.t===t));const c=$('#stC',m);c.innerHTML='<p class="muted">Chargement…</p>';try{await T[t](m,c)}catch(e){c.innerHTML='<p class="muted">'+esc(errMsg(e))+'</p>'}};
+  $('#stT',m).onclick=e=>{const t=e.target.dataset&&e.target.dataset.t;if(t)show(t)};
+  m._show=show;show('p');
+};
+stSource=async function(bot,flagged){
+  const r=RK();let j=null;
+  if(r>=2||!flagged){j=prompt('Justification (15 caractères minimum, journalisée)');if(!j)return}
+  const {data,error}=await sb.rpc('staff_bot_source',{p_bot:bot,p_justification:j});if(error)return toast(error.message);
+  const prot=new Set((data.protected||[]).map(x=>x.hash));
+  const m=modal(`<h3>${esc(data.bot)} — ${data.window?'lignes signalées':'répertoire'}</h3>${data.window?'<p class="muted">Seules les 6 lignes avant et après chaque ligne signalée sont visibles.</p>':''}${(data.files||[]).map(f=>`<div class="dev-srcf"><b>${esc(f.path)}</b> <span class="muted">${fmtSz(f.size)}</span>${f.content===null?'<div class="muted">binaire</div>':`<div class="dev-src">${f.content.split(/\r?\n/).map((l,i)=>{if(data.window&&l==='')return '';const p=prot.has(Ciffron.lineHash(f.path,l));const bad=Ciffron.blocking(Ciffron.scanFile(f.path,l,prot)).length;return `<div class="${p?'pl-prot':bad?'pl-bad':''}" ${p?'title="protégé"':''}><i>${i+1}</i>${esc(l)||' '}</div>`}).join('')}</div>`}</div>`).join('')}<div class="row end"><button class="ghost" data-x>Fermer</button></div>`,true);
+  m.classList.add('devmodal');
+};
+stLogs=async function(m,box){
+  const {data,error}=await sb.rpc('staff_logs',{p_limit:300});if(error)throw error;
+  sb.rpc('staff_note_journal').catch(()=>{});
+  box.innerHTML=`<div class="dev-log">${(data||[]).map(l=>`<div><span class="muted">${fmtDt(l.created_at)}</span> <b>${esc(l.action)}</b> ${esc(l.target||'')} <span class="tag">@${esc(l.staff_name||'?')}</span> <span class="muted">${esc(JSON.stringify(l.detail||{}).slice(0,200))}</span></div>`).join('')}</div>`;
+};
+stBans=async function(m,box){
+  const r=RK();const {data,error}=await sb.rpc('staff_ban_list');if(error)throw error;
+  box.innerHTML=`<div class="row"><input id="sbU" placeholder="@utilisateur" class="grow">${r>=3?'<input id="sbI" placeholder="IP (facultatif)" class="grow">':''}</div>
+    <div class="row"><input id="sbS" type="number" min="0" placeholder="Durée en secondes (0 = infinie)" class="grow"><input id="sbR" placeholder="Raison" class="grow"></div>
+    <div class="row end">${r>=3?'<button class="ghost lite" id="sbIps">Bannir toutes ses IP</button>':''}<button id="sbGo">Bannir</button></div>
+    <label>Liste</label>${(data||[]).map(b=>`<div class="row" style="padding:4px 0"><span class="grow ${b.active?'':'muted'}">${b.user?'@'+esc(b.user):''} ${b.ip_ban?(b.ip?esc(b.ip):'adresse IP'):''} <span class="muted">${b.until?'jusqu’au '+fmtDt(b.until):'définitif'} · ${esc(b.reason||'')} · par @${esc(b.by||'?')}</span></span>${b.active&&(r>=3||!b.ip_ban)?`<button class="ghost lite" data-u="${b.id}">Débannir</button>`:''}</div>`).join('')}`;
+  const go=async fn=>{const {error}=await fn;if(error)return toast(error.message);toast('Fait');stBans(m,box)};
+  $('#sbGo',box).onclick=()=>go(sb.rpc('staff_ban',{p_username:$('#sbU',box).value||null,p_ip:r>=3?($('#sbI',box).value||null):null,p_secs:+$('#sbS',box).value||0,p_reason:$('#sbR',box).value}));
+  const bi=$('#sbIps',box);if(bi)bi.onclick=()=>go(sb.rpc('staff_ban_user_ips',{p_username:$('#sbU',box).value,p_secs:+$('#sbS',box).value||0,p_reason:$('#sbR',box).value}));
+  box.onclick=e=>{const u=e.target.dataset&&e.target.dataset.u;if(u)go(sb.rpc('staff_unban',{p_id:+u}))};
+};
+async function stIps(m,box){
+  box.innerHTML=`<div class="row"><input id="ipU" placeholder="@utilisateur" class="grow"><button id="ipGo">Voir ses adresses IP</button></div><div id="ipL"></div>`;
+  $('#ipGo',box).onclick=async()=>{const {data,error}=await sb.rpc('staff_user_ips',{p_username:$('#ipU',box).value});if(error)return toast(error.message);
+    $('#ipL',box).innerHTML=(data||[]).map(x=>`<div class="row" style="padding:3px 0"><b class="grow">${esc(x.ip)} ${x.signup?'<span class="tag">inscription</span>':''}</b><span class="muted">${fmtDt(x.first)} → ${fmtDt(x.last)}</span></div>`).join('')||'<p class="muted">Aucune adresse enregistrée.</p>'};
+}
+/* ---------- progression ---------- */
+async function stProgress(m,box){
+  const {data:p,error}=await sb.rpc('staff_progress');if(error)throw error;
+  const w=p.week||{},r=p.rank;let h='';
+  h+=`<div class="pgtop"><div><b>${esc(ROLES[p.role])}</b><div class="muted">depuis le ${fmtDt(p.since).split(' ')[0]}</div></div><div class="pgwarn ${p.warnings?'w':''}">Avertissements : <b>${p.warnings}</b> / ${p.max_warnings}</div></div>`;
+  if(p.deadline)h+=`<div class="pgalert">${p.deadline_kind==='grad'?'Délai pour devenir administrateur : ':'Il vous reste pour remplir vos conditions : '}<b>${stLeft(p.deadline)}</b>${p.deficit&&p.deadline_kind==='weekly'?`<div class="muted">À faire : ${p.deficit.secs>0?Math.ceil(p.deficit.secs/60)+' min d’activité · ':''}${p.deficit.journals>0?'consulter les journaux · ':''}${p.deficit.quiz>0?'réussir le mini-test':''}</div>`:''}</div>`;
+  if(r<4){
+    h+=`<label>Cette semaine</label><div class="pgrings">${stRing('Activité',w.mins||0,w.need_mins||1)}${stRing('Journaux',w.journals||0,w.need_journals||1)}${w.need_quiz?stRing('Mini-test',w.quiz?1:0,1):''}</div>
+      ${stBar('Activité réelle',w.mins||0,w.need_mins,'min')}${stBar('Journaux consultés (1 par jour)',w.journals||0,w.need_journals)}${w.need_quiz?`<div class="pgbar"><div class="pgl"><span>Mini-test hebdomadaire (3/5)</span><b>${w.quiz?'réussi':'à faire'}</b></div></div>`:''}`;
+    if(r===3)h+=`<div class="muted">Demandes en attente depuis plus de 7 jours : <b>${w.stale_requests||0}</b></div>`;
+    const risk=!w.ok&&p.warnings>=p.max_warnings-1;
+    h+=`<div class="${w.ok?'pgok':risk?'pgalert':'muted'}" style="margin:8px 0">${w.ok?'Exigences de la semaine remplies.':risk?'Vous serez rétrogradé si ces exigences ne sont pas remplies avant dimanche soir.':'Exigences de la semaine non encore remplies : un avertissement sera donné dimanche soir.'}</div>`;
+    if(w.need_quiz&&!w.quiz)h+=`<div class="row end"><button id="pgWq">Passer le mini-test</button></div>`;
+  }
+  if(r===1&&p.grad){const g=p.grad;
+    h+=`<label>Passage au rang d’administrateur</label><div class="pgrings">${stRing('Parrainages',g.refs,g.need_refs)}${stRing('Temps sur le site',g.secs/60,60)}${stRing('Connexions',g.streak7,g.need_streak7)}${stRing('Activité 30 j',g.streak30,g.need_streak30)}</div>
+      ${stBar('Parrainages approuvés',g.refs,g.need_refs)}${stBar('Temps total sur le site',Math.round(g.secs/60),60,'min')}${stBar('Jours de connexion consécutifs',g.streak7,g.need_streak7,'j')}${stBar('Jours consécutifs avec 5 min d’activité',g.streak30,g.need_streak30,'j')}
+      <div class="pgbar"><div class="pgl"><span>Compte de plus de 2 semaines</span><b>${g.age_ok?'oui':'non'}</b></div></div><div class="pgbar"><div class="pgl"><span>Test de connaissances (12/15)</span><b>${g.quiz?'réussi':'à passer'}</b></div></div>
+      <div class="muted">Délai maximal : ${stLeft(p.grad_deadline)}</div>
+      <div class="row end">${g.ready&&!g.quiz?'<button id="pgGq">Passer le test (15 questions)</button>':''}${g.quiz&&!p.pending_request?'<button id="pgReq">Envoyer ma demande au chef</button>':''}</div>`;}
+  if(r===2&&p.chief){const c=p.chief;
+    h+=`<label>Passage au rang de chef</label>${stBar('Ancienneté',c.days,c.need_days,'j')}${stBar('Parrainages approuvés',c.refs,c.need_refs)}<div class="row end">${!p.pending_request&&c.days>=c.need_days&&c.refs>=c.need_refs?'<button id="pgChief">Rédiger ma demande</button>':''}</div>`;}
+  if(p.pending_request)h+=`<div class="pgalert">Demande n° ${p.pending_request.id} envoyée le ${fmtDt(p.pending_request.at)} : en attente de décision.</div>`;
+  box.innerHTML=h;
+  const b=id=>$(id,box);
+  if(b('#pgWq'))b('#pgWq').onclick=()=>quizRun('weekly',()=>stProgress(m,box));
+  if(b('#pgGq'))b('#pgGq').onclick=()=>quizRun('grad',()=>stProgress(m,box));
+  if(b('#pgReq'))b('#pgReq').onclick=async()=>{const {error}=await sb.rpc('staff_request_create',{p_target:'admin',p_payload:{}});if(error)return toast(error.message);toast('Demande envoyée');stProgress(m,box)};
+  if(b('#pgChief'))b('#pgChief').onclick=()=>chiefForm(()=>stProgress(m,box));
+}
+function chiefForm(done){
+  const m=modal(`<h3>Demande de passage chef des administrateurs</h3>
+    <label>Justification (500 mots minimum, rédigée par vous sans IA) <span class="muted" id="cfJc">0 mot</span></label><textarea id="cfJ" rows="8"></textarea>
+    <label>Les pouvoirs d’un administrateur et ceux d’un chef <span class="muted" id="cfPc">0 mot</span></label><textarea id="cfP" rows="4"></textarea>
+    <label>Explication du langage CMM (60 mots minimum) <span class="muted" id="cfCc">0 mot</span></label><textarea id="cfC" rows="4"></textarea>
+    <label class="row"><input type="checkbox" id="cfO"> <span>Je jure de ne jamais nuire à Communicer! ni à ses utilisateurs et de ne pas abuser des pouvoirs qui me seront confiés.</span></label>
+    <p class="muted">Un texte dont 1 % est détecté comme généré par une IA entraîne le licenciement immédiat.</p>
+    <div class="row end"><button class="ghost" data-x>Annuler</button><button id="cfGo">Envoyer</button></div>`,true);
+  const cnt=(a,b)=>{$(a,m).oninput=()=>{$(b,m).textContent=stWords($(a,m).value)+' mots'}};cnt('#cfJ','#cfJc');cnt('#cfP','#cfPc');cnt('#cfC','#cfCc');
+  $('#cfGo',m).onclick=async()=>{const {error}=await sb.rpc('staff_request_create',{p_target:'chief',p_payload:{justification:$('#cfJ',m).value,powers:$('#cfP',m).value,cmm:$('#cfC',m).value,oath:$('#cfO',m).checked}});if(error)return toast(error.message);toast('Demande envoyée');m.close();done&&done()};
+}
+/* ---------- demandes ---------- */
+async function stReqs(m,box){
+  const {data,error}=await sb.rpc('staff_requests_list');if(error)throw error;const r=RK();
+  box.innerHTML=(data||[]).map(q=>`<div class="stcard"><div class="row"><b class="grow">@${esc(q.user)} → ${q.target==='chief'?'chef des administrateurs':'administrateur'}</b><span class="muted">n° ${q.id} · ${fmtDt(q.created_at)} · ${q.status==='pending'?'en attente depuis '+q.days+' j':q.status==='accepted'?'acceptée':'refusée'}</span></div>
+    ${q.criteria?`<div class="muted">Parrainages ${q.criteria.refs}/10 · connexions ${q.criteria.streak7}/7 · activité ${q.criteria.streak30}/30 j · test ${q.criteria.quiz?'réussi':'non'}</div>`:''}
+    ${q.payload?`<details><summary>Lire la demande</summary><div class="bnotes"><b>Justification</b><br>${esc(q.payload.justification||'').replace(/\n/g,'<br>')}<br><br><b>Pouvoirs</b><br>${esc(q.payload.powers||'').replace(/\n/g,'<br>')}<br><br><b>CMM</b><br>${esc(q.payload.cmm||'').replace(/\n/g,'<br>')}</div></details>`:''}
+    ${q.note?`<div class="muted">Note : ${esc(q.note)}</div>`:''}
+    ${q.status==='pending'&&q.payload!==undefined&&(q.target==='admin'?r>=3:r>=4)?`<div class="row" style="flex-wrap:wrap"><button class="lite" data-a="ok" data-i="${q.id}">Accepter</button><button class="ghost lite" data-a="no" data-i="${q.id}">Refuser</button>${q.target==='chief'&&r>=4?`<button class="danger lite" data-a="ai" data-i="${q.id}">IA détectée (licencier)</button>`:''}</div>`:''}</div>`).join('')||'<p class="muted">Aucune demande.</p>';
+  box.onclick=async e=>{const a=e.target.dataset&&e.target.dataset.a;if(!a)return;const id=+e.target.dataset.i;let note=null;
+    if(a!=='ok'){note=prompt(a==='ai'?'Note (facultative)':'Raison du refus');if(a==='no'&&!note)return}
+    const {error}=await sb.rpc('staff_request_decide',{p_id:id,p_accept:a==='ok',p_note:note,p_ai:a==='ai'});if(error)return toast(error.message);toast('Décision enregistrée');stReqs(m,box)};
+}
+/* ---------- équipe ---------- */
+async function stTeam(m,box){
+  const {data,error}=await sb.rpc('staff_overview');if(error)throw error;const r=RK();
+  const btn=(a,t,c)=>`<button class="${c||'ghost'} lite" data-a="${a}">${t}</button>`;
+  box.innerHTML=`<div class="row"><input id="tmU" placeholder="@utilisateur" class="grow"><input id="tmR" placeholder="Raison (avertissement, licenciement)" class="grow"></div>
+    <div class="row" style="flex-wrap:wrap">${btn('student','Nommer élève')}${btn('admin','Élève → administrateur')}${r>=4?btn('chief','Administrateur → chef')+btn('derank','Rétrograder')+btn('warn','Avertir')+btn('unwarn','Retirer un avertissement')+btn('fire','Licencier','danger'):btn('cede','Céder ma place de chef')}</div>
+    <label>Équipe</label>${(data||[]).map(s=>{const w=s.week||{};return `<div class="stcard"><div class="row"><b class="grow">@${esc(s.user)} <span class="rbadge r-${esc(s.role)}">${esc(ROLES[s.role])}</span></b><span class="muted">avert. ${s.warnings}${s.deadline?' · délai '+stLeft(s.deadline):''}</span></div>${w.rank<4?`<div class="muted">Semaine : ${w.mins} / ${w.need_mins} min · journaux ${w.journals} / ${w.need_journals}${w.need_quiz?' · mini-test '+(w.quiz?'réussi':'à faire'):''}</div>`:''}</div>`}).join('')}`;
+  box.onclick=async e=>{const a=e.target.dataset&&e.target.dataset.a;if(!a)return;const u=$('#tmU',box).value,why=$('#tmR',box).value;
+    if(['derank','fire','cede'].includes(a)&&!confirm('Confirmer cette action ?'))return;
+    const call={student:['staff_rank_user',{p_username:u,p_role:'student'}],admin:['staff_rank_user',{p_username:u,p_role:'admin'}],chief:['staff_rank_user',{p_username:u,p_role:'chief'}],derank:['staff_derank',{p_username:u}],warn:['staff_warn',{p_username:u,p_reason:why,p_remove:false}],unwarn:['staff_warn',{p_username:u,p_reason:why,p_remove:true}],fire:['staff_fire',{p_username:u,p_reason:why}],cede:['staff_cede',{p_username:u}]}[a];
+    const {error}=await sb.rpc(call[0],call[1]);if(error)return toast(error.message);toast('Fait');staffRolesLoad(true);stTeam(m,box)};
+}
+/* ---------- tests avec anti-triche ---------- */
+async function quizRun(kind,done){
+  const rules=['Ne fermez pas le test et ne quittez pas cette page ou cet onglet.','N’ouvrez aucune autre page de Communicer!, aucune extension, aucune application en superposition (capture, vidéo).','N’ouvrez pas la console. N’utilisez pas Ctrl+F, Ctrl+C, Ctrl+V, Ctrl+A et ne sélectionnez pas de texte.',kind==='grad'?'Chaque réponse fait au moins 40 caractères et est justifiée.':'Une seule tentative par jour ; 3 bonnes réponses sur 5 sont requises.','Toute violation entraîne un licenciement automatique et l’inscription sur liste noire.'];
+  if(!confirm('AVERTISSEMENT AVANT LE TEST\n\n- '+rules.join('\n- ')+'\n\nCommencer maintenant ?'))return;
+  const {data:q,error}=await sb.rpc('staff_quiz_start',{p_kind:kind});if(error)return toast(error.message);
+  const ov=document.createElement('div');ov.className='quizov';
+  ov.innerHTML=`<div class="quizbox"><h3>${kind==='grad'?'Test de connaissances — 12 bonnes réponses sur 15':'Mini-test hebdomadaire — 3 sur 5'}</h3><div id="qzBody"></div><div class="row end"><button id="qzGo" disabled>Envoyer</button></div></div>`;
+  document.body.appendChild(ov);
+  const body=$('#qzBody',ov);let over=false;const go=$('#qzGo',ov);
+  if(kind==='grad'){
+    body.innerHTML=q.questions.map((x,i)=>`<div class="qq"><b>${i+1}. ${esc(x.q)}</b><textarea data-a="${i}" rows="2" placeholder="Réponse (40 caractères minimum)"></textarea><input data-j="${i}" placeholder="Justification"><span class="muted" data-c="${i}">0/40</span></div>`).join('');
+    const chk=()=>{go.disabled=!q.questions.every((x,i)=>$(`[data-a="${i}"]`,ov).value.trim().length>=40&&$(`[data-j="${i}"]`,ov).value.trim().length>=15)};
+    body.oninput=e=>{const i=e.target.dataset.a;if(i!=null)$(`[data-c="${i}"]`,ov).textContent=e.target.value.trim().length+'/40';chk()};
+  }else{
+    body.innerHTML=q.questions.map((x,i)=>`<div class="qq"><b>${i+1}. ${esc(x.q)}</b>${x.opts.map((o,k)=>`<label class="row"><input type="radio" name="q${i}" value="${k}"> <span>${esc(o)}</span></label>`).join('')}</div>`).join('');
+    body.onchange=()=>{go.disabled=!q.questions.every((x,i)=>$(`input[name="q${i}"]:checked`,ov))};
+  }
+  const bc=('BroadcastChannel' in window)?new BroadcastChannel('communicer-quiz'):null;
+  const L=[];const on=(t,ev,f,o)=>{t.addEventListener(ev,f,o);L.push(()=>t.removeEventListener(ev,ev&&f,o))};
+  let busy=false;
+  const end=async(res,msg)=>{if(over)return;over=true;L.forEach(f=>f());clearInterval(hb);clearInterval(wd);if(bc)bc.close();ov.remove();
+    if(msg)alert(msg);await staffRefresh();done&&done()};
+  const viol=async why=>{if(over||busy)return;over=true;L.forEach(f=>f());clearInterval(hb);clearInterval(wd);if(bc)bc.close();try{await sb.rpc('staff_quiz_violation',{p_id:q.id,p_reason:why})}catch(e){}ov.remove();alert('Test interrompu : '+why+'.\nVos pouvoirs ont été retirés.');await staffRefresh();done&&done()};
+  on(document,'visibilitychange',()=>{if(document.hidden)viol('page quittée')});
+  on(window,'blur',()=>{setTimeout(()=>{if(!over&&!busy&&!document.hasFocus())viol('perte du focus (autre fenêtre, extension ou application)')},250)});
+  on(window,'pagehide',()=>{if(!over&&!busy)try{navigator.sendBeacon&&0;sb.rpc('staff_quiz_violation',{p_id:q.id,p_reason:'page fermée'})}catch(e){}});
+  on(document,'keydown',e=>{const k=(e.key||'').toLowerCase();if(e.key==='F12'||(e.ctrlKey||e.metaKey)&&['f','c','v','a','x','u','s','p'].includes(k)||(e.ctrlKey||e.metaKey)&&e.shiftKey&&['i','j','c'].includes(k)){e.preventDefault();viol('raccourci interdit')}},true);
+  ['copy','paste','cut','dragstart','contextmenu'].forEach(ev=>on(document,ev,e=>{e.preventDefault();if(ev!=='dragstart'&&ev!=='contextmenu')viol('copier-coller')}));
+  on(document,'selectionchange',()=>{const s=String(getSelection()||'');const a=document.activeElement;if(s&&!(a&&/TEXTAREA|INPUT/.test(a.tagName)))viol('sélection de texte')});
+  if(bc){bc.onmessage=e=>{if(e.data==='hello')viol('autre page de Communicer! ouverte')};bc.postMessage('hello')}
+  const wd=setInterval(()=>{if(over)return;if(!document.hasFocus())return viol('perte du focus');if(outerWidth-innerWidth>200||outerHeight-innerHeight>260)viol('console ouverte')},1000);
+  const hb=setInterval(async()=>{try{const {data}=await sb.rpc('staff_quiz_beat',{p_id:q.id});if(data&&!data.open&&!over)end(null,'Test terminé.')}catch(e){}},15000);
+  go.onclick=async()=>{busy=true;go.disabled=true;
+    const ans=kind==='grad'?q.questions.map((x,i)=>({a:$(`[data-a="${i}"]`,ov).value.trim(),j:$(`[data-j="${i}"]`,ov).value.trim()})):q.questions.map((x,i)=>+$(`input[name="q${i}"]:checked`,ov).value);
+    const {data,error}=await sb.rpc('staff_quiz_submit',{p_id:q.id,p_answers:ans});busy=false;
+    if(error){go.disabled=false;return toast(error.message)}
+    const ok=data.status==='passed';
+    end(null,data.status==='violation'?'Test invalidé : '+(data.reason||''):ok?`Test réussi : ${data.score}/${data.total}.`:kind==='grad'?`Test échoué : ${data.score}/${data.total}. Vos pouvoirs ont été retirés.`:`Mini-test échoué : ${data.score}/${data.total}. Un avertissement a été donné.`)};
+}
+async function staffRefresh(){try{const {data}=await sb.rpc('dev_info');if(data)S.staff=data.staff||null;S.rank=RK()}catch(e){}}
+/* ---------- commandes adm/ (groupe Administration, tous les groupes) ---------- */
+const _brStaff=botRoute;
+botRoute=async function(c,text,x){
+  const t=String(text||'').trim();
+  if(!/^adm\//i.test(t))return _brStaff.apply(this,arguments);
+  if(RK()<2)return;
+  const [cmd,...a]=t.slice(4).split(/\s+/);const show=(s)=>{const m=modal(`<h3>AdminBOT</h3><pre class="dev-code" style="white-space:pre-wrap">${esc(s)}</pre><div class="row end"><button class="ghost" data-x>Fermer</button></div>`,true)};
+  try{
+    if(x&&x.msgId)try{await sb.rpc('msg_delete_all',{p_id:x.msgId})}catch(e){}
+    const rpc=async(n,p)=>{const {data,error}=await sb.rpc(n,p);if(error)throw error;return data};
+    const un=s=>String(s||'').replace(/^@/,'');
+    if(!cmd||cmd==='aide')return show('adm/groupes [texte]\nadm/info @utilisateur\nadm/ban @utilisateur secondes raison\nadm/deban numéro\nadm/retirer numéro-du-groupe @utilisateur\nadm/vider numéro-du-groupe');
+    if(cmd==='groupes'){const l=await rpc('staff_group_list',{p_q:a.join(' ')||null});return show(l.map(g=>`n° ${g.num} · ${g.name} · ${g.members} membres`).join('\n')||'Aucun groupe')}
+    if(cmd==='info'){const i=await rpc('staff_who',{p_username:un(a[0])});return show(`@${i.user}\nRôle : ${i.role?ROLES[i.role]:'aucun'}\nAvertissements : ${i.warnings??0}\nBanni : ${i.banned&&i.banned.banned?'oui':'non'}\nInscrit le ${fmtDt(i.created_at)}`)}
+    if(cmd==='ban'){await rpc('staff_ban',{p_username:un(a[0]),p_ip:null,p_secs:+a[1]||0,p_reason:a.slice(2).join(' ')});return show('Utilisateur banni')}
+    if(cmd==='deban'){await rpc('staff_unban',{p_id:+a[0]});return show('Bannissement levé')}
+    if(cmd==='retirer')return show(await rpc('staff_group_kick',{p_num:+a[0],p_username:un(a[1])}));
+    if(cmd==='vider')return show(await rpc('staff_group_clear',{p_num:+a[0]}));
+    show('Commande inconnue. Tapez adm/aide');
+  }catch(e){show('Erreur : '+errMsg(e))}
+};
+
+/* ================= Patch 10 : jetons, boutique, quêtes, parrainage, cadres, badges, emojis premium ================= */
+const FRAME_NAMES={frame_or:'or',frame_arc:'arc',frame_feu:'feu',frame_neon:'neon',frame_glace:'glace'};
+const BADGE_SVG={badge_etoile:['#f5b301','M12 2l3 7 7 .6-5.3 4.7 1.7 7.2L12 17.8 5.6 21.5l1.7-7.2L2 9.6 9 9z'],badge_flamme:['#f2622c','M12 2c1 4 5 6 5 11a5 5 0 0 1-10 0c0-2 1-3 2-4 0 2 1 3 2 3 0-4-1-7 1-10z'],badge_couronne:['#e0a800','M3 18l-1-11 5 4 5-7 5 7 5-4-1 11z'],badge_feuille:['#3aa655','M5 19C5 9 11 4 20 4c0 9-5 15-15 15zM5 19l8-8'],badge_eclair:['#2f8cf0','M13 2L4 14h6l-1 8 9-12h-6z'],badge_gemme:['#a24bd6','M6 3h12l4 6-10 12L2 9z'],badge_fondateur:['#d94452','M12 2l2.4 5 5.6.8-4 4 1 5.6-5-2.7-5 2.7 1-5.6-4-4 5.6-.8z']};
+const badgeSvg=(code,sz)=>{const b=BADGE_SVG[code];if(!b)return '';return `<svg class="bdg" width="${sz||16}" height="${sz||16}" viewBox="0 0 24 24" fill="${b[0]}" stroke="${b[0]}" stroke-linejoin="round" aria-label="${esc(code)}"><path d="${b[1]}" fill-opacity=".9"/></svg>`};
+/* emojis premium : dessinés en SVG, jamais du texte copiable */
+function peSvg(code,sz){
+  sz=sz||22;const k=code[3],n=+code.slice(4)-1;
+  if(k==='v'){const hue=(n*29+20)%360,eye=n%4,mouth=Math.floor(n/4)%3;
+    const eyes=[`<circle cx="9" cy="10" r="1.6"/><circle cx="15" cy="10" r="1.6"/>`,`<path d="M7.5 10.5q1.5-2 3 0M13.5 10.5q1.5-2 3 0" fill="none" stroke="#2a2a2a" stroke-width="1.5" stroke-linecap="round"/>`,`<circle cx="9" cy="10" r="2.3" fill="#fff" stroke="#2a2a2a"/><circle cx="15" cy="10" r="2.3" fill="#fff" stroke="#2a2a2a"/><circle cx="9" cy="10" r="1"/><circle cx="15" cy="10" r="1"/>`,`<circle cx="9" cy="10" r="1.6"/><path d="M13.5 10h3" stroke="#2a2a2a" stroke-width="1.6" stroke-linecap="round"/>`][eye];
+    const mo=[`<path d="M8 14.5q4 4 8 0" fill="none" stroke="#2a2a2a" stroke-width="1.6" stroke-linecap="round"/>`,`<ellipse cx="12" cy="16" rx="3" ry="2.4" fill="#7a1f1f"/>`,`<path d="M9 16h6" stroke="#2a2a2a" stroke-width="1.6" stroke-linecap="round"/>`][mouth];
+    return `<svg class="pe" data-pe="${code}" width="${sz}" height="${sz}" viewBox="0 0 24 24"><defs><radialGradient id="g${code}" cx="35%" cy="30%"><stop offset="0" stop-color="hsl(${hue} 95% 78%)"/><stop offset="1" stop-color="hsl(${hue} 75% 52%)"/></radialGradient></defs><circle cx="12" cy="12" r="10.5" fill="url(#g${code})" stroke="hsl(${hue} 60% 38%)"/><g fill="#2a2a2a">${eyes}</g>${mo}</svg>`}
+  const hue=[330,45,280,200][n%4],petals=[5,6,8][Math.floor(n/4)%3];let p='';
+  for(let i=0;i<petals;i++){const a=i*360/petals;p+=`<ellipse cx="12" cy="6.2" rx="2.6" ry="4.2" transform="rotate(${a} 12 12)" fill="hsl(${hue} 85% 62%)" stroke="hsl(${hue} 60% 40%)" stroke-width=".6"/>`}
+  return `<svg class="pe" data-pe="${code}" width="${sz}" height="${sz}" viewBox="0 0 24 24">${p}<circle cx="12" cy="12" r="3.2" fill="#ffd54a" stroke="#c99a00" stroke-width=".6"/></svg>`;
+}
+const _ft=fmtText;
+fmtText=function(t){
+  let h=_ft.apply(this,arguments);
+  if(h.indexOf(':pe_')<0)return h;
+  const big=!/[^\s]/.test(String(t).replace(/:pe_[vn]\d+:/g,''))&&(String(t).match(/:pe_[vn]\d+:/g)||[]).length<=3;
+  return h.replace(/:(pe_[vn]\d{1,2}):/g,(m,c)=>peSvg(c,big?44:22));
+};
+document.addEventListener('copy',e=>{
+  const sel=getSelection();if(!sel||sel.isCollapsed)return;
+  const f=sel.getRangeAt(0).cloneContents();if(!f.querySelector||!f.querySelector('.pe'))return;
+  f.querySelectorAll('.pe').forEach(x=>x.remove());e.clipboardData.setData('text/plain',f.textContent);e.preventDefault();
+},true);
+document.addEventListener('dragstart',e=>{if(e.target.closest&&e.target.closest('.pe'))e.preventDefault()});
+document.addEventListener('contextmenu',e=>{if(e.target.closest&&e.target.closest('.pe'))e.preventDefault()},true);
+/* sélecteur : onglet Premium */
+let PE_OWNED=[];
+async function peLoad(){try{const {data}=await sb.rpc('pe_owned');PE_OWNED=data||[];if(PE_OWNED.length)EMOJIS.Premium='';else delete EMOJIS.Premium}catch(e){}}
+const _rp=renderPicker;
+renderPicker=function(cat){
+  _rp.apply(this,arguments);
+  if(cat==='Premium'){const g=$('#picker .pg');if(g)g.innerHTML=PE_OWNED.map(c=>`<button data-e=":${c}:">${peSvg(c,26)}</button>`).join('')}
+};
+/* cadres et badges */
+const COS={};let cosBusy=0,cosTimer=null;
+async function cosApply(){
+  const els=[...document.querySelectorAll('.av[data-un]')];const need=[...new Set(els.map(x=>x.dataset.un).filter(u=>u&&!(u in COS)))];
+  if(need.length){try{const {data}=await sb.rpc('cosmetics_of',{p_users:need.slice(0,60)});need.forEach(u=>COS[u]=(data&&data[u])||null)}catch(e){need.forEach(u=>COS[u]=null)}}
+  els.forEach(x=>{const c=COS[x.dataset.un];const f=c&&c.frame?'fr-'+FRAME_NAMES[c.frame]:'';if(x.dataset.fr!==f){[...x.classList].filter(k=>k.startsWith('fr-')).forEach(k=>x.classList.remove(k));if(f)x.classList.add(f);x.dataset.fr=f}});
+}
+new MutationObserver(()=>{clearTimeout(cosTimer);cosTimer=setTimeout(cosApply,400)}).observe(document.body,{childList:true,subtree:true});
+const _opShop=openProfile;
+openProfile=async function(un){
+  const r=await _opShop.apply(this,arguments);
+  try{const u=String(un||'').toLowerCase().replace(/^@/,'');delete COS[u];const {data}=await sb.rpc('cosmetics_of',{p_users:[u]});const c=data&&data[u];
+    const hd=$('.pf-modal .pf-hd .grow h3');
+    if(c&&c.badge&&hd&&!hd.parentNode.querySelector('.bdg'))hd.insertAdjacentHTML('afterend',badgeSvg(c.badge,18));
+    const pa=$('.pf-modal .pf-av .av');if(c&&c.frame&&pa)pa.classList.add('fr-'+FRAME_NAMES[c.frame]);}catch(e){}
+  return r;
+};
+/* ---------- boutique ---------- */
+const _ds=devSettings;
+devSettings=function(m){
+  _ds.apply(this,arguments);
+  const cr=m.querySelector('.credits');if(!cr||m.querySelector('#sShop'))return;
+  const d=document.createElement('div');d.className='devsec';d.innerHTML=`<label>Jetons</label><div class="row"><span class="grow" id="sTok">Boutique, quêtes et parrainage</span><button class="ghost" id="sShop">Ouvrir</button></div>`;
+  cr.before(d);$('#sShop',m).onclick=()=>{m.close();shopOpen()};
+};
+async function shopOpen(tab){
+  const m=modal(`<h3>Jetons <span class="tokchip" id="shBal">…</span></h3><div class="row" id="shT" style="flex-wrap:wrap"><button class="ghost lite" data-t="s">Boutique</button><button class="ghost lite" data-t="q">Quêtes</button><button class="ghost lite" data-t="r">Parrainage</button><button class="ghost lite" data-t="h">Historique</button></div><div id="shC" class="devtab"></div><div class="row end"><button class="ghost" data-x>Fermer</button></div>`,true);
+  m.classList.add('devmodal');
+  const bal=b=>{$('#shBal',m).textContent=b+' jeton'+(b>1?'s':'')};
+  const T={s:shShop,q:shQuests,r:shRef,h:shHist};
+  const show=async t=>{$$('#shT [data-t]',m).forEach(b=>b.classList.toggle('on',b.dataset.t===t));const c=$('#shC',m);c.innerHTML='<p class="muted">Chargement…</p>';try{await T[t](c,bal)}catch(e){c.innerHTML='<p class="muted">'+esc(errMsg(e))+'</p>'}};
+  $('#shT',m).onclick=e=>{const t=e.target.dataset&&e.target.dataset.t;if(t)show(t)};
+  show(tab||'s');
+}
+const FRSAMPLE=n=>`<span class="av sm fr-${FRAME_NAMES[n]}" style="background:#667"><i style="font-style:normal">A</i></span>`;
+async function shShop(box,bal){
+  const {data,error}=await sb.rpc('shop_list');if(error)throw error;bal(data.balance);
+  const eq=data.equipped||{};const grp={frame:'Cadres de photo',badge:'Badges',pack:'Emojis premium',feature:'Fonctions'};
+  box.innerHTML=Object.keys(grp).map(k=>`<label>${grp[k]}</label>`+data.items.filter(i=>i.kind===k).map(i=>`<div class="shrow"><span class="shpv">${k==='frame'?FRSAMPLE(i.code):k==='badge'?badgeSvg(i.code,26):k==='pack'?data.emojis.filter(e=>e.pack===i.code).slice(0,4).map(e=>peSvg(e.code,20)).join(''):'<b>L</b>'}</span><span class="grow"><b>${esc(i.name)}</b><div class="muted">${esc(i.descr)}</div></span>
+    ${i.owned?(k==='frame'||k==='badge'?(eq[k]===i.code?`<button class="ghost lite" data-q="${k}" data-c="">Retirer</button>`:`<button class="lite" data-q="${k}" data-c="${i.code}">Équiper</button>`):'<span class="tag">possédé</span>'):i.price==null?'<span class="muted">Réservé</span>':`<button class="lite" data-b="${i.code}">${i.price} jetons</button>`}</div>`).join('')).join('');
+  box.onclick=async e=>{const b=e.target.dataset;if(!b)return;
+    if(b.b){if(!confirm('Acheter cet article ?'))return;const {error}=await sb.rpc('shop_buy',{p_code:b.b});if(error)return toast(error.message);toast('Achat effectué');await peLoad();return shShop(box,bal)}
+    if(b.q){const {error}=await sb.rpc('shop_equip',{p_slot:b.q,p_code:b.c||null});if(error)return toast(error.message);for(const u in COS)delete COS[u];cosApply();return shShop(box,bal)}};
+}
+async function shQuests(box,bal){
+  const {data,error}=await sb.rpc('quests_list');if(error)throw error;
+  const w=await sb.rpc('wallet_me');if(w.data)bal(w.data.balance);
+  box.innerHTML=['day','week'].map(p=>`<label>${p==='day'?'Quotidiennes':'Hebdomadaires'}</label>`+data.filter(q=>q.period===p).map(q=>`<div class="pgbar"><div class="pgl"><span>${esc(q.title)} <span class="muted">+${q.reward}</span></span><b>${q.value} / ${q.target}</b></div><div class="pgt"><i style="width:${q.value/q.target*100}%" class="${q.value>=q.target?'ok':''}"></i></div>${q.value>=q.target?(q.claimed?'<span class="tag">récupérée</span>':`<button class="lite" data-c="${q.code}">Récupérer</button>`):''}</div>`).join('')).join('');
+  box.onclick=async e=>{const c=e.target.dataset&&e.target.dataset.c;if(!c)return;const {error}=await sb.rpc('quest_claim',{p_code:c});if(error)return toast(error.message);toast('Jetons reçus');shQuests(box,bal)};
+}
+async function shRef(box,bal){
+  const {data:code,error}=await sb.rpc('referral_code_me');if(error)throw error;
+  const {data:w}=await sb.rpc('wallet_me');if(w)bal(w.balance);const url=LINKBASE()+'/ref?cd='+code;
+  box.innerHTML=`<p class="muted">Partagez ce lien : chaque personne qui s’inscrit, reste plus d’un jour et envoie 5 messages vous rapporte 10 jetons (5 pour elle).</p><div class="row"><input readonly class="grow" value="${esc(url)}"><button class="ghost lite" id="rfCp">Copier</button></div>
+    <p>Parrainages approuvés : <b>${w?w.refs:0}</b> · en attente : <b>${w?w.refs_pending:0}</b></p><label>J’ai un code de parrainage</label><div class="row"><input id="rfC" maxlength="5" placeholder="XXXXX" class="grow"><button id="rfGo">Valider</button></div>`;
+  $('#rfCp',box).onclick=()=>linkCopy(url);
+  $('#rfGo',box).onclick=async()=>{const {data,error}=await sb.rpc('referral_use',{p_code:$('#rfC',box).value.trim().toUpperCase()});if(error)return toast(error.message);toast('Parrainé par @'+data)};
+}
+async function shHist(box,bal){
+  const {data,error}=await sb.rpc('wallet_me');if(error)throw error;bal(data.balance);
+  box.innerHTML=(data.log||[]).map(l=>`<div class="row" style="padding:3px 0"><span class="grow">${esc(l.reason)}</span><b style="color:${l.delta>0?'#4a8':'var(--danger,#d44)'}">${l.delta>0?'+':''}${l.delta}</b><span class="muted">${fmtDt(l.at)}</span></div>`).join('')||'<p class="muted">Aucune opération.</p>';
+}
+/* lien de parrainage */
+async function goRef(cd){
+  const code=String(cd||'').toUpperCase();if(!/^[A-Z0-9]{5}$/.test(code))return toast('Lien invalide');
+  const m=modal(`<h3>Code de parrainage</h3><p>Utiliser le code <b>${esc(code)}</b> ? Vous recevrez 5 jetons une fois votre compte actif.</p><div class="row end"><button class="ghost" data-x>Annuler</button><button id="grGo">Utiliser</button></div>`);
+  $('#grGo',m).onclick=async()=>{const {data,error}=await sb.rpc('referral_use',{p_code:code});if(error)return toast(error.message);m.close();toast('Parrainé par @'+data)};
+}
+/* administration : jetons et articles */
+async function stTokens(m,box){
+  const {data:sh}=await sb.rpc('shop_list');const items=(sh&&sh.items)||[];
+  box.innerHTML=`<p class="muted">Réservé aux demandes d’indemnisation et aux erreurs ayant causé une perte de jetons. Chaque action est journalisée.</p>
+    <div class="row"><input id="tkU" placeholder="@utilisateur" class="grow"><button class="ghost lite" id="tkSee">Voir</button></div><div id="tkInfo" class="muted"></div>
+    <div class="row"><input id="tkN" type="number" placeholder="Montant (négatif pour retirer)" class="grow"><input id="tkR" placeholder="Raison" class="grow"><button id="tkGo">Appliquer</button></div>
+    <label>Articles</label><div class="row"><select id="tkI" class="grow">${items.map(i=>`<option value="${i.code}">${esc(i.name)}</option>`).join('')}</select><button class="ghost lite" id="tkGive">Donner</button><button class="ghost lite" id="tkTake">Retirer</button></div>`;
+  const U=()=>$('#tkU',box).value;
+  const see=async()=>{const {data,error}=await sb.rpc('admin_wallet',{p_username:U()});if(error)return toast(error.message);$('#tkInfo',box).textContent=`Solde : ${data.balance} · articles : ${(data.items||[]).join(', ')||'aucun'}`};
+  $('#tkSee',box).onclick=see;
+  $('#tkGo',box).onclick=async()=>{const {data,error}=await sb.rpc('admin_tokens',{p_username:U(),p_amount:+$('#tkN',box).value,p_reason:$('#tkR',box).value});if(error)return toast(error.message);toast('Nouveau solde : '+data);see()};
+  const it=give=>async()=>{const {error}=await sb.rpc('admin_item',{p_username:U(),p_code:$('#tkI',box).value,p_give:give});if(error)return toast(error.message);toast('Fait');see()};
+  $('#tkGive',box).onclick=it(true);$('#tkTake',box).onclick=it(false);
+}
+/* événements de quêtes */
+const _scl=startCallLive;startCallLive=function(){try{sb.rpc('quest_event',{p_kind:'call'})}catch(e){}return _scl.apply(this,arguments)};
+const _ss=startSession;startSession=function(){try{sb.rpc('quest_event',{p_kind:'game'})}catch(e){}return _ss.apply(this,arguments)};
+/* démarrage : jetons du jour, emojis premium, version Lite payante */
+(function(){let n=0;const t=setInterval(async()=>{
+  if(!(S.me&&S.me.id&&S.profile)){if(++n>240)clearInterval(t);return}
+  clearInterval(t);
+  try{const {data}=await sb.rpc('wallet_me');if(data&&data.daily)toast('+2 jetons : connexion du jour')}catch(e){}
+  peLoad();cosApply();
+  if(window.__LITE){try{const {data}=await sb.rpc('has_item',{p_code:'lite'});if(data===false)liteLock()}catch(e){}}
+},500)})();
+async function liteLock(){
+  const {data:sh}=await sb.rpc('shop_list');const it=((sh&&sh.items)||[]).find(i=>i.code==='lite');if(!it)return;
+  const ov=document.createElement('div');ov.className='quizov';
+  ov.innerHTML=`<div class="quizbox" style="text-align:center;padding-top:15vh"><h3>Communicer Lite</h3><p>La version économie d’énergie se débloque une fois pour ${it.price} jetons.</p><p>Votre solde : <b>${sh.balance}</b></p><div class="row" style="justify-content:center"><button id="llBuy" ${sh.balance<it.price?'disabled':''}>Débloquer</button><button class="ghost" id="llFull">Ouvrir la version complète</button></div></div>`;
+  document.body.appendChild(ov);
+  $('#llFull',ov).onclick=()=>{location.href=location.origin+PBASE+'/'};
+  $('#llBuy',ov).onclick=async()=>{const {error}=await sb.rpc('shop_buy',{p_code:'lite'});if(error)return toast(error.message);ov.remove();toast('Lite débloquée')};
 }
 
 /* ================= Lot 4 : présence « Vu », sessions en direct (1 appel + 1 jeu par conversation) ================= */
