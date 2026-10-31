@@ -884,7 +884,7 @@ button.on.ghost{background:#ffd24d;color:#111}
 /* appel : les caméras sont l'élément principal */
 .room.call .rm-body{flex-direction:column !important}
 .room.call .rm-side{width:auto !important;flex:1 1 auto !important;border-right:0 !important;border-bottom:1px solid rgba(255,255,255,.08)}
-.room.call .rm-tiles{grid-template-columns:repeat(auto-fit,minmax(150px,1fr)) !important;gap:12px !important;padding:12px !important;flex:1;align-content:start}
+.room.call .rm-tiles{grid-template-columns:repeat(auto-fit,minmax(140px,230px)) !important;justify-content:center;gap:12px !important;padding:12px !important;flex:1;align-content:start}
 .room.call .rm-tiles .tile .t-media{width:100% !important;height:auto !important;aspect-ratio:4/3;border-radius:16px}
 .room.call .rm-tiles .tile .t-av .av{width:84px !important;height:84px !important}
 .room.call .rm-main{flex:0 0 auto !important;max-height:96px;overflow:auto}
@@ -992,6 +992,86 @@ button.on.ghost{background:#ffd24d;color:#111}
 .av.fr-arc{box-shadow:0 0 0 2px var(--bg,#fff),0 0 0 4px #f0f;animation:frarc 3s linear infinite}
 @keyframes frfeu{to{box-shadow:0 0 0 2px var(--bg,#fff),0 0 0 4px #ffb02e,0 0 16px #ff6a00}}
 @keyframes frarc{0%{box-shadow:0 0 0 2px var(--bg,#fff),0 0 0 4px #f33}25%{box-shadow:0 0 0 2px var(--bg,#fff),0 0 0 4px #fc0}50%{box-shadow:0 0 0 2px var(--bg,#fff),0 0 0 4px #3c6}75%{box-shadow:0 0 0 2px var(--bg,#fff),0 0 0 4px #39f}100%{box-shadow:0 0 0 2px var(--bg,#fff),0 0 0 4px #f33}}
+
+/* appels : texte en direct dans la boîte de la caméra (en haut), pas de barre en mode réduit */
+.room.call .rm-tiles .tile,.room.mini .rm-tiles .tile{position:relative}
+.room.call .rm-tiles .tile .t-say,.room.mini .rm-tiles .tile .t-say{position:absolute;top:6px;left:6px;right:6px;margin:0;z-index:4;max-height:46%;overflow:auto;background:rgba(255,255,255,.92);font-size:12px;padding:4px 7px;border-radius:9px}
+.room.call .rm-tiles .tile .t-name{position:relative;z-index:1}
+.room.mini .rm-tiles .tile .t-say{font-size:10.5px;padding:2px 5px;max-height:52%}
+.room.mini .rm-bar,.room.mini #rmSay,.room.mini #rmSayX,.room.mini #rmHand,.room.mini .rm-reacts{display:none !important}
+.toast,#toasts,.toasts{z-index:100000 !important}
+
+.emt-i{object-fit:cover}.emt-s{width:26px;height:26px;border-radius:50%;object-fit:cover;background:#222;flex:none}.emt-i.noimg{display:block;background:#222}
+
+/* ===== Jetons v2 ===== */
+.balchip{display:inline-flex;align-items:center;gap:5px;border:1px solid #f5b30166;background:#f5b30122;color:#c99a00;border-radius:99px;padding:2px 10px 2px 7px;font-size:13px;font-weight:600;cursor:pointer;line-height:1.5;white-space:nowrap;flex:none}
+.balchip:hover{background:#f5b30144}.balchip.ready{box-shadow:0 0 0 2px #f5b30188;animation:balpulse 2s ease-in-out infinite}
+@keyframes balpulse{50%{box-shadow:0 0 0 5px #f5b30122}}
+#meBox .balchip{margin-right:4px}#chatBox .hd .balchip{margin-right:4px}
+.balhd{display:flex;align-items:center;justify-content:space-between;gap:8px}
+.bmT{flex-wrap:wrap;gap:4px;margin-bottom:8px}
+.bigbal{font-size:34px;font-weight:700;text-align:center;margin:6px 0;color:#c99a00}
+.shrow2{display:flex;align-items:center;gap:10px;padding:7px 0;border-bottom:1px solid #8882}
+.shrow2 .grow small{display:block;opacity:.7}
+.fgrid{display:flex;flex-wrap:wrap;gap:8px;margin:6px 0 10px}
+.fcell{display:flex;flex-direction:column;align-items:center;gap:3px;font-size:11px;cursor:pointer;padding:6px;border-radius:10px;border:1px solid transparent;width:70px;text-align:center}
+.fcell.on{border-color:#f5b301;background:#f5b30122}.fcell.lock{opacity:.45;cursor:default}
+.fcell .av{width:38px;height:38px}
+.rfs{width:54px;height:38px;border-radius:8px;background:#8883}
+.mbadge{display:inline-flex;vertical-align:middle;margin-left:4px;cursor:help}
+.mbadges{display:inline-flex;gap:2px;margin-left:6px;vertical-align:middle}
+.bdgrow{display:flex;align-items:center;gap:8px;padding:5px 0;border-bottom:1px solid #8882}
+#bdgTip{position:fixed;z-index:100000;max-width:300px;background:var(--panel,#1c2230);color:var(--fg,#e8ecf5);border:1px solid #8886;border-radius:12px;padding:10px 12px;font-size:12.5px;box-shadow:0 8px 28px #0006;pointer-events:none;display:none}
+#bdgTip b{font-size:14px}#bdgTip .tsub{opacity:.75;margin-top:3px}
+#bdgTip .split{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:8px}
+#bdgTip .split>div{border:1px solid #8884;border-radius:8px;padding:6px}
+#bdgTip .tunion{text-align:center;border-top:1px solid #8884;padding-top:6px}
+.tag.t-merit{background:#f5b30133;color:#c99a00}.tag.t-special{background:#8b5cf633;color:#8b5cf6}.tag.t-premium{background:#22c55e33;color:#16a34a}.tag.t-patron{background:#b8c0cc44;color:#8b95a5}.tag.t-union{background:#d4af3733;color:#b8921a}
+.refbox{border:1px solid #8885;border-radius:12px;padding:10px 12px;margin-bottom:10px;font-size:13px;line-height:1.45}
+.refbox.warn{border-color:#f59e0b;background:#f59e0b1c}.refbox.err{border-color:#ef4444;background:#ef44441c}
+.refbox ul{margin:6px 0 0 18px;padding:0}.refbox s{opacity:.6}
+#list .item.pinned::after{content:"";width:7px;height:7px;border-radius:50%;background:#f5b301;flex:none;margin-left:4px}
+.pg .pe-sub{grid-column:1/-1;display:flex;gap:4px;flex-wrap:wrap;margin-bottom:4px}
+.pg .pe-sub button{font-size:11px;padding:2px 8px}
+/* --- cadres de photo (statiques) --- */
+.av.pf_s1{box-shadow:0 0 0 2px var(--bg,#fff),0 0 0 4px #e0a800}
+.av.pf_s2{box-shadow:0 0 0 2px var(--bg,#fff),0 0 0 4px #b8c0cc,0 0 6px #fff8}
+.av.pf_s3{box-shadow:0 0 0 2px var(--bg,#fff),0 0 0 4px #d6283c,0 0 8px #d6283c88}
+.av.pf_s4{box-shadow:0 0 0 2px var(--bg,#fff),0 0 0 4px #2563eb,0 0 8px #2563eb88}
+.av.pf_s5{box-shadow:0 0 0 2px var(--bg,#fff),0 0 0 4px #16a34a,0 0 8px #16a34a88}
+.av.pf_s6{box-shadow:0 0 0 2px #e5e7eb,0 0 0 4px #111827}
+/* --- cadres de photo (animés) --- */
+.av.pf_a1{animation:pfa1 3s linear infinite}
+@keyframes pfa1{0%{box-shadow:0 0 0 2px var(--bg,#fff),0 0 0 4px #f00}17%{box-shadow:0 0 0 2px var(--bg,#fff),0 0 0 4px #ff0}33%{box-shadow:0 0 0 2px var(--bg,#fff),0 0 0 4px #0f0}50%{box-shadow:0 0 0 2px var(--bg,#fff),0 0 0 4px #0ff}67%{box-shadow:0 0 0 2px var(--bg,#fff),0 0 0 4px #00f}83%{box-shadow:0 0 0 2px var(--bg,#fff),0 0 0 4px #f0f}100%{box-shadow:0 0 0 2px var(--bg,#fff),0 0 0 4px #f00}}
+.av.pf_a2{animation:pfa2 1.1s ease-in-out infinite alternate}
+@keyframes pfa2{from{box-shadow:0 0 0 2px var(--bg,#fff),0 0 0 4px #ff7a1a,0 0 6px #ff3b00}to{box-shadow:0 0 0 2px var(--bg,#fff),0 0 0 4px #ffcf33,0 0 16px #ff7a1a}}
+.av.pf_a3{animation:pfa3 1.4s ease-in-out infinite}
+@keyframes pfa3{0%,100%{box-shadow:0 0 0 2px #0b0f14,0 0 0 3px #19e6ff,0 0 4px #19e6ff}50%{box-shadow:0 0 0 2px #0b0f14,0 0 0 4px #19e6ff,0 0 16px #19e6ff}}
+.av.pf_a4{animation:pfa4 4s ease-in-out infinite}
+@keyframes pfa4{0%,100%{box-shadow:0 0 0 2px var(--bg,#fff),0 0 0 4px #34d399,0 0 10px #34d39988}33%{box-shadow:0 0 0 2px var(--bg,#fff),0 0 0 4px #60a5fa,0 0 12px #60a5fa88}66%{box-shadow:0 0 0 2px var(--bg,#fff),0 0 0 4px #c084fc,0 0 12px #c084fc88}}
+.av.pf_a5{animation:pfa5 .9s steps(2,end) infinite}
+@keyframes pfa5{0%{box-shadow:0 0 0 2px var(--bg,#fff),0 0 0 4px #facc15,0 0 4px #facc15}50%{box-shadow:0 0 0 2px var(--bg,#fff),0 0 0 4px #fff,0 0 14px #93c5fd}}
+.av.pf_a6{animation:pfa6 2.4s linear infinite}
+@keyframes pfa6{0%{box-shadow:0 0 0 2px var(--bg,#fff),-5px -5px 0 2px #f5b301}25%{box-shadow:0 0 0 2px var(--bg,#fff),5px -5px 0 2px #f5b301}50%{box-shadow:0 0 0 2px var(--bg,#fff),5px 5px 0 2px #f5b301}75%{box-shadow:0 0 0 2px var(--bg,#fff),-5px 5px 0 2px #f5b301}100%{box-shadow:0 0 0 2px var(--bg,#fff),-5px -5px 0 2px #f5b301}}
+/* --- cadres de profil --- */
+.pf-modal.rf_s1{box-shadow:0 0 0 2px #e0a800,0 10px 40px #0007}
+.pf-modal.rf_s2{box-shadow:0 0 0 2px #8a93a5,0 0 0 6px #0000,0 0 0 8px #8a93a5,0 10px 40px #0007}
+.pf-modal.rf_s3{outline:3px dotted #f5b301;outline-offset:3px}
+.pf-modal.rf_s4{box-shadow:0 0 0 2px #7c3aed,inset 0 0 0 6px #7c3aed22,0 10px 40px #0007}
+.pf-modal.rf_s5{box-shadow:12px 12px 0 #0006,0 10px 40px #0007}
+.pf-modal.rf_s6{box-shadow:0 0 0 4px #2563eb,0 0 0 6px #fff,0 10px 40px #0007}
+.pf-modal.rf_a1{animation:rfa1 3s linear infinite}
+@keyframes rfa1{0%{box-shadow:0 0 0 3px #f00}17%{box-shadow:0 0 0 3px #ff0}33%{box-shadow:0 0 0 3px #0f0}50%{box-shadow:0 0 0 3px #0ff}67%{box-shadow:0 0 0 3px #00f}83%{box-shadow:0 0 0 3px #f0f}100%{box-shadow:0 0 0 3px #f00}}
+.pf-modal.rf_a2{animation:rfa2 2.4s ease-in-out infinite}
+@keyframes rfa2{0%,100%{box-shadow:0 0 6px 1px #60a5fa88}50%{box-shadow:0 0 30px 6px #60a5fa}}
+.pf-modal.rf_a3{animation:rfa3 2s linear infinite}
+@keyframes rfa3{0%{box-shadow:0 -3px 0 #19e6ff}25%{box-shadow:3px 0 0 #19e6ff}50%{box-shadow:0 3px 0 #19e6ff}75%{box-shadow:-3px 0 0 #19e6ff}100%{box-shadow:0 -3px 0 #19e6ff}}
+.pf-modal.rf_a4{animation:rfa4 1.3s ease-in-out infinite alternate}
+@keyframes rfa4{from{box-shadow:0 0 14px 2px #ff7a1a88}to{box-shadow:0 0 34px 6px #ff3b00}}
+.pf-modal.rf_a5{animation:rfa5 3s ease-in-out infinite}
+@keyframes rfa5{0%,100%{box-shadow:-8px 0 0 #38bdf8,8px 0 0 #0000}50%{box-shadow:-8px 0 0 #0000,8px 0 0 #38bdf8}}
+.pf-modal.rf_a6{animation:rfa6 1s steps(3,end) infinite}
+@keyframes rfa6{0%{box-shadow:0 0 0 3px #facc15,0 0 8px #fff}50%{box-shadow:0 0 0 3px #fde68a,0 0 20px #facc15}100%{box-shadow:0 0 0 3px #facc15,0 0 8px #fff}}
 
 .comp{position:relative}
 .plusmenu{position:absolute;bottom:100%;margin-bottom:6px;background:var(--panel);border:1px solid var(--line);border-radius:12px;box-shadow:0 8px 28px rgba(0,0,0,.18);padding:4px;z-index:30;min-width:200px;animation:pmIn .14s ease-out}
@@ -4451,7 +4531,7 @@ function connectRoom(){
   const ss=S.sess,c=S.convs.get(ss.conv);
   ss.ch=sb.channel('room-'+ss.id,{config:{broadcast:{self:false},presence:{key:S.me.id}}});ss.away={};ss.seen=new Set();
   const on=(ev,fn)=>ss.ch.on('broadcast',{event:ev},async({payload})=>{try{const o=await unpack(c,payload);if(S.sess===ss)fn(o)}catch(e){}});
-  on('hello',roomHello);on('act',roomAct);on('state',roomState);on('bye',roomBye);on('end',()=>{toast("La partie a été fermée par l'hôte");leaveSession(false)});
+  on('hello',roomHello);on('host',o=>roomHostEv(o));on('act',roomAct);on('state',roomState);on('bye',roomBye);on('end',()=>{toast("La partie a été fermée par l'hôte");leaveSession(false)});
   on('say',o=>{ss.say[o.u]=o.t||'';updateSay(o.u)});
   on('away',o=>markAway(o.u));on('back',o=>clearAway(o.u));
   if(ss.ch.on)try{ss.ch.on('presence',{event:'sync'},()=>presSync(ss))}catch(e){}
@@ -4474,9 +4554,9 @@ function roomHello(o){
   const ss=S.sess;if(!ss||!ss.isHost)return;const u=o.u,g=GAMES[ss.game];
   if(o.spec&&!g.p2p){const cc=S.convs.get(ss.conv);if(cc&&cc.members.some(m=>m.user_id===u)&&!ss.players.includes(u)){(ss.specs=ss.specs||new Set()).add(u);ss.invited.delete(u);pushState()}return}
   if(!ss.players.includes(u)){
-    if(!ss.invited.has(u)){const cc=S.convs.get(ss.conv);if(!cc||!cc.members.some(m=>m.user_id===u))return;if(!g.p2p){(ss.specs=ss.specs||new Set()).add(u);pushState();return}}
+    if(!ss.invited.has(u)){const cc=S.convs.get(ss.conv);if(!cc||!cc.members.some(m=>m.user_id===u))return;if(!g.p2p&&(ss.state||ss.players.length>=g.max)){(ss.specs=ss.specs||new Set()).add(u);pushState();return}}
     if(ss.players.length>=g.max){return}
-    ss.players.push(u);ss.invited.delete(u);
+    ss.players.push(u);ss.invited.delete(u);ss.declined.delete(u);
   }
   const c=S.convs.get(ss.conv);
   if(!g.p2p&&!ss.state&&((!g.lobby&&ss.players.length>=g.min)||(g.lobby&&c&&c.kind==='direct'&&ss.players.length>=g.min)))return startGame();
@@ -4491,11 +4571,11 @@ function startGame(){
 function pushState(){
   const ss=S.sess;if(!ss)return;ss.v++;
   {const g=GAMES[ss.game];if(g&&g.priv&&ss.isHost&&ss.state){const m=g.priv(ss.state,ss.hp)||{};ss.mypriv=m[S.me.id]||{};for(const u of ss.players)if(u!==S.me.id)rsend('priv',{to:u,d:m[u]||{}},ss)}}
-  rsend('state',{v:ss.v,players:ss.players,phase:ss.phase,cfg:ss.cfg,st:ss.state});renderRoom();
+  rsend('state',{v:ss.v,host:ss.host,players:ss.players,phase:ss.phase,cfg:ss.cfg,st:ss.state});renderRoom();
 }
 function roomState(o){
   const ss=S.sess;if(!ss||ss.isHost||o.v<=ss.v)return;
-  ss.v=o.v;ss.players=o.players;ss.phase=o.phase;ss.cfg=o.cfg||{};ss.state=o.st;
+  ss.v=o.v;if(o.host)ss.host=o.host;ss.players=o.players;ss.spec=!GAMES[ss.game].p2p&&!o.players.includes(S.me.id);ss.phase=o.phase;ss.cfg=o.cfg||{};ss.state=o.st;
   clearTimeout(ss.helloT);clearTimeout(ss.joinT);renderRoom();
 }
 function act(a){
@@ -4507,6 +4587,7 @@ function hostAct(a,u){
   const ss=S.sess,g=GAMES[ss.game];if(!ss||!ss.state||ss.frozen||!ss.players.includes(u))return;
   if(a.t==='saved')ss.state.saved=u;
   else if(!g.reduce(ss.state,a,u,ss.hp))return;
+  if(a.t==='again'&&ss.state){ss.state.saved=null;ss.autoKey=null;ss.resKey=null;ss.resHide=null}
   pushState();
 }
 function roomBye(o){
@@ -4688,7 +4769,7 @@ function showResult(){
   const ss=S.sess;if(!ss||!$('#rmRes'))return;const g=GAMES[ss.game],box=$('#rmRes'),btn=$('#rmResBtn');
   const res=g.result&&ss.state&&ss.phase==='live'?g.result(ss.state,nmOf):null;
   if(!res){box.hidden=true;btn.hidden=true;ss.resKey=null;ss.resHide=null;if(ss.statDone){ss.statDone=false;ss.t0=Date.now()}return}
-  if(!ss.statDone){ss.statDone=true;statRecord(ss.game,ss.state,ss.t0||Date.now())}
+  if(!ss.statDone){ss.statDone=true;statRecord(ss.game,ss.state,ss.t0||Date.now());winRecord(ss)}
   const key=JSON.stringify(res.lines);
   if(ss.resKey!==key){ss.resKey=key;ss.resHide=null;if(res&&ss.ui&&ss.ui.celebrate)ss.ui.celebrate(ss.state)}
   btn.hidden=false;
@@ -7478,6 +7559,7 @@ var botRoute=async function(c,text,x){
       const cid=Math.random().toString(36).slice(2);inst.cmdWait=inst.cmdWait||new Map();
       const done=new Promise(res=>{inst.cmdWait.set(cid,res);setTimeout(res,25000)});
       inst.port.postMessage({t:'cmd',cid,name,ctx:{name,args,raw:text,params:botParseArgs(args),user:S.profile.username,prefix:b.prefix,msgid:x&&x.msgId||null}});
+      try{sb.rpc('quest_event',{p_kind:'bot'}).then(()=>{},()=>{})}catch(e){}
       await done;
     }catch(e){toast(botNameOf(b)+' indisponible : '+errMsg(e))}
     return;
@@ -7736,7 +7818,7 @@ async function botRoomCall(inst,m,a){
       return false}
     case 'game.info':return ss&&ss.conv===c.id?{game:ss.game,name:(GAMES[ss.game]||{}).name,phase:ss.phase,players:ss.players.length,frozen:!!FRZ.on}:null;
     case 'game.list':return Object.entries(GAMES).map(([id,g])=>({id,name:g.name,conv:g.conv}));
-    case 'game.freeze':{botNeed(inst,'game.control');need();roomFreeze(Math.max(1,Math.min(60,+a[0]||30)),botUserArg(a[1])||'?');return true}
+    case 'game.freeze':{botNeed(inst,'game.control');need();if(ss.game==='appel')throw new Error('La pause est impossible dans un appel');roomFreeze(Math.max(1,Math.min(15,+a[0]||15)),botUserArg(a[1])||'?');return true}
     case 'game.unfreeze':{botNeed(inst,'game.control');need();roomUnfreeze();return true}
     case 'game.kick':{botNeed(inst,'game.control');need();const t=botResolve(c,a[0]);if(!t)throw new Error('Indiquez un nom d’utilisateur');
       const {data:ok}=await sb.rpc('has_cmd_right',{p_conv:c.id,p_user:S.me.id});if(ok!==true)throw new Error('Vous n’avez pas le droit d’exclure quelqu’un');
@@ -8282,7 +8364,7 @@ function staffBeatStart(){
     if(!S.staff||document.visibilityState!=='visible'||!document.hasFocus()||Date.now()-STAFF_LAST>60000)return;
     try{await sb.rpc('staff_beat',{p_secs:30})}catch(e){}
   },30000);
-  setInterval(()=>{if(S.staff)sb.rpc('staff_tick').catch(()=>{})},600000);
+  setInterval(()=>{if(S.staff)sb.rpc('staff_tick').then(()=>{},()=>{})},600000);
 }
 /* ---------- utilitaires d'affichage ---------- */
 const stBar=(label,v,need,unit)=>{const p=Math.max(0,Math.min(100,need?v/need*100:0));return `<div class="pgbar"><div class="pgl"><span>${esc(label)}</span><b>${typeof v==='number'?Math.round(v*10)/10:v}${unit?' '+unit:''} / ${need}${unit?' '+unit:''}</b></div><div class="pgt"><i style="width:${p}%" class="${p>=100?'ok':''}"></i></div></div>`};
@@ -8310,7 +8392,7 @@ stSource=async function(bot,flagged){
 };
 stLogs=async function(m,box){
   const {data,error}=await sb.rpc('staff_logs',{p_limit:300});if(error)throw error;
-  sb.rpc('staff_note_journal').catch(()=>{});
+  sb.rpc('staff_note_journal').then(()=>{},()=>{});
   box.innerHTML=`<div class="dev-log">${(data||[]).map(l=>`<div><span class="muted">${fmtDt(l.created_at)}</span> <b>${esc(l.action)}</b> ${esc(l.target||'')} <span class="tag">@${esc(l.staff_name||'?')}</span> <span class="muted">${esc(JSON.stringify(l.detail||{}).slice(0,200))}</span></div>`).join('')}</div>`;
 };
 stBans=async function(m,box){
@@ -8456,143 +8538,394 @@ botRoute=async function(c,text,x){
   }catch(e){show('Erreur : '+errMsg(e))}
 };
 
-/* ================= Patch 10 : jetons, boutique, quêtes, parrainage, cadres, badges, emojis premium ================= */
-const FRAME_NAMES={frame_or:'or',frame_arc:'arc',frame_feu:'feu',frame_neon:'neon',frame_glace:'glace'};
-const BADGE_SVG={badge_etoile:['#f5b301','M12 2l3 7 7 .6-5.3 4.7 1.7 7.2L12 17.8 5.6 21.5l1.7-7.2L2 9.6 9 9z'],badge_flamme:['#f2622c','M12 2c1 4 5 6 5 11a5 5 0 0 1-10 0c0-2 1-3 2-4 0 2 1 3 2 3 0-4-1-7 1-10z'],badge_couronne:['#e0a800','M3 18l-1-11 5 4 5-7 5 7 5-4-1 11z'],badge_feuille:['#3aa655','M5 19C5 9 11 4 20 4c0 9-5 15-15 15zM5 19l8-8'],badge_eclair:['#2f8cf0','M13 2L4 14h6l-1 8 9-12h-6z'],badge_gemme:['#a24bd6','M6 3h12l4 6-10 12L2 9z'],badge_fondateur:['#d94452','M12 2l2.4 5 5.6.8-4 4 1 5.6-5-2.7-5 2.7 1-5.6-4-4 5.6-.8z']};
-const badgeSvg=(code,sz)=>{const b=BADGE_SVG[code];if(!b)return '';return `<svg class="bdg" width="${sz||16}" height="${sz||16}" viewBox="0 0 24 24" fill="${b[0]}" stroke="${b[0]}" stroke-linejoin="round" aria-label="${esc(code)}"><path d="${b[1]}" fill-opacity=".9"/></svg>`};
-/* emojis premium : dessinés en SVG, jamais du texte copiable */
-function peSvg(code,sz){
-  sz=sz||22;const k=code[3],n=+code.slice(4)-1;
-  if(k==='v'){const hue=(n*29+20)%360,eye=n%4,mouth=Math.floor(n/4)%3;
-    const eyes=[`<circle cx="9" cy="10" r="1.6"/><circle cx="15" cy="10" r="1.6"/>`,`<path d="M7.5 10.5q1.5-2 3 0M13.5 10.5q1.5-2 3 0" fill="none" stroke="#2a2a2a" stroke-width="1.5" stroke-linecap="round"/>`,`<circle cx="9" cy="10" r="2.3" fill="#fff" stroke="#2a2a2a"/><circle cx="15" cy="10" r="2.3" fill="#fff" stroke="#2a2a2a"/><circle cx="9" cy="10" r="1"/><circle cx="15" cy="10" r="1"/>`,`<circle cx="9" cy="10" r="1.6"/><path d="M13.5 10h3" stroke="#2a2a2a" stroke-width="1.6" stroke-linecap="round"/>`][eye];
-    const mo=[`<path d="M8 14.5q4 4 8 0" fill="none" stroke="#2a2a2a" stroke-width="1.6" stroke-linecap="round"/>`,`<ellipse cx="12" cy="16" rx="3" ry="2.4" fill="#7a1f1f"/>`,`<path d="M9 16h6" stroke="#2a2a2a" stroke-width="1.6" stroke-linecap="round"/>`][mouth];
-    return `<svg class="pe" data-pe="${code}" width="${sz}" height="${sz}" viewBox="0 0 24 24"><defs><radialGradient id="g${code}" cx="35%" cy="30%"><stop offset="0" stop-color="hsl(${hue} 95% 78%)"/><stop offset="1" stop-color="hsl(${hue} 75% 52%)"/></radialGradient></defs><circle cx="12" cy="12" r="10.5" fill="url(#g${code})" stroke="hsl(${hue} 60% 38%)"/><g fill="#2a2a2a">${eyes}</g>${mo}</svg>`}
-  const hue=[330,45,280,200][n%4],petals=[5,6,8][Math.floor(n/4)%3];let p='';
-  for(let i=0;i<petals;i++){const a=i*360/petals;p+=`<ellipse cx="12" cy="6.2" rx="2.6" ry="4.2" transform="rotate(${a} 12 12)" fill="hsl(${hue} 85% 62%)" stroke="hsl(${hue} 60% 40%)" stroke-width=".6"/>`}
-  return `<svg class="pe" data-pe="${code}" width="${sz}" height="${sz}" viewBox="0 0 24 24">${p}<circle cx="12" cy="12" r="3.2" fill="#ffd54a" stroke="#c99a00" stroke-width=".6"/></svg>`;
+/* ================= Jetons v2 : solde, boutique, badges, cadres, parrainage, quêtes, emojis premium ================= */
+const TK={bal:null,w:null,inv:null,shop:null,pins:new Set(),pe:null,peOwn:false,peCat:null,bdg:{}};
+const nfmt=n=>(Math.round((+n||0)*10)/10).toLocaleString('fr-CA');
+const rpcd=async(fn,a)=>{const r=await sb.rpc(fn,a||{});if(r.error)throw r.error;return r.data};
+function balRender(){document.querySelectorAll('.balchip b').forEach(b=>b.textContent=TK.bal==null?'…':nfmt(TK.bal));document.querySelectorAll('.balchip').forEach(c=>c.classList.toggle('ready',!!(TK.w&&TK.w.daily_ready)))}
+async function balRefresh(){try{const d=await rpcd('wallet_me');TK.w=d;TK.bal=d.balance;balRender();return d}catch(e){}}
+const chipHtml=()=>`<button class="balchip" type="button" title="Jetons">${ic('coin',16)}<b>…</b></button>`;
+const _rmT=renderMe;
+renderMe=function(){
+  _rmT.apply(this,arguments);
+  const g=document.querySelector('#meBox .grow');if(g&&!document.querySelector('#meBox .balchip'))g.insertAdjacentHTML('afterend',chipHtml());
+  const bc=$('#bCall');if(bc&&!document.querySelector('#chatBox .hd .balchip'))bc.insertAdjacentHTML('beforebegin',chipHtml());
+  balRender();
+};
+document.addEventListener('click',e=>{if(e.target.closest&&e.target.closest('.balchip')){e.preventDefault();e.stopPropagation();balOpen()}},true);
+
+/* ---------- badges : médailles et infobulles ---------- */
+const TIERC={merit:'#f5b301',special:'#8b5cf6',premium:'#22c55e',patron:'#b8c0cc',union:'#d4af37'};
+const TIERN={merit:'Mérite',special:'Spécial',premium:'Premium',patron:'Mécénat',union:'Union'};
+const GLY={star:'M12 6.5l1.7 3.6 3.9.5-2.9 2.7.8 3.9L12 15.2 8.5 17.2l.8-3.9-2.9-2.7 3.9-.5z',shield:'M12 6l5 2v4c0 3-2 5-5 6-3-1-5-3-5-6V8z',crown:'M7 16l-1-6 3 2 3-4 3 4 3-2-1 6z',flame:'M12 6c.7 2.7 3.5 4 3.5 7a3.5 3.5 0 0 1-7 0c0-1.4.7-2.2 1.4-2.8 0 1.4.7 2 1.4 2 0-2.8-.7-4.4.7-6.2z',bolt:'M13 6l-4 6h3l-1 6 5-7h-3z',gem:'M8 8h8l2 3-6 7-6-7z',leaf:'M7 16c0-6 4-9 10-9 0 6-3 10-9 10l-1 1z',book:'M7 7h6a2 2 0 0 1 2 2v8H9a2 2 0 0 0-2 2zM17 9v8',gear:'M12 9a3 3 0 1 0 0 6 3 3 0 0 0 0-6zM12 6v2M12 16v2M6 12h2M16 12h2',eye:'M5 12c2-3 4-4 7-4s5 1 7 4c-2 3-4 4-7 4s-5-1-7-4zM12 10.5a1.5 1.5 0 1 0 0 3 1.5 1.5 0 0 0 0-3z',heart:'M12 17s-5-3.2-5-6.6A2.6 2.6 0 0 1 12 9a2.6 2.6 0 0 1 5 1.4C17 13.800 12 17 12 17z',cpu:'M9 9h6v6H9zM11 6v3M13 6v3M11 15v3M13 15v3M6 11h3M6 13h3M15 11h3M15 13h3',code:'M10 9l-3 3 3 3M14 9l3 3-3 3',pen:'M8 16l1-3 6-6 2 2-6 6zM8 16l-1 2 2-1'};
+const BGLY={nouveau_venu:'leaf',habitue:'flame',veteran:'shield',aine:'book',champion:'crown',chasseur:'eye',ambassadeur:'heart',strategie:'gem',elite:'bolt',premier:'star',ingenieur:'gear',gardien:'shield',developpeur:'code',concepteur:'pen',fondateur:'crown',moderateur:'shield',aristocrate:'crown',cybernaute:'cpu',enigmatique:'eye',legende:'star',souverain:'crown',grand_mecene:'gem',mecene:'heart',legende_mecene:'star'};
+function medalSvg(b,sz){
+  sz=sz||20;const c=TIERC[b.tier]||'#f5b301',g=GLY[BGLY[b.code]||'star'];
+  const ring=b.tier==='union'?`<defs><linearGradient id="ug${sz}" x1="0" x2="1"><stop offset=".5" stop-color="#d4af37"/><stop offset=".5" stop-color="#b8c0cc"/></linearGradient></defs><circle cx="12" cy="12" r="10" fill="url(#ug${sz})" stroke="#0004"/>`:`<circle cx="12" cy="12" r="10" fill="${c}" stroke="#0004"/>`;
+  return `<svg width="${sz}" height="${sz}" viewBox="0 0 24 24" aria-hidden="true">${ring}<path d="${g}" fill="#fff" fill-opacity=".92" stroke="#0005" stroke-width=".6" stroke-linejoin="round"/></svg>`;
 }
-const _ft=fmtText;
-fmtText=function(t){
-  let h=_ft.apply(this,arguments);
-  if(h.indexOf(':pe_')<0)return h;
-  const big=!/[^\s]/.test(String(t).replace(/:pe_[vn]\d+:/g,''))&&(String(t).match(/:pe_[vn]\d+:/g)||[]).length<=3;
-  return h.replace(/:(pe_[vn]\d{1,2}):/g,(m,c)=>peSvg(c,big?44:22));
-};
-document.addEventListener('copy',e=>{
-  const sel=getSelection();if(!sel||sel.isCollapsed)return;
-  const f=sel.getRangeAt(0).cloneContents();if(!f.querySelector||!f.querySelector('.pe'))return;
-  f.querySelectorAll('.pe').forEach(x=>x.remove());e.clipboardData.setData('text/plain',f.textContent);e.preventDefault();
-},true);
-document.addEventListener('dragstart',e=>{if(e.target.closest&&e.target.closest('.pe'))e.preventDefault()});
-document.addEventListener('contextmenu',e=>{if(e.target.closest&&e.target.closest('.pe'))e.preventDefault()},true);
-/* sélecteur : onglet Premium */
-let PE_OWNED=[];
-async function peLoad(){try{const {data}=await sb.rpc('pe_owned');PE_OWNED=data||[];if(PE_OWNED.length)EMOJIS.Premium='';else delete EMOJIS.Premium}catch(e){}}
-const _rp=renderPicker;
-renderPicker=function(cat){
-  _rp.apply(this,arguments);
-  if(cat==='Premium'){const g=$('#picker .pg');if(g)g.innerHTML=PE_OWNED.map(c=>`<button data-e=":${c}:">${peSvg(c,26)}</button>`).join('')}
-};
-/* cadres et badges */
-const COS={};let cosBusy=0,cosTimer=null;
+let _bk=0;
+function medal(b,sz){const k='b'+(++_bk);TK.bdg[k]=b;return `<span class="mbadge" data-bk="${k}" aria-label="${esc(b.name)}">${medalSvg(b,sz)}</span>`}
+const ordN=n=>n===1?'1er':n+'e';
+function tipHtml(b){
+  const when=x=>x?fmtDt(x):'';
+  const one=(x,full)=>`<b>${esc(x.name)}</b><div class="tsub">${esc(x.descr)}</div><div class="tsub">${ordN(x.seq)} à l’obtenir · ${esc(when(x.at))}${x.by?`<br>Remis par @${esc(x.by)}`:''}</div>`;
+  if(b.tier==='union'&&b.extra&&b.extra.a&&b.extra.b)return `<div class="split"><div>${one(b.extra.a)}</div><div>${one(b.extra.b)}</div></div><div class="tunion">${one(b)}</div>`;
+  return one(b);
+}
+(function(){
+  let tip=null;
+  const get=()=>tip||(tip=Object.assign(document.createElement('div'),{id:'bdgTip'}),document.body.appendChild(tip),tip);
+  document.addEventListener('mouseover',e=>{const el=e.target.closest&&e.target.closest('.mbadge');if(!el)return;const b=TK.bdg[el.dataset.bk];if(!b)return;const t=get();t.innerHTML=tipHtml(b);t.style.display='block';const r=el.getBoundingClientRect();t.style.left=Math.max(8,Math.min(innerWidth-t.offsetWidth-8,r.left+r.width/2-t.offsetWidth/2))+'px';t.style.top=(r.bottom+8+t.offsetHeight>innerHeight?r.top-t.offsetHeight-8:r.bottom+8)+'px'});
+  document.addEventListener('mouseout',e=>{if(e.target.closest&&e.target.closest('.mbadge')&&tip)tip.style.display='none'});
+  document.addEventListener('click',e=>{if(tip&&!e.target.closest('.mbadge'))tip.style.display='none'});
+})();
+
+/* ---------- cosmétiques visibles par tous : cadre de photo, couleur du nom ---------- */
+const COS={};let cosTimer=null;
+function nameTint(){
+  const us=Object.keys(COS).filter(u=>COS[u]&&COS[u].nc);if(!us.length)return;
+  const prof=new Map();S.profiles.forEach(p=>prof.set(p.username,p));
+  const forms=new Map();us.forEach(u=>{forms.set('@'+u,u);const p=prof.get(u);if(p&&p.nickname){forms.set(p.nickname,u);forms.set(p.nickname+' (@'+u+')',u)}});
+  document.querySelectorAll('b,strong,h3,.who,.nm').forEach(el=>{if(el.childElementCount)return;const u=forms.get(el.textContent.trim());if(u)el.style.color=COS[u].nc;else if(el.dataset.tint){el.style.color='';delete el.dataset.tint}if(u)el.dataset.tint='1'});
+}
 async function cosApply(){
   const els=[...document.querySelectorAll('.av[data-un]')];const need=[...new Set(els.map(x=>x.dataset.un).filter(u=>u&&!(u in COS)))];
-  if(need.length){try{const {data}=await sb.rpc('cosmetics_of',{p_users:need.slice(0,60)});need.forEach(u=>COS[u]=(data&&data[u])||null)}catch(e){need.forEach(u=>COS[u]=null)}}
-  els.forEach(x=>{const c=COS[x.dataset.un];const f=c&&c.frame?'fr-'+FRAME_NAMES[c.frame]:'';if(x.dataset.fr!==f){[...x.classList].filter(k=>k.startsWith('fr-')).forEach(k=>x.classList.remove(k));if(f)x.classList.add(f);x.dataset.fr=f}});
+  for(let i=0;i<need.length;i+=60){const part=need.slice(i,i+60);try{const {data}=await sb.rpc('cosmetics_of',{p_users:part});part.forEach(u=>COS[u]=(data&&data[u])||null)}catch(e){part.forEach(u=>COS[u]=null)}}
+  els.forEach(x=>{const c=COS[x.dataset.un];const f=c&&c.pf?c.pf:'';if(x.dataset.fr!==f){[...x.classList].filter(k=>/^pf_/.test(k)).forEach(k=>x.classList.remove(k));if(f)x.classList.add(f);x.dataset.fr=f}});
+  nameTint();
 }
 new MutationObserver(()=>{clearTimeout(cosTimer);cosTimer=setTimeout(cosApply,400)}).observe(document.body,{childList:true,subtree:true});
-const _opShop=openProfile;
+const cosReset=()=>{for(const u in COS)delete COS[u];cosApply()};
+
+/* ---------- profil : médailles, cadre, couleurs, fond ---------- */
+const _opT=openProfile;
 openProfile=async function(un){
-  const r=await _opShop.apply(this,arguments);
-  try{const u=String(un||'').toLowerCase().replace(/^@/,'');delete COS[u];const {data}=await sb.rpc('cosmetics_of',{p_users:[u]});const c=data&&data[u];
-    const hd=$('.pf-modal .pf-hd .grow h3');
-    if(c&&c.badge&&hd&&!hd.parentNode.querySelector('.bdg'))hd.insertAdjacentHTML('afterend',badgeSvg(c.badge,18));
-    const pa=$('.pf-modal .pf-av .av');if(c&&c.frame&&pa)pa.classList.add('fr-'+FRAME_NAMES[c.frame]);}catch(e){}
+  const r=await _opT.apply(this,arguments);
+  try{
+    const u=String(un||'').toLowerCase().replace(/^@/,'');const {data:p}=await sb.rpc('profile_full',{p_username:u});if(!p)return r;
+    const md=document.querySelector('.pf-modal');if(!md)return r;
+    const hd=md.querySelector('.pf-hd .grow h3');
+    if(hd){if(p.nc)hd.style.color=p.nc;if(!hd.parentNode.querySelector('.mbadges')&&(p.badges||[]).length)hd.insertAdjacentHTML('afterend',`<div class="mbadges" style="margin:3px 0 0">${p.badges.map(b=>medal(b,22)).join('')}</div>`)}
+    const pa=md.querySelector('.pf-av .av');if(pa&&p.pf)pa.classList.add(p.pf);
+    if(p.rf)md.classList.add(p.rf);
+    if(p.pc)md.style.background=p.pc;if(p.ptc)md.style.color=p.ptc;
+    if(p.bg){md.style.backgroundImage='url("'+p.bg.replace(/["()\s]/g,'')+'")';md.style.backgroundSize='cover';md.style.backgroundPosition='center'}
+  }catch(e){}
   return r;
 };
+
+/* ---------- fenêtre du solde ---------- */
+const TABS=[['a','Accueil'],['h','Historique'],['s','Boutique'],['i','Inventaire'],['r','Parrainage'],['x','Romanomoney'],['b','Acheter']];
+async function balOpen(tab){
+  if(!S.me)return;
+  const old=document.getElementById('balModal');if(old)old.remove();
+  const m=modal(`<h3 class="balhd"><span>Jetons</span><span class="tokchip" id="bmBal">${nfmt(TK.bal)}</span></h3><div class="row bmT" id="bmT">${TABS.map(t=>`<button class="ghost lite" data-t="${t[0]}">${t[1]}</button>`).join('')}</div><div id="bmC"></div>`,true);
+  m.id='balModal';m.classList.add('devmodal');
+  const bal=b=>{if(b!=null){TK.bal=b;balRender()}$('#bmBal',m).textContent=nfmt(TK.bal)};
+  const T={a:bmHome,h:bmHist,s:bmShop,i:bmInv,r:bmRef,x:bmXchg,b:bmBuy};
+  const show=async t=>{$$('#bmT [data-t]',m).forEach(b=>b.classList.toggle('on',b.dataset.t===t));const c=$('#bmC',m);c.innerHTML='<p class="muted">Chargement…</p>';try{await T[t](c,bal,show)}catch(e){c.innerHTML='<p class="muted">'+esc(errMsg(e))+'</p>'}};
+  $('#bmT',m).onclick=e=>{const t=e.target.dataset&&e.target.dataset.t;if(t)show(t)};
+  m._show=show;show(tab||'a');return m;
+}
+const leftTxt=d=>{const s=Math.max(0,(new Date(d)-Date.now())/1000),h=Math.floor(s/3600),mn=Math.floor(s%3600/60);return h?`${h} h ${mn} min`:`${mn} min`};
+async function bmHome(box,bal,show){
+  const w=await balRefresh()||TK.w;bal(w.balance);const qs=await rpcd('quests_list');
+  const draw=()=>{box.innerHTML=`<div class="bigbal">${nfmt(TK.bal)}</div>
+    <div class="row" style="justify-content:center;margin-bottom:10px">${TK.w.daily_ready?'<button id="bmDaily">Récupérer la récompense quotidienne (+2)</button>':`<button class="ghost" disabled>Prochaine récompense dans ${esc(leftTxt(TK.w.daily_next))}</button>`}</div>
+    <label>Quêtes du jour (4 jetons chacune, renouvelées toutes les 24 h)</label>${qs.map(q=>`<div class="pgbar"><div class="pgl"><span>${esc(q.title)} <span class="muted">+${q.reward}</span></span><b>${q.value} / ${q.target}</b></div><div class="pgt"><div style="width:${Math.min(100,q.value/q.target*100)}%"></div></div>
+      ${q.claimed?'<span class="tag">récupérée</span>':q.value>=q.target?`<button class="lite" data-c="${esc(q.code)}">Récupérer</button>`:''}</div>`).join('')}
+    <p class="muted" style="margin-top:12px">Gagnez aussi : victoires en groupe (0,5), parrainage (350), bogue approuvé (55).</p>`};
+  draw();
+  box.onclick=async e=>{
+    if(e.target.id==='bmDaily'){try{const r=await rpcd('daily_claim');if(r.ok)toast('+'+r.gain+' jetons');await balRefresh();bal(TK.bal);draw()}catch(x){toast(errMsg(x))}return}
+    const c=e.target.dataset&&e.target.dataset.c;if(c){try{const b=await rpcd('quest_claim',{p_code:c});toast('+4 jetons');bal(b);qs.forEach(q=>{if(q.code===c)q.claimed=true});await balRefresh();draw()}catch(x){toast(errMsg(x))}}};
+}
+async function bmHist(box,bal){
+  const w=await balRefresh()||TK.w;bal(w.balance);
+  box.innerHTML=(w.log||[]).length?w.log.map(l=>`<div class="row" style="padding:3px 0"><span class="grow">${esc(l.reason)}</span><b style="color:${l.delta>0?'#4a8':l.delta<0?'var(--danger,#d44)':'inherit'}">${l.delta>0?'+':''}${nfmt(l.delta)}</b><span class="muted">${esc(fmtDt(l.at))}</span></div>`).join(''):'<p class="muted">Aucun mouvement.</p>';
+}
+async function bmBuy(box){
+  const sh=await rpcd('shop_list');
+  box.innerHTML=`<div class="refbox"><b>Pack de jetons</b><p>${nfmt(sh.pack.tokens)} jetons pour ${String(sh.pack.cad).replace('.',',')} CAD.</p><button disabled>Bientôt disponible</button></div>`;
+}
+
 /* ---------- boutique ---------- */
-const _ds=devSettings;
-devSettings=function(m){
-  _ds.apply(this,arguments);
-  const cr=m.querySelector('.credits');if(!cr||m.querySelector('#sShop'))return;
-  const d=document.createElement('div');d.className='devsec';d.innerHTML=`<label>Jetons</label><div class="row"><span class="grow" id="sTok">Boutique, quêtes et parrainage</span><button class="ghost" id="sShop">Ouvrir</button></div>`;
-  cr.before(d);$('#sShop',m).onclick=()=>{m.close();shopOpen()};
-};
-async function shopOpen(tab){
-  const m=modal(`<h3>Jetons <span class="tokchip" id="shBal">…</span></h3><div class="row" id="shT" style="flex-wrap:wrap"><button class="ghost lite" data-t="s">Boutique</button><button class="ghost lite" data-t="q">Quêtes</button><button class="ghost lite" data-t="r">Parrainage</button><button class="ghost lite" data-t="h">Historique</button></div><div id="shC" class="devtab"></div><div class="row end"><button class="ghost" data-x>Fermer</button></div>`,true);
-  m.classList.add('devmodal');
-  const bal=b=>{$('#shBal',m).textContent=b+' jeton'+(b>1?'s':'')};
-  const T={s:shShop,q:shQuests,r:shRef,h:shHist};
-  const show=async t=>{$$('#shT [data-t]',m).forEach(b=>b.classList.toggle('on',b.dataset.t===t));const c=$('#shC',m);c.innerHTML='<p class="muted">Chargement…</p>';try{await T[t](c,bal)}catch(e){c.innerHTML='<p class="muted">'+esc(errMsg(e))+'</p>'}};
-  $('#shT',m).onclick=e=>{const t=e.target.dataset&&e.target.dataset.t;if(t)show(t)};
-  show(tab||'s');
+async function bmShop(box,bal,show){
+  const sh=await rpcd('shop_list');TK.shop=sh;bal(sh.balance);
+  const own=sh.badges.filter(b=>b.owned).map(b=>b.code);
+  const grp=[['Fonctions',['lite','pin','name_color','profile_color','profile_bg','badge_slot5']],['Cadres',['frame_photo','frame_photo_anim','frame_profile','frame_profile_anim']],['Nom',['rename','credits_name']],['Emojis',['pack_emoji']]];
+  const row=(name,desc,price,owned,code,extra)=>`<div class="shrow2"><div class="grow"><b>${name}</b><small>${desc}</small></div>${extra||''}${owned?'<span class="tag">possédé</span>':`<button class="lite" data-b="${esc(code)}" ${sh.balance<price?'disabled':''}>${nfmt(price)}</button>`}</div>`;
+  let h='';
+  grp.forEach(([t,codes])=>{h+=`<label>${t}</label>`+codes.map(c=>sh.items.find(i=>i.code===c)).filter(Boolean).map(i=>row(esc(i.name),esc(i.descr),i.price,i.owned,i.code)).join('')});
+  h+='<label>Badges</label>'+sh.badges.map(b=>row(`${medal(b,20)} ${esc(b.name)} <span class="tag t-${esc(b.tier)}">${esc(TIERN[b.tier])}</span>`,esc(b.descr),b.price,b.owned,b.code)).join('');
+  if(own.includes('grand_mecene')&&own.includes('mecene'))h+=`<label>Union</label><div class="shrow2"><div class="grow"><b>Légende du mécène</b><small>Fusionne le Grand mécène et le Mécène en un seul badge.</small></div><button class="lite" data-u="1" ${sh.balance<2750?'disabled':''}>2 750</button></div>`;
+  box.innerHTML=h;
+  box.onclick=async e=>{
+    const d=e.target.dataset;if(!d)return;
+    if(d.b){const it=sh.items.find(i=>i.code===d.b)||sh.badges.find(i=>i.code===d.b);if(!confirm('Acheter « '+it.name+' » pour '+nfmt(it.price)+' jetons ?'))return;
+      try{const b=await rpcd('shop_buy',{p_code:d.b});toast('Achat effectué');TK.pe=null;await peLoad();cosReset();bal(b);show('s')}catch(x){toast(errMsg(x))}}
+    if(d.u){if(!confirm('Fusionner pour 2 750 jetons ? Les deux badges seront remplacés.'))return;try{await rpcd('badge_union');toast('Badge fusionné');await balRefresh();show('s')}catch(x){toast(errMsg(x))}}};
 }
-const FRSAMPLE=n=>`<span class="av sm fr-${FRAME_NAMES[n]}" style="background:#667"><i style="font-style:normal">A</i></span>`;
-async function shShop(box,bal){
-  const {data,error}=await sb.rpc('shop_list');if(error)throw error;bal(data.balance);
-  const eq=data.equipped||{};const grp={frame:'Cadres de photo',badge:'Badges',pack:'Emojis premium',feature:'Fonctions'};
-  box.innerHTML=Object.keys(grp).map(k=>`<label>${grp[k]}</label>`+data.items.filter(i=>i.kind===k).map(i=>`<div class="shrow"><span class="shpv">${k==='frame'?FRSAMPLE(i.code):k==='badge'?badgeSvg(i.code,26):k==='pack'?data.emojis.filter(e=>e.pack===i.code).slice(0,4).map(e=>peSvg(e.code,20)).join(''):'<b>L</b>'}</span><span class="grow"><b>${esc(i.name)}</b><div class="muted">${esc(i.descr)}</div></span>
-    ${i.owned?(k==='frame'||k==='badge'?(eq[k]===i.code?`<button class="ghost lite" data-q="${k}" data-c="">Retirer</button>`:`<button class="lite" data-q="${k}" data-c="${i.code}">Équiper</button>`):'<span class="tag">possédé</span>'):i.price==null?'<span class="muted">Réservé</span>':`<button class="lite" data-b="${i.code}">${i.price} jetons</button>`}</div>`).join('')).join('');
-  box.onclick=async e=>{const b=e.target.dataset;if(!b)return;
-    if(b.b){if(!confirm('Acheter cet article ?'))return;const {error}=await sb.rpc('shop_buy',{p_code:b.b});if(error)return toast(error.message);toast('Achat effectué');await peLoad();return shShop(box,bal)}
-    if(b.q){const {error}=await sb.rpc('shop_equip',{p_slot:b.q,p_code:b.c||null});if(error)return toast(error.message);for(const u in COS)delete COS[u];cosApply();return shShop(box,bal)}};
+
+/* ---------- inventaire : badges, cadres, couleurs, nom ---------- */
+const FRN=(sh,c)=>(sh.frames.find(f=>f.code===c)||{}).name||c;
+async function bmInv(box,bal,show){
+  const [inv,sh]=await Promise.all([rpcd('inventory_me'),rpcd('shop_list')]);TK.inv=inv;bal(sh.balance);
+  const has=c=>inv.items.includes(c),e=inv.ext||{};
+  const sel=new Set((e.badges||[]).filter(c=>c!=='moderateur'));
+  const fr=(cat,field,pass,label)=>{const l=sh.frames.filter(f=>f.cat===cat),ok=has(pass),cur=e[field];
+    return `<label>${label}${ok?'':' <span class="muted">(pass à acheter)</span>'}</label><div class="fgrid">${ok?`<div class="fcell ${!cur?'on':''}" data-f="${field}" data-v="">Aucun</div>`:''}${l.map(f=>`<div class="fcell ${ok?'':'lock'} ${cur===f.code?'on':''}" ${ok?`data-f="${field}" data-v="${f.code}"`:''}>${field==='photo_frame'?`<span class="av ${f.code}" style="background:#667"><i style="font-style:normal">A</i></span>`:`<span class="rfs ${f.code}" style="${/_a/.test(f.code)?'box-shadow:0 0 0 2px #60a5fa':'box-shadow:0 0 0 2px #e0a800'}"></span>`}<span>${esc(f.name)}</span></div>`).join('')}</div>`};
+  box.innerHTML=`<label>Badges affichés (${inv.slots} au maximum${inv.badges.some(b=>b.code==='moderateur')?', Modérateur toujours en premier':''})</label>
+    ${inv.badges.length?inv.badges.map(b=>`<div class="bdgrow">${medal(b,24)}<span class="grow"><b>${esc(b.name)}</b> <span class="tag t-${esc(b.tier)}">${esc(TIERN[b.tier])}</span></span>${b.code==='moderateur'?'<span class="tag">fixe</span>':`<input type="checkbox" data-bs="${esc(b.code)}" ${sel.has(b.code)?'checked':''}>`}</div>`).join(''):'<p class="muted">Aucun badge.</p>'}
+    <div class="row end"><button class="lite" id="ivBd">Enregistrer les badges</button></div>
+    ${fr('photo','photo_frame','frame_photo','Cadre de photo')}${fr('photo_anim','photo_frame','frame_photo_anim','Cadre de photo animé')}${fr('profile','profile_frame','frame_profile','Cadre de profil')}${fr('profile_anim','profile_frame','frame_profile_anim','Cadre de profil animé')}
+    <label>Couleurs et fond</label>
+    ${[['name_color','Couleur du nom','name_color',e.name_color],['profile_color','Couleur du profil','profile_color',e.profile_color],['profile_text_color','Couleur du texte du profil','profile_color',e.profile_text_color]].map(([f,l,need,v])=>`<div class="row" style="padding:3px 0"><span class="grow">${l}${has(need)?'':' <span class="muted">(à acheter)</span>'}</span>${has(need)?`<input type="color" data-cf="${f}" value="${esc(v||'#ffffff')}"><button class="ghost lite" data-cs="${f}">Appliquer</button><button class="ghost lite" data-cr="${f}">Retirer</button>`:''}</div>`).join('')}
+    <div class="row" style="padding:3px 0"><span class="grow">Fond du profil (lien https d’une image ou d’un GIF)${has('profile_bg')?'':' <span class="muted">(à acheter)</span>'}</span></div>
+    ${has('profile_bg')?`<div class="row"><input id="ivBg" class="grow" placeholder="https://…" value="${esc(e.profile_bg||'')}"><button class="ghost lite" id="ivBgS">Appliquer</button></div>`:''}
+    ${has('credits_name')?`<label>Nom dans les crédits</label><div class="row"><input id="ivCr" class="grow" maxlength="40" value="${esc(e.credits_name||'')}"><button class="ghost lite" id="ivCrS">Enregistrer</button></div>`:''}
+    ${e.rename_credits>0?`<label>Changer de nom d’utilisateur (${e.rename_credits} crédit)</label><div class="row"><input id="ivRn" class="grow" maxlength="20" placeholder="nouveau_nom"><button class="lite" id="ivRnS">Changer</button></div>`:''}`;
+  const setf=async(f,v)=>{try{await rpcd('cosmetic_set',{p_field:f,p_value:v});toast('Enregistré');cosReset();show('i')}catch(x){toast(errMsg(x))}};
+  box.onclick=async ev=>{
+    const t=ev.target,d=t.dataset||{},c=t.closest&&t.closest('.fcell[data-f]');
+    if(c)return setf(c.dataset.f,c.dataset.v);
+    if(t.id==='ivBd'){const arr=[...box.querySelectorAll('[data-bs]:checked')].map(x=>x.dataset.bs);try{await rpcd('badges_equip',{p_codes:arr});toast('Badges enregistrés');show('i')}catch(x){toast(errMsg(x))}}
+    if(d.cs)return setf(d.cs,box.querySelector(`[data-cf="${d.cs}"]`).value);
+    if(d.cr)return setf(d.cr,'');
+    if(t.id==='ivBgS')return setf('profile_bg',$('#ivBg',box).value.trim());
+    if(t.id==='ivCrS')return setf('credits_name',$('#ivCr',box).value.trim());
+    if(t.id==='ivRnS'){try{const n=await rpcd('rename_me',{p_new:$('#ivRn',box).value});toast('Nom changé : @'+n);S.profile.username=n;renderMe();show('i')}catch(x){toast(errMsg(x))}}
+  };
 }
-async function shQuests(box,bal){
-  const {data,error}=await sb.rpc('quests_list');if(error)throw error;
-  const w=await sb.rpc('wallet_me');if(w.data)bal(w.data.balance);
-  box.innerHTML=['day','week'].map(p=>`<label>${p==='day'?'Quotidiennes':'Hebdomadaires'}</label>`+data.filter(q=>q.period===p).map(q=>`<div class="pgbar"><div class="pgl"><span>${esc(q.title)} <span class="muted">+${q.reward}</span></span><b>${q.value} / ${q.target}</b></div><div class="pgt"><i style="width:${q.value/q.target*100}%" class="${q.value>=q.target?'ok':''}"></i></div>${q.value>=q.target?(q.claimed?'<span class="tag">récupérée</span>':`<button class="lite" data-c="${q.code}">Récupérer</button>`):''}</div>`).join('')).join('');
-  box.onclick=async e=>{const c=e.target.dataset&&e.target.dataset.c;if(!c)return;const {error}=await sb.rpc('quest_claim',{p_code:c});if(error)return toast(error.message);toast('Jetons reçus');shQuests(box,bal)};
-}
-async function shRef(box,bal){
-  const {data:code,error}=await sb.rpc('referral_code_me');if(error)throw error;
-  const {data:w}=await sb.rpc('wallet_me');if(w)bal(w.balance);const url=LINKBASE()+'/ref?cd='+code;
-  box.innerHTML=`<p class="muted">Partagez ce lien : chaque personne qui s’inscrit, reste plus d’un jour et envoie 5 messages vous rapporte 10 jetons (5 pour elle).</p><div class="row"><input readonly class="grow" value="${esc(url)}"><button class="ghost lite" id="rfCp">Copier</button></div>
-    <p>Parrainages approuvés : <b>${w?w.refs:0}</b> · en attente : <b>${w?w.refs_pending:0}</b></p><label>J’ai un code de parrainage</label><div class="row"><input id="rfC" maxlength="5" placeholder="XXXXX" class="grow"><button id="rfGo">Valider</button></div>`;
+
+/* ---------- parrainage ---------- */
+async function bmRef(box,bal){
+  const code=await rpcd('referral_code_me');const w=TK.w||await balRefresh();const url=LINKBASE()+'/ref?cd='+code;
+  box.innerHTML=`<div class="refbox"><b>Votre lien de parrainage</b><div class="row" style="margin-top:6px"><input readonly class="grow" value="${esc(url)}"><button class="ghost lite" id="rfCp">Copier</button></div>
+    <ul><li>Vous recevez <b>350 jetons</b> par personne parrainée, elle en reçoit <b>125</b>.</li><li>Vous devenez amis automatiquement.</li><li>Aucune récompense si la personne s’est déjà connectée depuis cet appareil.</li></ul></div>
+    <p>Parrainages récompensés : <b>${w?w.refs:0}</b></p>`;
   $('#rfCp',box).onclick=()=>linkCopy(url);
-  $('#rfGo',box).onclick=async()=>{const {data,error}=await sb.rpc('referral_use',{p_code:$('#rfC',box).value.trim().toUpperCase()});if(error)return toast(error.message);toast('Parrainé par @'+data)};
 }
-async function shHist(box,bal){
-  const {data,error}=await sb.rpc('wallet_me');if(error)throw error;bal(data.balance);
-  box.innerHTML=(data.log||[]).map(l=>`<div class="row" style="padding:3px 0"><span class="grow">${esc(l.reason)}</span><b style="color:${l.delta>0?'#4a8':'var(--danger,#d44)'}">${l.delta>0?'+':''}${l.delta}</b><span class="muted">${fmtDt(l.at)}</span></div>`).join('')||'<p class="muted">Aucune opération.</p>';
+
+/* ---------- échange Romanomoney ---------- */
+const XC={ext:{present:false,admin:false}};
+window.addEventListener('message',e=>{
+  if(e.source===window&&e.data&&e.data.rmn==='ext-status'){XC.ext.present=true;XC.ext.admin=!!e.data.admin;if(XC.ext.admin&&S.me)sb.rpc('panel_flag',{p_where:'ext'}).then(()=>{},()=>{})}
+  if(e.data&&e.data.rmn==='admin-opened'&&typeof RMN!=='undefined'&&RMN.fr&&e.source===RMN.fr.contentWindow&&S.me)sb.rpc('panel_flag',{p_where:'site'}).then(()=>{},()=>{});
+});
+function xchgAsk(src,units,nonce){
+  return new Promise(res=>{
+    const to=setTimeout(()=>{off();res({ok:false,reason:'timeout'})},8000);
+    const h=e=>{const d=e.data;if(!d||d.rmn!=='xchg-res'||d.nonce!==nonce)return;if(src==='ext'?e.source!==window:!(typeof RMN!=='undefined'&&RMN.fr&&e.source===RMN.fr.contentWindow))return;off();res(d)};
+    const off=()=>{clearTimeout(to);window.removeEventListener('message',h)};
+    window.addEventListener('message',h);
+    if(src==='ext')window.postMessage({rmn:'ext-xchg',nonce,units},location.origin);
+    else RMN.fr.contentWindow.postMessage({rmn:'xchg',nonce,units},new URL(RMN_BASE).origin);
+  });
 }
-/* lien de parrainage */
+async function bmXchg(box,bal,show){
+  window.postMessage({rmn:'ext-status?'},location.origin);
+  const i=await rpcd('xchg_info');const left=Math.max(0,i.cap-i.used);
+  box.innerHTML=`<div class="refbox"><b>Échanger de l’argent Romanomoney</b><p>${String(i.unit_tokens).replace('.',',')} jeton par tranche de 1,60e1615 échangée. Maximum ${i.cap} tranches par mois (${i.used} utilisées ce mois-ci).</p>
+    ${i.blocked?'<p><b>Échange refusé :</b> le panneau administrateur de Romanomoney a déjà été ouvert.</p>':''}</div>
+    <label>Source</label><div class="row"><label class="row" style="gap:6px"><input type="radio" name="xs" value="ext" checked> Extension</label><label class="row" style="gap:6px"><input type="radio" name="xs" value="site"> Romanomoney du site (ouvert dans Communicer)</label></div>
+    <label>Tranches</label><div class="row"><input id="xN" type="number" min="1" max="${left}" value="${Math.min(1,left)||0}" style="width:90px"><span class="muted">= <span id="xT">${nfmt((Math.min(1,left)||0)*i.unit_tokens)}</span> jeton(s)</span></div>
+    <div class="row end"><button id="xGo" ${i.blocked||!left?'disabled':''}>Échanger</button></div><p class="muted" id="xMsg"></p>`;
+  const n=()=>Math.max(0,Math.min(left,Math.floor(+$('#xN',box).value||0)));
+  $('#xN',box).oninput=()=>{$('#xT',box).textContent=nfmt(n()*i.unit_tokens)};
+  $('#xGo',box).onclick=async()=>{
+    const src=box.querySelector('[name=xs]:checked').value,u=n(),msg=$('#xMsg',box);if(!u)return;
+    if(src==='site'&&!(typeof RMN!=='undefined'&&RMN.fr))return msg.textContent='Ouvrez d’abord Romanomoney dans Communicer (liste des discussions).';
+    if(src==='ext'&&!XC.ext.present)return msg.textContent='Extension introuvable : installez la dernière version et rechargez la page.';
+    $('#xGo',box).disabled=true;msg.textContent='Échange en cours…';let nonce;
+    try{nonce=await rpcd('xchg_begin',{p_src:src,p_units:u})}catch(x){msg.textContent=errMsg(x);return}
+    const r=await xchgAsk(src,u,nonce);
+    if(!r.ok){sb.rpc('xchg_cancel',{p_nonce:nonce}).then(()=>{},()=>{});if(r.reason==='admin')sb.rpc('panel_flag',{p_where:src}).then(()=>{},()=>{});
+      msg.textContent={admin:'Refusé : le panneau administrateur a déjà été ouvert.',funds:'Argent insuffisant.',timeout:'Aucune réponse de la source.',game:'Jeu indisponible.'}[r.reason]||'Échange impossible.';$('#xGo',box).disabled=false;return}
+    try{const b=await rpcd('xchg_commit',{p_nonce:nonce});toast('+'+nfmt(u*i.unit_tokens)+' jeton(s)');bal(b);await balRefresh();show('x')}catch(x){msg.textContent=errMsg(x);}
+  };
+}
+
+/* ---------- épinglage (clic droit) ---------- */
+async function pinsLoad(){try{TK.pins=new Set(await rpcd('pins_me'))}catch(e){}}
+const _rlT=renderList;
+renderList=function(){
+  _rlT.apply(this,arguments);
+  const l=$('#list');if(!l||!TK.pins.size)return;
+  [...l.querySelectorAll('.item[data-id]')].filter(x=>TK.pins.has(x.dataset.id)).reverse().forEach(x=>{x.classList.add('pinned');l.prepend(x)});
+};
+document.addEventListener('contextmenu',e=>{
+  const it=e.target.closest&&e.target.closest('#list .item[data-id]');if(!it)return;
+  e.preventDefault();document.querySelectorAll('.ctxm').forEach(x=>x.remove());
+  const id=it.dataset.id,on=TK.pins.has(id);
+  const m=document.createElement('div');m.className='ctxm';m.style.left=Math.min(e.clientX,innerWidth-200)+'px';m.style.top=Math.min(e.clientY,innerHeight-60)+'px';
+  m.innerHTML=`<button>${on?'Retirer l’épingle':'Épingler en haut'}</button>`;document.body.appendChild(m);
+  const close=()=>{m.remove();document.removeEventListener('mousedown',away,true)};const away=ev=>{if(!m.contains(ev.target))close()};setTimeout(()=>document.addEventListener('mousedown',away,true),0);
+  m.querySelector('button').onclick=async()=>{close();
+    try{await rpcd('pin_set',{p_conv:id,p_on:!on});await pinsLoad();renderList()}
+    catch(x){toast(errMsg(x));if(/Achetez/.test(errMsg(x)))balOpen('s')}};
+});
+
+/* ---------- emojis premium (onglet du sélecteur) ---------- */
+async function peLoad(){
+  try{if(!TK.pe)TK.pe=await rpcd('emoji_premium_list');TK.peOwn=!!(await rpcd('has_item',{p_code:'pack_emoji'}))}catch(e){TK.pe=TK.pe||{}}
+}
+const PESET=()=>{const s=new Set();Object.values(TK.pe||{}).forEach(a=>a.forEach(x=>s.add(x)));return s};
+EMOJIS.Premium='';
+const _rpT=renderPicker;
+renderPicker=function(cat){
+  _rpT.apply(this,arguments);
+  if(cat!=='Premium')return;
+  const g=$('#picker .pg');if(!g)return;const pe=TK.pe||{},cats=Object.keys(pe);
+  const cur=TK.peCat&&pe[TK.peCat]?TK.peCat:cats[0];
+  g.innerHTML=`<div class="pe-sub">${cats.map(c=>`<button class="${c===cur?'':'ghost'}" data-pc="${esc(c)}">${esc(c)}</button>`).join('')}</div>`+(pe[cur]||[]).map(e=>`<button data-e="${e}" data-pe="1"><span class="emo a${e.codePointAt(0)%6}">${e}</span></button>`).join('')+(TK.peOwn?'':'<div class="muted" style="grid-column:1/-1;font-size:11px;margin-top:4px">Réservé aux abonnés du pack premium</div>');
+};
+document.addEventListener('click',e=>{
+  const pc=e.target.closest&&e.target.closest('#picker [data-pc]');if(pc){e.stopImmediatePropagation();TK.peCat=pc.dataset.pc;renderPicker('Premium');return}
+  const b=e.target.closest&&e.target.closest('#picker [data-pe]');
+  if(b&&!TK.peOwn){e.stopImmediatePropagation();e.preventDefault();toast('Réservé aux abonnés du pack premium');balOpen('s')}
+},true);
+const _spT=sendPayload;
+sendPayload=function(c,p){
+  if(p&&p.k==='text'&&!TK.peOwn&&TK.pe){const s=PESET();for(const ch of String(p.t||'')){if(s.has(ch)){toast('Réservé aux abonnés du pack premium');balOpen('s');return Promise.reject(new Error('Emoji réservé aux abonnés'))}}}
+  return _spT.apply(this,arguments);
+};
+
+/* ---------- réglages : jetons, signalement de bogue, crédits ---------- */
+const _dsT=devSettings;
+devSettings=function(m){
+  _dsT.apply(this,arguments);
+  const cr=m.querySelector('.credits');if(!cr||m.querySelector('#sShop'))return;
+  const d=document.createElement('div');d.className='devsec';d.innerHTML=`<label>Jetons</label><div class="row"><span class="grow">Solde, boutique, quêtes, parrainage</span><button class="ghost" id="sShop">Ouvrir</button></div><div class="row" style="margin-top:6px"><span class="grow">Un problème sur le site ?</span><button class="ghost" id="sBug">Signaler un bogue</button></div>`;
+  cr.before(d);$('#sShop',m).onclick=()=>{m.close();balOpen()};$('#sBug',m).onclick=()=>{m.close();bugOpen()};
+  sb.rpc('credits_list').then(r=>{if(r&&r.data&&r.data.length&&cr.isConnected)cr.insertAdjacentHTML('beforeend',r.data.map(n=>`<div class="cr-l"><span>${esc(n)}</span><b>Soutien</b></div>`).join(''))},()=>{});
+};
+function bugOpen(){
+  const m=modal(`<h3>Signaler un bogue</h3><p class="muted">Un bogue approuvé par un administrateur rapporte 55 jetons.</p><label>Titre</label><input id="bgT" maxlength="120"><label>Description (étapes pour le reproduire)</label><textarea id="bgB" rows="6" maxlength="4000" style="width:100%"></textarea><div class="row end"><button class="ghost" data-x>Annuler</button><button id="bgGo">Envoyer</button></div>`);
+  $('#bgGo',m).onclick=async e=>{e.target.disabled=true;try{await rpcd('bug_report',{p_title:$('#bgT',m).value,p_body:$('#bgB',m).value});toast('Signalement envoyé');m.close()}catch(x){e.target.disabled=false;toast(errMsg(x))}};
+}
+
+/* ---------- parrainage : page d'invitation (visiteur) et lien ouvert par un membre ---------- */
+const REF={code:null,old:false,active:false,token:null,info:null};
+const refOld=()=>{try{for(let i=0;i<localStorage.length;i++){const k=localStorage.key(i);if(/^sb-/.test(k)||/^cm_/.test(k))return true}}catch(e){}return false};
+function refCache(){
+  const o={ua:navigator.userAgent,lang:navigator.language,tz:(Intl.DateTimeFormat().resolvedOptions()||{}).timeZone||'',screen:[screen.width,screen.height],at:new Date().toISOString(),ls:{},ss:{},cookies:'',idb:[]};
+  const mask=(k,v)=>/auth-token|access|refresh/i.test(k)?'(jeton masqué, '+String(v).length+' caractères)':String(v).slice(0,2000);
+  try{for(let i=0;i<localStorage.length;i++){const k=localStorage.key(i);o.ls[k]=mask(k,localStorage.getItem(k))}}catch(e){}
+  try{for(let i=0;i<sessionStorage.length;i++){const k=sessionStorage.key(i);o.ss[k]=mask(k,sessionStorage.getItem(k))}}catch(e){}
+  try{o.cookies=document.cookie.split(';').map(c=>{const p=c.split('=');return p[0].trim()+'='+mask(p[0],p.slice(1).join('='))}).join('; ')}catch(e){}
+  return o;
+}
+async function refCacheFull(){const o=refCache();try{if(indexedDB.databases)o.idb=((await indexedDB.databases())||[]).map(d=>d.name)}catch(e){}return o}
+function refContestModal(after){
+  const m=modal(`<h3>Contester</h3><p class="muted">Si c’est vraiment votre premier compte, expliquez-le. Le contenu complet du cache de ce navigateur (sans vos jetons de connexion) est transmis à un administrateur avec votre raison. Vous devez quand même créer votre compte : les récompenses sont versées si la contestation est acceptée.</p><label>Raison</label><textarea id="rcR" rows="5" maxlength="1500" style="width:100%"></textarea><div class="row end"><button class="ghost" data-x>Annuler</button><button id="rcGo">Envoyer la contestation</button></div>`);
+  $('#rcGo',m).onclick=async e=>{
+    const reason=$('#rcR',m).value.trim();if(reason.length<5)return toast('Expliquez la raison');e.target.disabled=true;
+    try{await after(reason,await refCacheFull());m.close()}catch(x){e.target.disabled=false;toast(errMsg(x))}};
+}
+async function refLanding(cd){
+  const card=document.querySelector('#auth .card');if(!card||document.getElementById('refBanner'))return;
+  if(!/^[a-zA-Z0-9]{5}$/.test(cd||'')){S.pendingGo=null;return toast('Lien de parrainage invalide')}
+  REF.active=true;REF.code=cd;REF.old=refOld();
+  let info=null;try{const r=await sb.rpc('referral_preview',{p_code:cd});info=r.data&&r.data.ok?r.data:null}catch(e){}
+  REF.info=info;if(!info)REF.code=null;
+  const ban=document.createElement('div');ban.id='refBanner';
+  const who=info?esc(info.nickname?info.nickname+' (@'+info.username+')':'@'+info.username):'';
+  ban.innerHTML=(REF.old?`<div class="refbox warn" id="refWarn"><b>Aucune récompense possible.</b> Cet appareil s’est déjà connecté à Communicer! (historique dans le cache) : ni vous ni votre parrain ne recevrez de jetons. Vous pouvez quand même créer un compte.<div class="row" style="margin-top:6px"><button class="ghost lite" id="refCt">Contester</button></div></div>`:'')
+    +(info?`<div class="refbox"><b>Invitation de ${who}</b><ul><li>Vous serez automatiquement amis avec ${who} à l’inscription.</li>${REF.old?`<li><s>${who} recevra ${nfmt(info.referrer)} jetons</s></li><li><s>Vous recevrez ${nfmt(info.referred)} jetons</s></li>`:`<li>${who} recevra <b>${nfmt(info.referrer)} jetons</b>.</li><li>Vous recevrez <b>${nfmt(info.referred)} jetons</b>.</li>`}</ul></div>`:'<div class="refbox err">Ce code de parrainage n’existe pas. Vous pouvez quand même créer un compte.</div>');
+  card.prepend(ban);
+  const ti=$('#tabIn');if(ti)ti.style.display='none';
+  const ct=$('#refCt');if(ct)ct.onclick=()=>refContestModal(async(reason,cache)=>{REF.token=Array.from(crypto.getRandomValues(new Uint8Array(20)),b=>b.toString(16).padStart(2,'0')).join('');
+    const r=await sb.rpc('referral_contest_anon',{p_code:REF.code,p_token:REF.token,p_reason:reason,p_cache:cache});if(r.error){REF.token=null;throw r.error}
+    ct.disabled=true;$('#refWarn').insertAdjacentHTML('beforeend','<p><b>Contestation envoyée.</b> Créez votre compte : les jetons seront versés si elle est acceptée.</p>')});
+  setAuthMode('up');
+}
+const _saT=showAuth;
+showAuth=function(msg){_saT.apply(this,arguments);const g=S.pendingGo;if(g&&g.go==='ref')refLanding(g.cd)};
+const _samT=setAuthMode;
+setAuthMode=function(m){if(REF.active)m='up';return _samT.call(this,m)};
+const _suT=signUp;
+signUp=async function(){
+  await _suT.apply(this,arguments);
+  try{localStorage.setItem('cm_seen','1')}catch(e){}
+  if(REF.active&&REF.code){
+    try{const r=await sb.rpc('referral_claim',{p_code:REF.code,p_clean:!REF.old,p_token:REF.token});S.refResult=r.data||{status:'error',message:r.error&&r.error.message}}catch(e){S.refResult={status:'error'}}
+    S.pendingGo=null;REF.active=false;
+  }
+};
+function refResultShow(){
+  const r=S.refResult;if(!r)return;S.refResult=null;
+  const who=r.referrer?'@'+esc(r.referrer):'votre parrain';
+  if(r.status==='rewarded')return modal(`<h3>Bienvenue</h3><p>Vous êtes maintenant ami avec ${who}. Vous avez reçu <b>${nfmt(r.gain||125)} jetons</b>.</p><div class="row end"><button data-x>Continuer</button></div>`);
+  if(r.status==='contest_pending')return modal(`<h3>Contestation en attente</h3><p>Vous êtes ami avec ${who}. Les jetons seront versés à la décision d’un administrateur, si elle est favorable.</p><div class="row end"><button data-x>Continuer</button></div>`);
+  if(r.status==='no_reward'){const why={old_cache:'cet appareil s’était déjà connecté à Communicer!',shared_ip:'un autre compte utilise la même connexion',cap:'ce parrain a atteint sa limite du jour'}[r.reason]||'les conditions ne sont pas remplies';
+    const m=modal(`<h3>Aucune récompense</h3><p>Vous êtes ami avec ${who}, mais aucun jeton n’est versé : ${why}.</p><div class="row end"><button class="ghost" id="rrCt">Contester</button><button data-x>Continuer</button></div>`);
+    const b=$('#rrCt',m);if(r.reason==='cap')b.remove();else b.onclick=()=>{m.close();refContestModal(async(reason,cache)=>{await rpcd('referral_contest_me',{p_reason:reason,p_cache:cache});toast('Contestation envoyée')})}}
+}
 async function goRef(cd){
-  const code=String(cd||'').toUpperCase();if(!/^[A-Z0-9]{5}$/.test(code))return toast('Lien invalide');
-  const m=modal(`<h3>Code de parrainage</h3><p>Utiliser le code <b>${esc(code)}</b> ? Vous recevrez 5 jetons une fois votre compte actif.</p><div class="row end"><button class="ghost" data-x>Annuler</button><button id="grGo">Utiliser</button></div>`);
-  $('#grGo',m).onclick=async()=>{const {data,error}=await sb.rpc('referral_use',{p_code:code});if(error)return toast(error.message);m.close();toast('Parrainé par @'+data)};
+  /* membre déjà connecté qui ouvre un lien de parrainage : aucune récompense possible */
+  const m=modal(`<h3>Lien de parrainage</h3><div class="refbox warn"><b>Aucune récompense possible :</b> vous êtes déjà connecté. Un lien de parrainage ne sert qu’à créer un nouveau compte.</div><p class="muted">Pour inviter quelqu’un, partagez votre propre lien (fenêtre des jetons, onglet Parrainage).</p><div class="row end"><button class="ghost" data-x>Fermer</button><button id="grMy">Mon lien</button></div>`);
+  $('#grMy',m).onclick=()=>{m.close();balOpen('r')};
 }
-/* administration : jetons et articles */
+
+/* ---------- événements de quêtes et victoires ---------- */
+const _sclT=startCallLive;startCallLive=function(){try{sb.rpc('quest_event',{p_kind:'call'}).then(()=>{},()=>{})}catch(e){}return _sclT.apply(this,arguments)};
+const _ssT=startSession;startSession=function(){try{sb.rpc('quest_event',{p_kind:'game'}).then(()=>{},()=>{})}catch(e){}return _ssT.apply(this,arguments)};
+function winRecord(ss){
+  try{const c=S.convs.get(ss.conv);if(!c||c.kind!=='group')return;const o=gameOutcome(ss.game,ss.state,S.me.id);if(!o||o.won!==true)return;
+    sb.rpc('game_win',{p_conv:ss.conv,p_game:ss.game,p_session:ss.id}).then(r=>{if(r&&r.data>0){toast('+'+r.data+' jeton (victoire en groupe)');balRefresh()}},()=>{})}catch(e){}
+}
+
+/* ---------- administration : jetons, badges, bogues, contestations, demandes ---------- */
 async function stTokens(m,box){
-  const {data:sh}=await sb.rpc('shop_list');const items=(sh&&sh.items)||[];
-  box.innerHTML=`<p class="muted">Réservé aux demandes d’indemnisation et aux erreurs ayant causé une perte de jetons. Chaque action est journalisée.</p>
-    <div class="row"><input id="tkU" placeholder="@utilisateur" class="grow"><button class="ghost lite" id="tkSee">Voir</button></div><div id="tkInfo" class="muted"></div>
-    <div class="row"><input id="tkN" type="number" placeholder="Montant (négatif pour retirer)" class="grow"><input id="tkR" placeholder="Raison" class="grow"><button id="tkGo">Appliquer</button></div>
-    <label>Articles</label><div class="row"><select id="tkI" class="grow">${items.map(i=>`<option value="${i.code}">${esc(i.name)}</option>`).join('')}</select><button class="ghost lite" id="tkGive">Donner</button><button class="ghost lite" id="tkTake">Retirer</button></div>`;
-  const U=()=>$('#tkU',box).value;
-  const see=async()=>{const {data,error}=await sb.rpc('admin_wallet',{p_username:U()});if(error)return toast(error.message);$('#tkInfo',box).textContent=`Solde : ${data.balance} · articles : ${(data.items||[]).join(', ')||'aucun'}`};
-  $('#tkSee',box).onclick=see;
-  $('#tkGo',box).onclick=async()=>{const {data,error}=await sb.rpc('admin_tokens',{p_username:U(),p_amount:+$('#tkN',box).value,p_reason:$('#tkR',box).value});if(error)return toast(error.message);toast('Nouveau solde : '+data);see()};
-  const it=give=>async()=>{const {error}=await sb.rpc('admin_item',{p_username:U(),p_code:$('#tkI',box).value,p_give:give});if(error)return toast(error.message);toast('Fait');see()};
-  $('#tkGive',box).onclick=it(true);$('#tkTake',box).onclick=it(false);
+  const sh=await rpcd('shop_list');const items=sh.items.filter(i=>i.kind!=='credit');
+  const allB=['nouveau_venu','habitue','veteran','aine','champion','chasseur','ambassadeur','strategie','elite','premier','ingenieur','gardien','developpeur','concepteur','fondateur','aristocrate','cybernaute','enigmatique','legende','souverain','grand_mecene','mecene','legende_mecene'];
+  const BN={nouveau_venu:'Nouveau venu',habitue:'Habitué',veteran:'Vétéran',aine:'Aîné',champion:'Champion',chasseur:'Chasseur de bogue',ambassadeur:'Ambassadeur',strategie:'Stratège',elite:'Élite',premier:'Premier',ingenieur:'Ingénieur',gardien:'Gardien',developpeur:'Développeur',concepteur:'Concepteur',fondateur:'Fondateur',aristocrate:'Aristocrate',cybernaute:'Cybernaute',enigmatique:'Énigmatique',legende:'Légende',souverain:'Souverain',grand_mecene:'Grand mécène',mecene:'Mécène',legende_mecene:'Légende du mécène'};
+  box.innerHTML=`<div class="row" id="tkT" style="flex-wrap:wrap"><button class="ghost lite on" data-s="w">Jetons et badges</button><button class="ghost lite" data-s="b">Bogues</button><button class="ghost lite" data-s="c">Contestations</button><button class="ghost lite" data-s="d">Demandes de badge</button></div><div id="tkC"></div>`;
+  const C=$('#tkC',box);
+  const views={
+    w:()=>{C.innerHTML=`<p class="muted">Réservé aux demandes d’indemnisation et aux erreurs. Chaque action est journalisée.</p>
+      <div class="row"><input id="tkU" placeholder="@utilisateur" class="grow"><button class="ghost lite" id="tkSee">Voir</button></div><div id="tkInfo" class="muted"></div>
+      <div class="row"><input id="tkN" type="number" step="0.5" placeholder="Montant (négatif pour retirer)" class="grow"><input id="tkR" placeholder="Raison" class="grow"><button id="tkGo">Appliquer</button></div>
+      <label>Badges</label><div class="row"><select id="tkB" class="grow">${allB.map(b=>`<option value="${b}">${esc(BN[b])}</option>`).join('')}</select><button class="ghost lite" id="tkBG">Donner</button><button class="ghost lite" id="tkBT">Retirer</button></div>
+      <label>Articles</label><div class="row"><select id="tkI" class="grow">${items.map(i=>`<option value="${i.code}">${esc(i.name)}</option>`).join('')}</select><button class="ghost lite" id="tkGive">Donner</button><button class="ghost lite" id="tkTake">Retirer</button></div>`;
+      const U=()=>$('#tkU',C).value;
+      const see=async()=>{try{const d=await rpcd('admin_wallet',{p_username:U()});$('#tkInfo',C).textContent=`Solde : ${nfmt(d.balance)} · badges : ${(d.badges||[]).map(b=>BN[b]||b).join(', ')||'aucun'} · articles : ${(d.items||[]).join(', ')||'aucun'}`}catch(x){toast(errMsg(x))}};
+      $('#tkSee',C).onclick=see;
+      $('#tkGo',C).onclick=async()=>{try{const d=await rpcd('admin_tokens',{p_username:U(),p_amount:+$('#tkN',C).value,p_reason:$('#tkR',C).value});toast('Nouveau solde : '+nfmt(d));see()}catch(x){toast(errMsg(x))}};
+      const bg=give=>async()=>{try{await rpcd('admin_badge',{p_username:U(),p_code:$('#tkB',C).value,p_give:give});toast('Fait');see()}catch(x){toast(errMsg(x))}};
+      $('#tkBG',C).onclick=bg(true);$('#tkBT',C).onclick=bg(false);
+      const it=give=>async()=>{try{await rpcd('admin_item',{p_username:U(),p_code:$('#tkI',C).value,p_give:give});toast('Fait');see()}catch(x){toast(errMsg(x))}};
+      $('#tkGive',C).onclick=it(true);$('#tkTake',C).onclick=it(false)},
+    b:async()=>{const l=await rpcd('bug_list');C.innerHTML=l.length?l.map(b=>`<div class="refbox"><b>${esc(b.title)}</b> <span class="muted">@${esc(b.user)} · ${esc(fmtDt(b.at))}</span><p style="white-space:pre-wrap">${esc(b.body)}</p><div class="row end"><button class="ghost lite" data-bn="${b.id}">Refuser</button><button class="lite" data-by="${b.id}">Approuver (+55)</button></div></div>`).join(''):'<p class="muted">Aucun signalement en attente.</p>';
+      C.onclick=async e=>{const d=e.target.dataset||{};const id=d.by||d.bn;if(!id)return;try{await rpcd('bug_review',{p_id:+id,p_approve:!!d.by});toast('Fait');views.b()}catch(x){toast(errMsg(x))}}},
+    c:async()=>{const l=await rpcd('contest_list');C.innerHTML=l.length?l.map(c=>`<div class="refbox"><b>${c.user?'@'+esc(c.user):'(compte pas encore créé)'}</b> <span class="muted">parrain @${esc(c.referrer||'?')} · ${esc(fmtDt(c.at))}</span><p style="white-space:pre-wrap">${esc(c.reason)}</p><details><summary>Cache transmis</summary><pre style="max-height:240px;overflow:auto;font-size:11px">${esc(JSON.stringify(c.cache,null,1))}</pre></details><div class="row end"><button class="ghost lite" data-cn="${c.id}">Refuser</button><button class="lite" data-cy="${c.id}">Accepter (verser les jetons)</button></div></div>`).join(''):'<p class="muted">Aucune contestation en attente.</p>';
+      C.onclick=async e=>{const d=e.target.dataset||{};const id=d.cy||d.cn;if(!id)return;try{await rpcd('contest_decide',{p_id:+id,p_approve:!!d.cy});toast('Fait');views.c()}catch(x){toast(errMsg(x))}}},
+    d:async()=>{const l=await rpcd('badge_requests_list');C.innerHTML=l.length?l.map(r=>`<div class="refbox"><b>@${esc(r.user)}</b> demande <b>${esc(BN[r.code]||r.code)}</b> <span class="muted">${esc(fmtDt(r.at))}</span><p style="white-space:pre-wrap">${esc(r.note)}</p><div class="row end"><button class="ghost lite" data-rn="${r.id}">Refuser</button><button class="lite" data-ry="${r.id}">Accorder</button></div></div>`).join(''):'<p class="muted">Aucune demande.</p>';
+      C.onclick=async e=>{const d=e.target.dataset||{};const id=d.ry||d.rn;if(!id)return;try{await rpcd('badge_request_decide',{p_id:+id,p_ok:!!d.ry});toast('Fait');views.d()}catch(x){toast(errMsg(x))}}}
+  };
+  $('#tkT',box).onclick=e=>{const s=e.target.dataset&&e.target.dataset.s;if(!s)return;$$('#tkT [data-s]',box).forEach(b=>b.classList.toggle('on',b.dataset.s===s));C.onclick=null;views[s]()};
+  views.w();
 }
-/* événements de quêtes */
-const _scl=startCallLive;startCallLive=function(){try{sb.rpc('quest_event',{p_kind:'call'})}catch(e){}return _scl.apply(this,arguments)};
-const _ss=startSession;startSession=function(){try{sb.rpc('quest_event',{p_kind:'game'})}catch(e){}return _ss.apply(this,arguments)};
-/* démarrage : jetons du jour, emojis premium, version Lite payante */
+
+/* ---------- démarrage ---------- */
 (function(){let n=0;const t=setInterval(async()=>{
   if(!(S.me&&S.me.id&&S.profile)){if(++n>240)clearInterval(t);return}
   clearInterval(t);
-  try{const {data}=await sb.rpc('wallet_me');if(data&&data.daily)toast('+2 jetons : connexion du jour')}catch(e){}
-  peLoad();cosApply();
+  try{localStorage.setItem('cm_seen','1')}catch(e){}
+  renderMe();balRefresh();pinsLoad().then(()=>renderList());peLoad();cosApply();
+  setInterval(balRefresh,60000);
+  setTimeout(refResultShow,800);
   if(window.__LITE){try{const {data}=await sb.rpc('has_item',{p_code:'lite'});if(data===false)liteLock()}catch(e){}}
 },500)})();
 async function liteLock(){
   const {data:sh}=await sb.rpc('shop_list');const it=((sh&&sh.items)||[]).find(i=>i.code==='lite');if(!it)return;
   const ov=document.createElement('div');ov.className='quizov';
-  ov.innerHTML=`<div class="quizbox" style="text-align:center;padding-top:15vh"><h3>Communicer Lite</h3><p>La version économie d’énergie se débloque une fois pour ${it.price} jetons.</p><p>Votre solde : <b>${sh.balance}</b></p><div class="row" style="justify-content:center"><button id="llBuy" ${sh.balance<it.price?'disabled':''}>Débloquer</button><button class="ghost" id="llFull">Ouvrir la version complète</button></div></div>`;
+  ov.innerHTML=`<div class="quizbox" style="text-align:center;padding-top:15vh"><h3>Communicer Lite</h3><p>La version économie d’énergie se débloque une fois pour ${nfmt(it.price)} jetons.</p><p>Votre solde : <b>${nfmt(sh.balance)}</b></p><div class="row" style="justify-content:center"><button class="ghost" id="llFull">Version complète</button><button id="llBuy" ${sh.balance<it.price?'disabled':''}>Débloquer</button></div></div>`;
   document.body.appendChild(ov);
   $('#llFull',ov).onclick=()=>{location.href=location.origin+PBASE+'/'};
-  $('#llBuy',ov).onclick=async()=>{const {error}=await sb.rpc('shop_buy',{p_code:'lite'});if(error)return toast(error.message);ov.remove();toast('Lite débloquée')};
+  $('#llBuy',ov).onclick=async()=>{const {error}=await sb.rpc('shop_buy',{p_code:'lite'});if(error)return toast(error.message);ov.remove();toast('Lite débloquée');balRefresh()};
 }
 
 /* ================= Lot 4 : présence « Vu », sessions en direct (1 appel + 1 jeu par conversation) ================= */
@@ -8732,6 +9065,89 @@ function liveRoomOpen(ss){
   livePaint();
 }
 
+/* ================= Corrections : appels (fin automatique, hôte transféré), rejoindre, jetons des .catch ================= */
+let AUTHTOK=null;
+(async()=>{try{const {data}=await sb.auth.getSession();AUTHTOK=data&&data.session&&data.session.access_token||null}catch(e){}try{sb.auth.onAuthStateChange((e,s)=>{AUTHTOK=s&&s.access_token||null})}catch(e){}})();
+const bgRpc=(fn,body)=>{try{sb.rpc(fn,body).then(()=>{},()=>{})}catch(e){}};   // le builder supabase n'a pas de .catch
+function beaconRpc(fn,body){
+  try{if(!AUTHTOK)return;fetch(SUPABASE_URL+'/rest/v1/rpc/'+fn,{method:'POST',keepalive:true,headers:{apikey:SUPABASE_KEY,Authorization:'Bearer '+AUTHTOK,'Content-Type':'application/json'},body:JSON.stringify(body)}).catch(()=>{})}catch(e){}
+}
+liveStart=function(ss){
+  const kind=ss.game==='appel'?'call':'game';
+  sb.rpc('live_start',{p_conv:ss.conv,p_kind:kind,p_session:ss.id,p_game:ss.game}).then(({error})=>{
+    if(error){if(S.sess===ss){toast(errMsg(error));ss.liveBad=true;leaveSession(true)}return}
+    ss.liveOk=true;liveBeatStart(ss);
+    if(S.sess!==ss)bgRpc('live_leave',{p_session:ss.id});
+  });
+};
+function liveBeatStart(ss){
+  clearInterval(ss.beatT);
+  ss.beatT=setInterval(()=>{if(S.sess!==ss){clearInterval(ss.beatT);return}bgRpc('live_beat',{p_session:ss.id})},10000);
+}
+liveEnd=function(ss){clearInterval(ss.beatT);if(ss.liveBad)return;try{sb.rpc('live_leave',{p_session:ss.id}).then(()=>{liveRefresh()},()=>{})}catch(e){}};
+const _js=joinSession;
+joinSession=function(p){
+  _js.apply(this,arguments);const ss=S.sess;if(!ss)return;
+  sb.rpc('live_join',{p_session:p.id,p_spec:false}).then(({error})=>{if(error&&S.sess===ss){toast(errMsg(error));leaveSession(false);return}liveBeatStart(ss)},()=>{});
+};
+liveJoin=function(sid){
+  const l=LIVE.list.find(x=>x.session===sid);if(!l)return;
+  if(S.pend&&!S.sess&&!S.call){clearTimeout(S.pend.to);S.pend=null;hideRing()}
+  if(S.sess||S.call||S.pend)return toast('Quittez d’abord votre activité en cours');
+  if(l.host===S.me.id&&(l.members||0)<=1){      // son propre ancien appel, abandonné : on le termine pour en relancer un
+    try{sb.rpc('live_leave',{p_session:l.session}).then(()=>{liveRefresh();toast('Ancienne session terminée : vous pouvez la relancer')},()=>{})}catch(e){}return;
+  }
+  joinSession({id:l.session,game:l.game,conv:LIVE.conv,host:l.host});
+};
+/* l'hôte d'un appel qui part passe la main ; l'appel s'arrête quand il n'y a plus personne (serveur) */
+const _ls=leaveSession;
+leaveSession=function(notify){
+  const ss=S.sess;
+  if(ss&&notify&&ss.isHost&&ss.game==='appel'){
+    const others=ss.players.filter(u=>u!==S.me.id&&!(ss.away&&ss.away[u])).sort();
+    if(others.length){rsend('host',{u:S.me.id,to:others[0]},ss);ss.isHost=false}
+  }
+  return _ls.apply(this,arguments);
+};
+function roomHostEv(o){
+  const ss=S.sess;if(!ss||ss.game!=='appel'||!o||!o.to||(o.u&&o.u!==ss.host))return;
+  const old=ss.host;ss.host=o.to;
+  if(o.to===S.me.id&&!ss.isHost){
+    ss.isHost=true;ss.invited=new Set();ss.declined=new Set();ss.players=ss.players.filter(x=>x!==old);
+    delete ss.cams[old];delete ss.say[old];if(ss.away)delete ss.away[old];
+    const t=document.querySelector(`#rmTiles .tile[data-u="${old}"]`);if(t)t.remove();pushState();
+  }
+}
+const _at=awayTick;
+awayTick=function(){
+  const ss=S.sess;
+  if(ss&&ss.game==='appel'&&ss.away){
+    for(const u of Object.keys(ss.away)){
+      if(Date.now()-ss.away[u]<AWAY_MS||u!==ss.host)continue;
+      delete ss.away[u];                                   // l'hôte a disparu : le premier participant présent reprend
+      const alive=ss.players.filter(x=>x!==u&&!ss.away[x]).sort();const nh=alive[0]||S.me.id;ss.host=nh;
+      if(nh===S.me.id){ss.isHost=true;ss.invited=new Set();ss.declined=new Set();ss.players=ss.players.filter(x=>x!==u);delete ss.cams[u];delete ss.say[u];
+        const t=document.querySelector(`#rmTiles .tile[data-u="${u}"]`);if(t)t.remove();pushState()}
+    }
+  }
+  return _at.apply(this,arguments);
+};
+/* fermeture de la page : quitter proprement (l'hôte d'appel passe la main, le serveur est prévenu) */
+window.addEventListener('pagehide',e=>{
+  const ss=S.sess;if(!ss||e.persisted)return;
+  beaconRpc('live_leave',{p_session:ss.id});
+  try{leaveSession(true)}catch(x){}
+});
+/* observateur : les boutons caméra/main/texte se désactivent selon l'état reçu de l'hôte */
+const _rr=renderRoom;
+renderRoom=function(){
+  _rr.apply(this,arguments);const ss=S.sess;if(!ss)return;
+  const sp=!!ss.spec&&!(GAMES[ss.game]||{}).p2p;
+  ['rmCam','rmHand'].forEach(i=>{const b=document.getElementById(i);if(b)b.hidden=sp});
+  const sy=document.getElementById('rmSay');if(sy)sy.disabled=sp;
+  const sub=document.getElementById('rmSub');if(sp&&sub)sub.textContent='Observateur';
+};
+
 /* ================= Lot 4 : menu clic droit des messages, plus ancien non lu ================= */
 function scrollOldestUnread(c,base){
   const box=document.getElementById('msgs'),arr=S.msgs[c.id]||[];if(!box)return;
@@ -8807,7 +9223,10 @@ const WDATA={"fr":{"a":"vends egale moule perle savez singe golfe tiens effet pi
 
 /* ================= Lot 4 : jeux Wikipédia (Akinateur, EEMMTT, WikiFight) ================= */
 const WK={
-  qs:o=>Object.entries(o).map(([k,v])=>k+'='+encodeURIComponent(v)).join('&'),
+  imgs(u){u=String(u||'');const m=u.match(/^(https:\/\/upload\.wikimedia\.org\/wikipedia\/[a-z]+\/thumb\/.+\/)(\d+)px-([^\/]+)$/);if(!m)return[u];
+    const full=m[1].replace('/thumb/','/').replace(/\/$/,'');return[u,m[1]+'330px-'+m[3],m[1]+'250px-'+m[3],m[1]+'500px-'+m[3],full]},
+  imgH(u,cls){const a=WK.imgs(u);if(!a[0])return `<span class="${cls||'emt-i'} noimg"></span>`;
+    return `<img class="${cls||'emt-i'}" alt="" crossorigin="anonymous" referrerpolicy="no-referrer" loading="eager" decoding="async" src="${esc(a[0])}" data-o="${esc(a[0])}" data-alt="${esc(a.slice(1).join(' '))}" onerror="var d=this.dataset,l=(d.alt||'').split(' ').filter(Boolean);if(l.length){d.alt=l.slice(1).join(' ');this.src=l[0]}else if(this.crossOrigin&&!d.nc){d.nc=1;this.removeAttribute('crossorigin');this.src=d.o}else{this.style.visibility='hidden'}">`},  qs:o=>Object.entries(o).map(([k,v])=>k+'='+encodeURIComponent(v)).join('&'),
   async j(u){const r=await fetch(u);if(!r.ok)throw new Error('Wikipédia indisponible ('+r.status+')');return r.json()},
   async search(lang,q){q=String(q||'').trim();if(q.length<2)return[];
     const d=await WK.j(`https://${lang}.wikipedia.org/w/api.php?`+WK.qs({action:'opensearch',search:q,limit:8,namespace:0,format:'json',origin:'*'}));
@@ -8819,7 +9238,7 @@ const WK={
     const pool=CELEBS.slice().sort(()=>Math.random()-.5),out=[];
     for(let i=0;i<pool.length&&out.length<n;i+=Math.max(8,n*2)){
       const part=pool.slice(i,i+Math.max(8,n*2));
-      try{const d=await WK.j('https://en.wikipedia.org/w/api.php?'+WK.qs({action:'query',titles:part.join('|'),prop:'pageimages|langlinks',piprop:'thumbnail',pithumbsize:360,lllang:'fr',lllimit:50,redirects:1,format:'json',formatversion:2,origin:'*'}));
+      try{const d=await WK.j('https://en.wikipedia.org/w/api.php?'+WK.qs({action:'query',titles:part.join('|'),prop:'pageimages|langlinks',piprop:'thumbnail',pithumbsize:500,lllang:'fr',lllimit:50,redirects:1,format:'json',formatversion:2,origin:'*'}));
         for(const p of ((d.query&&d.query.pages)||[])){const fr=p.langlinks&&p.langlinks[0]&&(p.langlinks[0].title||p.langlinks[0]['*']);const img=p.thumbnail&&p.thumbnail.source;if(fr&&img&&out.length<n&&!out.some(o=>o.t===fr))out.push({t:fr,img})}}
       catch(e){if(!out.length)throw e}
     }
@@ -8887,7 +9306,7 @@ function mountEmt(root,api){
     try{const l=await WK.celebs(6);if(my===loadN&&api.state().ph==='load')api.act({t:'celebs',l})}catch(e){api.act({t:'err',m:e.message||'Wikipédia injoignable'})}}
   function card(c,i,st,me){
     const sel=mine[i],done=st.done[api.me];
-    return `<div class="emt-c"><div class="emt-i" style="background-image:url('${esc(c.img||'')}')"></div><b>${esc(c.t)}</b>${st.ph==='pick'&&!done?`<div class="emt-b">${['e','m','t'].map(v=>`<button class="ghost lite ${sel===v?'on':''}" data-p="${i}:${v}">${EMT.CAT[v]}</button>`).join('')}</div>`:''}</div>`}
+    return `<div class="emt-c">${WK.imgH(c.img)}<b>${esc(c.t)}</b>${st.ph==='pick'&&!done?`<div class="emt-b">${['e','m','t'].map(v=>`<button class="ghost lite ${sel===v?'on':''}" data-p="${i}:${v}">${EMT.CAT[v]}</button>`).join('')}</div>`:''}</div>`}
   function draw(st){
     const H=$('#emH',root),G=$('#emG',root),C=$('#emC',root);
     if(st.ph==='load'){H.textContent='Tirage de six personnalités…';G.innerHTML='';C.innerHTML=st.err?`<p class="muted">${esc(st.err)}</p>${api.isHost?'<button id="emRt">Réessayer</button>':''}`:'<p class="muted">Chargement depuis Wikipédia…</p>';
@@ -8899,7 +9318,7 @@ function mountEmt(root,api){
       C.innerHTML=done?`<p class="muted">Choix envoyé. En attente de ${st.pl.filter(u=>!st.done[u]).map(api.name).join(', ')}…</p>`:`<p class="muted">Embrasser ${c.e}/2 · Marier ${c.m}/2 · Tuer ${c.t}/2</p><button id="emOk" ${ok?'':'disabled'}>Valider mes choix</button>`;
       return}
     H.textContent='Résultats';mine={};
-    G.innerHTML=`<div class="emt-r">${st.pl.map(u=>`<div class="emt-p"><h4>${esc(api.name(u))}</h4>${['e','m','t'].map(v=>`<div class="emt-l"><span class="emt-t ${v}">${EMT.CAT[v]}</span>${Object.keys(st.picks[u]||{}).filter(i=>st.picks[u][i]===v).map(i=>`<span class="emt-n"><i style="background-image:url('${esc(st.celebs[i].img||'')}')"></i>${esc(st.celebs[i].t)}</span>`).join('')}</div>`).join('')}</div>`).join('')}</div>`;
+    G.innerHTML=`<div class="emt-r">${st.pl.map(u=>`<div class="emt-p"><h4>${esc(api.name(u))}</h4>${['e','m','t'].map(v=>`<div class="emt-l"><span class="emt-t ${v}">${EMT.CAT[v]}</span>${Object.keys(st.picks[u]||{}).filter(i=>st.picks[u][i]===v).map(i=>`<span class="emt-n">${WK.imgH(st.celebs[i].img,'emt-s')}${esc(st.celebs[i].t)}</span>`).join('')}</div>`).join('')}</div>`).join('')}</div>`;
     C.innerHTML=api.isHost?'<button id="emAg">Nouveau tirage</button>':'<p class="muted">L’hôte peut relancer un tirage.</p>';
   }
   return{update(st){draw(st)}};
@@ -8916,6 +9335,7 @@ const AKI={
     if(a.t==='secret'&&st.ph==='choose'&&u===st.th){
       const t=String(a.s&&a.s.t||'').slice(0,100);if(!t)return false;
       hp.secret={t,x:String(a.s.x||'').slice(0,400),img:/^https:\/\/upload\.wikimedia\.org\//.test(a.s.img||'')?a.s.img:null};st.ph='ask';return true}
+    if(a.t==='again'&&st.over){const i=st.pl.indexOf(st.th);st.th=st.pl[(i+1)%st.pl.length];st.ph='choose';st.q=[];st.g=[];st.over=false;st.win=null;st.reveal=null;st.n++;st.saved=null;hp.secret=null;return true}
     if(st.ph!=='ask')return false;
     if(a.t==='q'&&u!==st.th&&!AKI.open(st)&&!st.g.some(x=>x.ok===null)&&st.q.length<AKI.MAXQ){const t=String(a.x||'').trim().slice(0,140);if(!t)return false;st.q.push({u,x:t,a:null});return true}
     if(a.t==='ans'&&u===st.th&&AKI.open(st)&&['o','n','p','?'].includes(a.a)){st.q[st.q.length-1].a=a.a;if(st.q.length>=AKI.MAXQ&&!st.g.some(x=>x.ok===null))AKI.end(st,hp,null);return true}
@@ -8956,7 +9376,7 @@ function mountAki(root,api){
     if(e.target.closest('#akN'))api.act({t:'again'});
   });
   root.addEventListener('keydown',e=>{if(e.key==='Enter'&&e.target.id==='akQi'){e.preventDefault();$('#akQ',root)&&$('#akQ',root).click()}});
-  const prevH=()=>sel?`<div class="aki-pv"><div class="emt-i" style="background-image:url('${esc(sel.img||'')}')"></div><div><b>${esc(sel.t)}</b><p>${esc(sel.x)}</p></div></div>`:'<p class="muted">Cherchez la personne sur Wikipédia puis validez-la.</p>';
+  const prevH=()=>sel?`<div class="aki-pv">${WK.imgH(sel.img)}<div><b>${esc(sel.t)}</b><p>${esc(sel.x)}</p></div></div>`:'<p class="muted">Cherchez la personne sur Wikipédia puis validez-la.</p>';
   function draw(st){
     const H=$('#akH',root),B=$('#akB',root),th=st.th===api.me;
     if(st.ph==='choose'){
@@ -8969,7 +9389,7 @@ function mountAki(root,api){
     const log=st.q.map((q,i)=>`<div class="aki-q"><span>${i+1}. <b>${esc(api.name(q.u))}</b> : ${esc(q.x)}</span><i class="aki-a ${q.a||''}">${q.a?({o:'Oui',n:'Non',p:'Peut-être','?':'Je ne sais pas'})[q.a]:'…'}</i></div>`).join('')+st.g.map(g=>`<div class="aki-q gs"><span><b>${esc(api.name(g.u))}</b> propose : ${esc(g.x)}</span><i class="aki-a ${g.ok===true?'o':g.ok===false?'n':''}">${g.ok===null?'à valider':g.ok?'Bravo':'Non'}</i></div>`).join('');
     if(st.over){
       H.textContent=st.win?`${api.name(st.win)} a trouvé !`:`Personne n’a trouvé : ${api.name(st.th)} gagne`;
-      B.innerHTML=`<div class="aki-pv big"><div class="emt-i" style="background-image:url('${esc((st.reveal&&st.reveal.img)||'')}')"></div><div><b>${esc(st.reveal?st.reveal.t:'')}</b><p>${esc(st.reveal?st.reveal.x:'')}</p></div></div><div class="aki-l">${log}</div>${api.isHost?'<button id="akN">Nouvelle manche</button>':''}`;return}
+      B.innerHTML=`<div class="aki-pv big">${WK.imgH(st.reveal&&st.reveal.img)}<div><b>${esc(st.reveal?st.reveal.t:'')}</b><p>${esc(st.reveal?st.reveal.x:'')}</p></div></div><div class="aki-l">${log}</div>${api.isHost?'<button id="akN">Nouvelle manche</button>':''}`;return}
     H.textContent=`Question ${Math.min(st.q.length+(AKI.open(st)?0:1),AKI.MAXQ)} sur ${AKI.MAXQ}`;
     let ctl='';
     const og=st.g.find(x=>x.ok===null),oq=AKI.open(st);
@@ -8993,30 +9413,35 @@ function mountAki(root,api){
 const WF={
   PEN:30,
   nk:s=>String(s||'').toLowerCase().replace(/_/g,' ').trim(),
-  init(pl){return{pl:pl.slice(),ph:'setup',ch:{},order:[],cur:0,runs:{},hist:[],over:false,saved:null,n:1}},
-  startRun(st){const c=st.ch[st.order[st.cur]];st.runs={};for(const p of st.pl)if(p!==st.order[st.cur])st.runs[p]={path:[c.s],done:false,gave:false,t:Date.now()}},
+  // Même défi pour tous, joué en même temps ; chaque joueur choisit le défi à son tour.
+  init(pl){return{pl:pl.slice(),ph:'pick',order:pl.slice(),cur:0,ch:null,runs:{},hist:[],over:false,saved:null,n:1}},
+  startRun(st){st.runs={};for(const p of st.pl)st.runs[p]={path:[st.ch.s],done:false,gave:false,t:Date.now()}},
   chk(st){
-    if(!Object.values(st.runs).every(r=>r.done))return;
-    const by=st.order[st.cur],c=st.ch[by];st.hist.push({by,s:c.s,e:c.e,runs:JSON.parse(JSON.stringify(st.runs))});
-    st.cur++;if(st.cur>=st.order.length){st.ph='end';st.over=true;st.runs={}}else WF.startRun(st);
+    if(!st.pl.length||!st.pl.every(p=>!st.runs[p]||st.runs[p].done))return;
+    st.hist.push({by:st.ch.by,s:st.ch.s,e:st.ch.e,runs:JSON.parse(JSON.stringify(st.runs))});
+    st.cur++;st.runs={};st.ch=null;
+    if(st.cur>=st.order.length){st.ph='end';st.over=true}else st.ph='pick';
   },
   reduce(st,a,u){
     if(a.t==='saved')return false;
     if(!st.pl.includes(u))return false;
-    if(a.t==='ch'&&st.ph==='setup'){
+    if(a.t==='again'&&st.over){const o=st.pl.slice();o.push(o.shift());st.order=o;st.cur=0;st.ch=null;st.runs={};st.hist=[];st.ph='pick';st.over=false;st.n++;st.saved=null;return true}
+    if(a.t==='ch'&&st.ph==='pick'){
+      if(u!==st.order[st.cur])return false;
       const s=String(a.s||'').slice(0,100),e=String(a.e||'').slice(0,100);if(!s||!e||WF.nk(s)===WF.nk(e))return false;
-      st.ch[u]={s,e};if(st.pl.every(x=>st.ch[x])){st.order=st.pl.slice();st.cur=0;st.ph='play';WF.startRun(st)}return true}
+      st.ch={s,e,by:u};st.ph='play';WF.startRun(st);return true}
     if(st.ph!=='play')return false;
     const r=st.runs[u];if(!r||r.done)return false;
     if(a.t==='nav'){const to=String(a.to||'').slice(0,100);if(!to||r.path.length>200)return false;r.path.push(to);
-      if(WF.nk(to)===WF.nk(st.ch[st.order[st.cur]].e)){r.done=true;r.t=Date.now()-r.t}WF.chk(st);return true}
+      if(WF.nk(to)===WF.nk(st.ch.e)){r.done=true;r.t=Date.now()-r.t}WF.chk(st);return true}
     if(a.t==='give'){r.done=true;r.gave=true;WF.chk(st);return true}
     return false;
   },
-  leave(st,u){const i=st.pl.indexOf(u);if(i<0)return false;st.pl.splice(i,1);delete st.ch[u];delete st.runs[u];
-    if(st.pl.length<2){st.over=true;st.ph='end';st.runs={};return true}
-    if(st.ph==='setup'&&st.pl.every(x=>st.ch[x])){st.order=st.pl.slice();st.cur=0;st.ph='play';WF.startRun(st)}
-    else if(st.ph==='play'){st.order=st.order.filter(x=>x!==u);if(!st.order.length){st.ph='end';st.over=true}else{if(st.cur>=st.order.length){st.ph='end';st.over=true;st.runs={}}else{WF.startRun(st)}}}
+  leave(st,u){const i=st.pl.indexOf(u);if(i<0)return false;st.pl.splice(i,1);delete st.runs[u];
+    const oi=st.order.indexOf(u);if(oi>=0){st.order.splice(oi,1);if(oi<st.cur)st.cur--}
+    if(st.pl.length<2){st.over=true;st.ph='end';st.runs={};st.ch=null;return true}
+    if(st.ph==='pick'){if(st.cur>=st.order.length){st.ph='end';st.over=true}}
+    else if(st.ph==='play'){WF.chk(st)}
     return true},
   totals(st){const t={};st.pl.forEach(u=>t[u]={u,clicks:0,paths:[],dnf:0});
     st.hist.forEach(h=>Object.entries(h.runs).forEach(([u,r])=>{if(!t[u])t[u]={u,clicks:0,paths:[],dnf:0};const c=Math.max(0,r.path.length-1);t[u].clicks+=r.gave?c+WF.PEN:c;if(r.gave)t[u].dnf++;t[u].paths.push({by:h.by,s:h.s,e:h.e,path:r.path,gave:r.gave})}));
@@ -9053,17 +9478,17 @@ function mountWikiFight(root,api){
   }
   function draw(st){
     const H=$('#wfH',root),B=$('#wfB',root);
-    if(st.ph==='setup'){
-      H.textContent='Choisissez votre page de départ et votre page d’arrivée';key='';
-      if(st.ch[api.me]){B.innerHTML=`<p>Votre défi : <b>${esc(st.ch[api.me].s)}</b> → <b>${esc(st.ch[api.me].e)}</b></p><p class="muted">En attente de ${st.pl.filter(u=>!st.ch[u]).map(api.name).join(', ')}…</p>`;return}
-      if(key!=='S'){key='S';pick={s:null,e:null};res=[];B.innerHTML=`<label>Page de départ</label><input data-f="s" placeholder="Rechercher sur Wikipédia" autocomplete="off"><label>Page d’arrivée</label><input data-f="e" placeholder="Rechercher sur Wikipédia" autocomplete="off"><div class="wk-rl" id="wfR"></div><button id="wfOk" disabled>Valider mon défi</button><p class="muted">Les autres joueurs devront aller de votre départ à votre arrivée en cliquant sur les liens des articles.</p>`}
+    if(st.ph==='pick'){
+      const ch=st.order[st.cur];H.textContent=`Défi ${st.cur+1} sur ${st.order.length}`;
+      if(ch!==api.me){key='W'+st.n+':'+st.cur;B.innerHTML=`<p><b>${esc(api.name(ch))}</b> choisit le défi de cette manche…</p><p class="muted">Tout le monde jouera le même défi en même temps.</p>`;return}
+      if(key!=='S'+st.n+':'+st.cur){key='S'+st.n+':'+st.cur;pick={s:null,e:null};res=[];B.innerHTML=`<p class="muted">C’est à vous de choisir le défi : tout le monde le jouera en même temps.</p><label>Page de départ</label><input data-f="s" placeholder="Rechercher sur Wikipédia" autocomplete="off"><label>Page d’arrivée</label><input data-f="e" placeholder="Rechercher sur Wikipédia" autocomplete="off"><div class="wk-rl" id="wfR"></div><button id="wfOk" disabled>Lancer le défi</button>`}
       return}
     if(st.ph==='play'){
-      const by=st.order[st.cur],c=st.ch[by],run=st.runs[api.me];
-      H.textContent=`Défi ${st.cur+1} sur ${st.order.length} · proposé par ${api.name(by)}`;
+      const c=st.ch,by=c.by,run=st.runs[api.me];
+      H.textContent=`Défi ${st.cur+1} sur ${st.order.length} · choisi par ${api.name(by)}`;
       const prog=Object.entries(st.runs).map(([u,r])=>`<span class="wf-p ${r.done?'d':''}">${esc(api.name(u))} : ${Math.max(0,r.path.length-1)} clic${r.path.length>2?'s':''}${r.done?(r.gave?' (abandon)':' ✓'):''}</span>`).join('');
       const k='P'+st.n+':'+st.cur;
-      if(key!==k){key=k;B.innerHTML=`<div class="wf-top"><span><b>${esc(c.s)}</b> → <b>${esc(c.e)}</b></span><span id="wfC"></span>${run?'<button class="ghost lite" id="wfGv">Abandonner</button>':''}</div><div class="wf-prog" id="wfPr"></div><div class="wf-trail" id="wfT"></div>${run?'<div class="wk-v" id="wfV"></div>':'<p class="muted">Vous avez proposé ce défi : observez les autres joueurs.</p><div class="wk-v" id="wfV" hidden></div>'}`;viewT=''}
+      if(key!==k){key=k;viewT='';B.innerHTML=`<div class="wf-top"><span><b>${esc(c.s)}</b> → <b>${esc(c.e)}</b></span><span id="wfC"></span>${run?'<button class="ghost lite" id="wfGv">Abandonner</button>':''}</div><div class="wf-prog" id="wfPr"></div><div class="wf-trail" id="wfT"></div>${run?'<div class="wk-v" id="wfV"></div>':'<p class="muted">Observation de la manche.</p>'}`}
       $('#wfPr',root).innerHTML=prog;
       if(run){$('#wfC',root).textContent=`${Math.max(0,run.path.length-1)} clic(s)`;$('#wfT',root).textContent=run.path.join(' › ');
         if(run.done){$('#wfV',root).innerHTML=`<p class="wf-fin">${run.gave?'Défi abandonné.':'Arrivé en '+(run.path.length-1)+' clic(s) !'} En attente des autres joueurs…</p>`}
@@ -9079,7 +9504,7 @@ function mountWikiFight(root,api){
 Object.assign(GAMES,{
   aki:{name:'Akinateur',desc:'Une personne pense à quelqu’un (trouvé sur Wikipédia), les autres posent des questions pour la deviner.',icon:'help',conv:['group'],min:2,max:8,lobby:true,auto:true,again:true,init:AKI.init,reduce:AKI.reduce,leave:AKI.leave,priv:AKI.priv,result:AKI.result,mount:mountAki,turn:st=>st.over?null:(st.ph==='choose'?st.th:(AKI.open(st)?st.th:st.pl.filter(x=>x!==st.th)))},
   emt:{name:'EEMMTT',desc:'Embrasser, marier, tuer : 2 de chaque parmi 6 personnalités tirées au hasard.',icon:'users',conv:['group'],min:1,max:8,lobby:true,auto:true,again:true,init:EMT.init,reduce:EMT.reduce,leave:EMT.leave,result:EMT.result,mount:mountEmt},
-  wikif:{name:'WikiFight',desc:'Rejoignez la page d’arrivée de vos adversaires en cliquant sur les liens de Wikipédia, en un minimum de clics.',icon:'grid',conv:['group'],min:2,max:8,lobby:true,auto:true,init:WF.init,reduce:WF.reduce,leave:WF.leave,result:WF.result,mount:mountWikiFight,turn:st=>st.ph==='play'?Object.keys(st.runs).filter(u=>!st.runs[u].done):null}
+  wikif:{name:'WikiFight',desc:'Rejoignez la page d’arrivée de vos adversaires en cliquant sur les liens de Wikipédia, en un minimum de clics.',icon:'grid',conv:['group'],min:2,max:8,lobby:true,auto:true,init:WF.init,reduce:WF.reduce,leave:WF.leave,result:WF.result,mount:mountWikiFight,turn:st=>st.ph==='pick'?st.order[st.cur]:st.ph==='play'?Object.keys(st.runs).filter(u=>!st.runs[u].done):null,again:true}
 });
 
 /* ================= Interfaces série 7 : Skyjo, Tag, Blokus ================= */
