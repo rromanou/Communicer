@@ -345,9 +345,9 @@ $cm$,6539 from public.bots where username='libonbot' on conflict (bot_id,path) d
 insert into public.bot_files(bot_id,path,content,size) select id,'pause.cmm',$cm$# Pause des jeux et des appels — toute la logique est ici, en CMM.
 # L'interface (bouton en haut à droite) est dans pause.html.
 # Pendant la pause : plus personne ne touche au jeu, les minuteries, le jeu et les bots s'arrêtent ;
-# on peut seulement parler et utiliser sa caméra. Durée maximale : 60 secondes.
+# on peut seulement parler et utiliser sa caméra. Durée maximale : 15 secondes. Impossible dans un appel.
 
-constante MAX_PAUSE = 60
+constante MAX_PAUSE = 15
 soit etat = {pause: faux, par: nul}
 
 fonction duree(n):
@@ -358,6 +358,15 @@ fonction duree(n):
 
 sur commande "pause" (ctx):
     essayer:
+        soit info = attends api.room.info()
+        si info.game == "appel":
+            dire("La pause est impossible dans un appel.")
+            retour
+        si etat.pause et ctx.user == etat.par:
+            api.room.broadcast("unpause", {by: ctx.user})
+            attends api.group.note("fin de pause", ctx.user, "reprise par son auteur")
+            dire("Le jeu reprend.")
+            retour
         soit ok = attends api.room.can(ctx.user)
         si non ok:
             dire("Vous n'avez pas le droit d'utiliser cette commande.")
@@ -387,14 +396,19 @@ sur commande "fpause" (ctx):
         dire("Impossible : " + e.message)
 
 sur evenement "room:open" (e):
+    soit info = attends api.room.info()
     soit on = attends api.store.get("fpause")
-    api.ui.show("pause-btn", on == vrai)
+    api.ui.show("pause-btn", on == vrai et info.game != "appel")
 
 sur evenement "room:fpause" (e):
-    api.ui.show("pause-btn", e.on == vrai)
+    soit info = attends api.room.info()
+    api.ui.show("pause-btn", e.on == vrai et info.game != "appel")
 
 # Un client reçoit « pause » : il vérifie auprès du serveur que l'auteur y avait droit.
 sur evenement "room:pause" (e):
+    soit info = attends api.room.info()
+    si info.game == "appel":
+        retour
     soit ok = attends api.room.can(e.from, "pause")
     si non ok:
         api.log("pause refusée pour " + e.from)
@@ -414,8 +428,9 @@ sur evenement "room:unpause" (e):
 sur evenement "room:unfrozen" (e):
     etat.pause = faux
     api.ui.set("pause-lbl", "Pause")
+    soit info = attends api.room.info()
     soit on = attends api.store.get("fpause")
-    api.ui.show("pause-btn", on == vrai)
+    api.ui.show("pause-btn", on == vrai et info.game != "appel")
 
 # Bouton « Pause » (tout le monde, si !fpause o) : met en pause ou reprend.
 sur clic "pause-btn" (e):
@@ -428,7 +443,7 @@ sur clic "pause-btn" (e):
             attends api.group.note("pause", e.user, MAX_PAUSE + " s maximum")
     erreur err:
         api.ui.toast(err.message)
-$cm$,3104 from public.bots where username='libonbot' on conflict (bot_id,path) do update set content=excluded.content,size=excluded.size,updated_at=now(),runtime=false;
+$cm$,3808 from public.bots where username='libonbot' on conflict (bot_id,path) do update set content=excluded.content,size=excluded.size,updated_at=now(),runtime=false;
 insert into public.bot_files(bot_id,path,content,size) select id,'pause.css',$cm$.pausebtn{display:inline-flex;align-items:center;gap:6px;background:#ffb703;color:#2b1d00;border-radius:10px;padding:6px 12px;font-weight:700}
 $cm$,143 from public.bots where username='libonbot' on conflict (bot_id,path) do update set content=excluded.content,size=excluded.size,updated_at=now(),runtime=false;
 insert into public.bot_files(bot_id,path,content,size) select id,'pause.html',$cm$<!-- Interface ajoutée à l'appel : bouton de pause en haut à droite (caché tant que !fpause n'est pas activé) -->
