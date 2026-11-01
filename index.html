@@ -8696,9 +8696,25 @@ async function bmHist(box,bal){
   const w=await balRefresh()||TK.w;bal(w.balance);
   box.innerHTML=(w.log||[]).length?w.log.map(l=>`<div class="row" style="padding:3px 0"><span class="grow">${esc(l.reason)}</span><b style="color:${l.delta>0?'#4a8':l.delta<0?'var(--danger,#d44)':'inherit'}">${l.delta>0?'+':''}${nfmt(l.delta)}</b><span class="muted">${esc(fmtDt(l.at))}</span></div>`).join(''):'<p class="muted">Aucun mouvement.</p>';
 }
-async function bmBuy(box){
-  const sh=await rpcd('shop_list');
-  box.innerHTML=`<div class="refbox"><b>Pack de jetons</b><p>${nfmt(sh.pack.tokens)} jetons pour ${String(sh.pack.cad).replace('.',',')} CAD.</p><button disabled>Bientôt disponible</button></div>`;
+const cad=c=>(c/100).toFixed(2).replace('.',',')+' $ CAD';
+async function bmBuy(box,bal,show){
+  const packs=await rpcd('pack_list');let ords=[];try{ords=await rpcd('order_mine')}catch(e){}
+  box.innerHTML=`<p class="muted">Achetez des jetons avec de l’argent réel. Les jetons sont crédités dès la confirmation du paiement.</p>
+    <label>Code promo (facultatif)</label><div class="row"><input id="pkPromo" class="grow" placeholder="CODE" autocapitalize="characters" maxlength="24"><button class="ghost lite" id="pkChk">Vérifier</button></div><div id="pkMsg" class="muted" style="min-height:18px"></div>
+    <div id="pkL">${packs.map(k=>`<div class="shrow2" data-p="${esc(k.code)}"><div class="grow"><b>${nfmt(k.tokens)} jetons</b><small class="pkp" data-c="${k.cents}">${cad(k.cents)}</small></div><button class="lite" data-buy="${esc(k.code)}">Acheter</button></div>`).join('')}</div>
+    ${ords.length?`<label>Dernières commandes</label>${ords.map(o=>`<div class="shrow2"><div class="grow"><b>${esc(o.ref)}</b><small>${nfmt(o.tokens)} jetons · ${cad(o.cents)} · ${o.status==='paid'?'payée':o.status==='pending'?'en attente de paiement':'annulée'}</small></div></div>`).join('')}`:''}`;
+  const code=()=>$('#pkPromo',box).value.trim();
+  const chk=async()=>{const msg=$('#pkMsg',box);$$('.pkp',box).forEach(s=>s.innerHTML=cad(+s.dataset.c));msg.textContent='';if(!code())return;
+    let ok=0,last='';for(const k of packs){try{const r=await rpcd('promo_preview',{p_pack:k.code,p_code:code()});ok++;const s=$('[data-p="'+k.code+'"] .pkp',box);s.innerHTML=`<s>${cad(r.base)}</s> ${cad(r.final)} (−${r.pct} %)`}catch(e){last=errMsg(e)}}
+    msg.textContent=ok?'Code appliqué aux packs concernés.':last};
+  $('#pkChk',box).onclick=chk;
+  box.onclick=async e=>{const k=e.target.dataset&&e.target.dataset.buy;if(!k)return;e.target.disabled=true;
+    try{const r=await rpcd('order_create',{p_pack:k,p_code:code()||null});
+      if(r.paid){toast('Commande '+r.ref+' : '+nfmt(r.tokens)+' jetons crédités');await balRefresh();return show('b')}
+      if(!r.url){toast('Le paiement n’est pas encore ouvert. Commande '+r.ref+' enregistrée.');return show('b')}
+      const u=r.url+(r.url.includes('?')?'&':'?')+'client_reference_id='+encodeURIComponent(r.ref);
+      window.open(u,'_blank','noopener');toast('Paiement ouvert pour la commande '+r.ref+'. Les jetons arrivent après confirmation.');show('b')
+    }catch(x){toast(errMsg(x));e.target.disabled=false}}
 }
 
 /* ---------- boutique ---------- */
@@ -8933,9 +8949,19 @@ async function stTokens(m,box){
   const sh=await rpcd('shop_list');const items=sh.items.filter(i=>i.kind!=='credit');
   const allB=['nouveau_venu','habitue','veteran','aine','champion','chasseur','ambassadeur','strategie','elite','premier','ingenieur','gardien','developpeur','concepteur','fondateur','aristocrate','cybernaute','enigmatique','legende','souverain','grand_mecene','mecene','legende_mecene'];
   const BN={nouveau_venu:'Nouveau venu',habitue:'Habitué',veteran:'Vétéran',aine:'Aîné',champion:'Champion',chasseur:'Chasseur de bogue',ambassadeur:'Ambassadeur',strategie:'Stratège',elite:'Élite',premier:'Premier',ingenieur:'Ingénieur',gardien:'Gardien',developpeur:'Développeur',concepteur:'Concepteur',fondateur:'Fondateur',aristocrate:'Aristocrate',cybernaute:'Cybernaute',enigmatique:'Énigmatique',legende:'Légende',souverain:'Souverain',grand_mecene:'Grand mécène',mecene:'Mécène',legende_mecene:'Légende du mécène'};
-  box.innerHTML=`<div class="row" id="tkT" style="flex-wrap:wrap"><button class="ghost lite on" data-s="w">Jetons et badges</button><button class="ghost lite" data-s="b">Bogues</button><button class="ghost lite" data-s="c">Contestations</button><button class="ghost lite" data-s="d">Demandes de badge</button></div><div id="tkC"></div>`;
+  box.innerHTML=`<div class="row" id="tkT" style="flex-wrap:wrap"><button class="ghost lite on" data-s="w">Jetons et badges</button><button class="ghost lite" data-s="b">Bogues</button><button class="ghost lite" data-s="c">Contestations</button><button class="ghost lite" data-s="d">Demandes de badge</button>${RK()>=4?'<button class="ghost lite" data-s="p">Paiements et promos</button>':''}</div><div id="tkC"></div>`;
   const C=$('#tkC',box);
   const views={
+    p:async()=>{const L=await rpcd('promo_list');const pk=await rpcd('pack_list');
+      C.innerHTML=`<label>Créer un code promo</label><div class="row" style="flex-wrap:wrap"><input id="pcC" placeholder="CODE" maxlength="24" style="width:130px"><input id="pcP" type="number" min="1" max="100" placeholder="% (1-100)" style="width:100px"><input id="pcM" type="number" min="1" placeholder="Utilisations (vide = infini)" style="width:210px"></div>
+        <div class="row" style="flex-wrap:wrap;margin-top:6px"><label class="muted"><input type="checkbox" id="pcAll" checked> Tous les packs</label>${pk.map(k=>`<label class="muted"><input type="checkbox" class="pcI" value="${esc(k.code)}"> ${nfmt(k.tokens)}</label>`).join('')}<button class="ghost lite" id="pcGo">Créer</button></div>
+        <label>Codes</label>${L.map(c=>`<div class="shrow2"><div class="grow"><b>${esc(c.code)}</b> −${c.pct} %<small>${c.items.includes('*')?'tous les packs':c.items.map(x=>esc((pk.find(k=>k.code===x)||{}).tokens||x)).join(', ')} · ${c.uses} / ${c.max==null?'∞':c.max} utilisations${c.active?'':' · désactivé'}</small></div><button class="ghost lite" data-t="${esc(c.code)}" data-a="${c.active?0:1}">${c.active?'Désactiver':'Activer'}</button></div>`).join('')||'<p class="muted">Aucun code.</p>'}
+        <label>Lien de paiement (https, fournisseur de paiement)</label><div class="row"><input id="pcU" class="grow" placeholder="https://…"><button class="ghost lite" id="pcUS">Enregistrer</button></div>`;
+      C.onclick=async e=>{const t=e.target;try{
+        if(t.id==='pcGo'){const items=$('#pcAll',C).checked?['*']:$$('.pcI:checked',C).map(x=>x.value);const mx=$('#pcM',C).value;await rpcd('promo_create',{p_code:$('#pcC',C).value,p_pct:+$('#pcP',C).value,p_items:items,p_max:mx?+mx:null});toast('Code créé');views.p()}
+        else if(t.dataset&&t.dataset.t){await rpcd('promo_set',{p_code:t.dataset.t,p_active:t.dataset.a==='1'});views.p()}
+        else if(t.id==='pcUS'){await rpcd('pay_cfg_set',{p_url:$('#pcU',C).value.trim()});toast('Lien enregistré')}
+      }catch(x){toast(errMsg(x))}}},
     w:()=>{C.innerHTML=`<p class="muted">Réservé aux demandes d’indemnisation et aux erreurs. Chaque action est journalisée.</p>
       <div class="row"><input id="tkU" placeholder="@utilisateur" class="grow"><button class="ghost lite" id="tkSee">Voir</button></div><div id="tkInfo" class="muted"></div>
       <div class="row"><input id="tkN" type="number" step="0.5" placeholder="Montant (négatif pour retirer)" class="grow"><input id="tkR" placeholder="Raison" class="grow"><button id="tkGo">Appliquer</button></div>
