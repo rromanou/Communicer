@@ -1,0 +1,391 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Pissourit</title>
+<link href="https://fonts.googleapis.com/css2?family=VT323&display=swap" rel="stylesheet">
+<style>
+:root{--cream:#fff8e7;--leaf:#7acb7f;--ink:#6b4f3a;--coral:#ff8e7f;--sun:#ffd36b}
+*{box-sizing:border-box}
+html,body{margin:0;height:100%;overflow:hidden;background:#9fdcf2;font-family:'VT323',monospace;font-size:20px;color:var(--ink)}
+#wrap{position:fixed;inset:0;transition:transform 1s cubic-bezier(.2,.8,.2,1)}
+canvas{width:100%;height:100%;display:block;touch-action:none;image-rendering:pixelated}
+.card{background:var(--cream);border:4px solid #6b4f3a;border-radius:0;box-shadow:4px 4px 0 #6b4f3a;padding:6px 14px}
+#top{position:fixed;top:10px;left:10px;right:10px;display:flex;gap:8px;align-items:flex-start;justify-content:space-between;pointer-events:none}
+#top>*{pointer-events:auto}
+#nom{font-size:21px;font-weight:700;line-height:1}#info{font-size:13px;opacity:.7}
+#needs{display:flex;gap:5px;flex-wrap:wrap;justify-content:center}
+.pill{display:flex;align-items:center;gap:5px;font-size:15px;padding:1px 9px 1px 5px;background:var(--cream);border:3px solid #6b4f3a;border-radius:0;justify-content:space-between}
+.pill i{display:block;width:42px;height:9px;border-radius:0;background:#e7d9bd;overflow:hidden}
+.pill b{display:block;height:100%;background:var(--leaf);border-radius:0;transition:width .6s}
+.pill.low b{background:var(--coral)}
+#msg{position:fixed;top:84px;left:50%;transform:translateX(-50%);font-weight:700;opacity:0;transition:opacity .4s;pointer-events:none;text-align:center}
+#dock{position:fixed;bottom:12px;left:50%;transform:translateX(-50%);display:flex;gap:7px;padding:7px 10px;flex-wrap:wrap;justify-content:center;max-width:96vw}
+button{font:inherit;font-weight:700;border:3px solid #6b4f3a;border-radius:0;padding:4px 10px;background:#fff;color:var(--ink);cursor:pointer;box-shadow:3px 3px 0 #6b4f3a;font-size:20px;transition:transform .12s}
+button:hover{transform:translateY(-2px)}button:active{transform:translateY(3px);box-shadow:0 1px 0 #0002}
+button:disabled{opacity:.45;cursor:default}
+button:focus-visible,select:focus-visible,input:focus-visible{outline:3px solid var(--sun);outline-offset:2px}
+button em{display:block;font-style:normal;font-size:22px;line-height:1.1}
+#act{position:fixed;bottom:108px;left:50%;transform:translateX(-50%);background:var(--sun);font-size:18px;padding:10px 20px;display:none}
+#vp{position:fixed;right:10px;bottom:100px;width:262px;display:none;flex-direction:column;gap:5px;font-size:14px;max-height:62vh;overflow:auto}
+#vp.on{display:flex}
+#vp label{display:flex;justify-content:space-between;align-items:center;gap:6px}
+#vp input[type=range]{width:110px;accent-color:var(--leaf)}
+select,input[type=number]{font:inherit;border:3px solid #6b4f3a;border-radius:0;background:#fff;color:var(--ink);max-width:130px}
+#vape{background:var(--coral);color:#fff;padding:11px;font-size:17px;touch-action:none;user-select:none}
+#vape.hold{background:var(--sun);color:var(--ink)}
+#modal{position:fixed;inset:0;display:none;place-items:center;background:#0004}
+#modal.on{display:grid}
+#mb{width:min(560px,94vw);max-height:84vh;overflow:auto;display:flex;flex-direction:column;gap:8px}
+#mb h2{margin:0}.row{display:flex;flex-wrap:wrap;gap:6px}
+.fam{display:flex;justify-content:space-between;align-items:center;font-size:14px;gap:6px}
+#start{position:fixed;inset:0;display:none;place-items:center;background:#9fdcf2cc}
+#start .card{text-align:center;padding:22px 28px;display:flex;flex-direction:column;gap:10px;align-items:center}
+h1{margin:0;font-size:30px}
+@media(prefers-reduced-motion:reduce){#wrap{transition:none}}
+</style>
+</head>
+<body>
+<div id="wrap"><canvas id="c"></canvas></div>
+<div id="top">
+  <div class="card"><div id="nom" data-t>Pissourit</div><div id="info"></div></div>
+  <div id="needs"></div>
+  <div class="card">🪙 <b id="jet">0</b> · 📦 <b id="stk">0</b> <span id="stars"></span></div>
+</div>
+<div id="msg" class="card" data-t></div>
+<button id="act"></button>
+<div id="vp" class="card">
+  <b data-t>Ma vape</b>
+  <label>Nicotine <select id="mg"></select></label>
+  <label>Puissance <input id="pow" type="range" min="1" max="10" value="5"></label>
+  <label>Sucré <input class="fl" type="range" min="0" max="10" value="0"></label>
+  <label>Sûr <input class="fl" type="range" min="0" max="10" value="0"></label>
+  <label>Frais <input class="fl" type="range" min="0" max="10" value="0"></label>
+  <label>Piquant <input class="fl" type="range" min="0" max="10" value="0"></label>
+  <label>Salé <input class="fl" type="range" min="0" max="10" value="0"></label>
+  <div id="gt" style="font-size:12px"></div>
+  <label>Type <select id="ty"><option value="vape">Vape</option><option value="cigare">Cigare</option><option value="cigarette">Cigarette</option></select></label><label>Papier <input id="cl" type="color" value="#c0c0c0"></label><label>Ajout <select id="aj"></select></label>
+  <button id="vape">Maintenir pour aspirer</button>
+  <div id="tox"></div>
+</div>
+<div id="dock" class="card"></div>
+<div id="modal"><div id="mb" class="card"></div></div>
+<div id="start"><div class="card"><h1 data-t>Un œuf t'attend !</h1><div>Couleurs, sexe et traits sont tirés au hasard, puis fixés pour toujours.</div><button id="make"><em>🥚</em>Créer mon Pissourit</button></div></div>
+<script>
+const KEY='pissourit_v2',$=id=>document.getElementById(id);
+const STAGES=[['Œuf',4],['Têtard',3],['Têtard à pattes',7],['Larve',14],['Chenille',21],['Chrysalide',3],['Bébé',21],['Adolescent',21],['Jeune adulte',56],['Adulte',119],['Vieillot',14],['Grand-parent',42]];
+const SZ=[.6,.55,.65,.5,.6,.5,.62,.82,1,1.08,1,.94];
+const NEEDS=[['faim','🍎',5],['soif','💧',7],['div','🎈',3],['prop','🫧',2],['ener','🌙',4],['aff','💗',2],['conf','🛋️',0]];
+const ACTS=[['mus','💪','Muscler',1,0],['faim','🍎','Nourrir',4,35],['soif','💧','Boire',2,45],['div','🎈','Jouer',1,25],['aff','💗','Caresser',.5,15],['prop','🫧','Nettoyer',6,50],['ener','🌙','Dormir',8,60]];
+const MGS=[1,2,5,10,15,25,30,45,65,90,120,150,200,300,450,600,820,1125];
+const FAMS=[['chro','Chrométhine','Mélange de lettres'],['defo','Déformine','Distorsion'],['moti','Motilithe','Mouvement ralenti'],['lat','Latérine','Clics retardés'],['temp','Temporine','Animations lentes'],['anim','Animéthine','Animations folles'],['obsc','Obscurine','Faux objets'],['fant','Fantomine','Faux Pissourits'],['best','Bestérite','Faux animaux'],['opt','Optéline','Illusions optiques'],['para','Paraxine','Paranoïa +'],['fert','Fertilithe','Fertilité −'],['hydr','Hydratérite','Déshydratation'],['vita','Vitaline','Santé −'],['dep','Dépendrite','Dépendance +'],['manq','Manquélite','Manque +'],['toxe','Toxérite','Toxicité +'],['endu','Endurite','Endurance +'],['nutri','Nutrilithe','Faim −'],['recre','Récréolite','Divertissement +']];
+const FCOL=[[255,170,210],[190,235,120],[150,235,240],[255,170,110],[200,190,255]];
+const HATS=[['🎩',15],['👑',40],['🌸',10],['🎀',12],['🧢',18],['🪖',25]];
+const NAMES=['Mimi','Choupi','Plume','Kiwi','Nono','Bulle','Pépito','Lulu','Zazou','Fripon'];
+let S=null,TI=0;
+function mul(a){return()=>{a|=0;a=a+0x6D2B79F5|0;let t=Math.imul(a^a>>>15,1|a);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296}}
+function HH(a,b,s=0){let h=(a*374761393+b*668265263+s*2147483647)|0;h=Math.imul(h^h>>>13,1274126177);return((h^h>>>16)>>>0)/4294967296}
+function load(){try{S=JSON.parse(localStorage.getItem(KEY))}catch(e){S=null}}
+function save(){try{localStorage.setItem(KEY,JSON.stringify(S))}catch(e){}}
+function genes(r){const h=()=>Math.floor(r()*360);return{plume:h(),cheveux:h(),oeil:h(),bec:h(),ongle:h(),motif:['uni','tachete','raye'][Math.floor(r()*3)],taille:.92+r()*.2,coiffure:Math.floor(r()*15)}}
+function create(){const seed=Math.floor(Math.random()*1e9),r=mul(seed);
+  S={seed,born:Date.now(),last:Date.now(),name:'',sex:r()<.5?'F':'M',g:genes(r),n:{faim:80,soif:80,div:80,prop:90,ener:90,aff:80},sante:100,
+   pan:0,endu:0,dep:0,manque:0,tox:0,fert:100,jet:60,xp:0,cd:{},stock:0,wanted:0,hat:'',fx:{},fxt:0,
+   vape:{mg:5,f:[0,0,0,0,0],aj:-1},ajouts:[],x:-300,y:-190};
+  S.n.conf=80;S.parts={};S.log=[];S.temp=22;S.def=Date.now();S.vape.t='vape';S.vape.c='#c0c0c0';S.mem=[];S.births={};S.disc=[];S.rch=0;S.alt=null;S.gen=null;S.name=prompt('Nom de ton Pissourit ?')||'Pissou';save();ui()}
+function stage(){const d=(Date.now()-S.born)/864e5;let a=0;for(let i=0;i<STAGES.length;i++){a+=STAGES[i][1];if(d<a)return i}return -1}
+function tick(){const dt=(Date.now()-S.last)/36e5*(S.anes>Date.now()?.25:1);S.last=Date.now();const st=stage();if(st<0){S.mort=true;return}
+  const hy=S.fxt>0&&S.fx.hydr?1+S.fx.hydr*.3:1;
+  NEEDS.forEach(([k,,v])=>{if(st>=1||k=='prop')S.n[k]=Math.max(0,S.n[k]-v*dt*(k=='soif'?hy:1))});
+  if(st==0)S.n.faim=S.n.soif=S.n.div=100;S.fat=Math.min(3,Math.max(0,(S.fat||0)+(S.n.faim>90?.3:-.08)*dt));S.mus=Math.max(0,(S.mus||0)-.04*dt)-(S.n.faim<10?.3*dt:0);
+  const bad=Object.values(S.n).filter(v=>v<15).length;
+  S.sante=Math.min(100,Math.max(0,S.sante+(bad>1?-3:Object.values(S.n).every(v=>v>50)?1:0)*dt));
+  S.pan=Math.max(0,S.pan-15*dt);S.tox=Math.max(0,S.tox-(8+S.endu/6)*dt);S.manque=Math.min(100,S.manque+S.dep*1.5*dt);S.fert=Math.min(100,S.fert+10*dt);
+  if(S.manque>60)S.pan=Math.min(100,S.pan+5*dt);
+  {const[ti,ta,tb]=TEMPS[st],d=S.temp<ta?ta-S.temp:S.temp>tb?S.temp-tb:0,pen=Math.abs(S.temp-ti)<.6?-2:d==0?1:d<=3?3:6;S.n.conf=Math.max(0,Math.min(100,S.n.conf-pen*dt));S.temp+=(S.temp>18?-1:1)*.3*dt;
+   if(d>0&&Date.now()-(S.nt?.t||0)>9e5){S.nt={...S.nt,t:Date.now()};say('La température de l\'habitat est inadaptée !');log('Température inadaptée')}
+   [['faim','a faim !'],['soif','a soif !'],['div','s\'ennuie !'],['prop','a besoin d\'être nettoyé !']].forEach(([k,m])=>{if(S.n[k]<30&&Date.now()-(S.nt?.[k]||0)>6e5){S.nt={...S.nt,[k]:Date.now()};say('Ton Pissourit '+m);log('Ton Pissourit '+m)}});
+   if(st>=7&&Date.now()-S.def>1728e5&&Math.random()<.3*dt){S.sante=Math.max(0,S.sante-10);S.def=Date.now()-1440e5;log('Attaqué : la défense n\'avait pas été vérifiée !');say('⚠ Ton Pissourit a été attaqué !')}}
+  if(S.rch&&S.jet>0){S.jet=Math.max(0,S.jet-S.rch*2*dt);if(Math.random()<S.rch*.3*dt)research(1)}
+  if(S.co){const ks=['faim','soif','div','prop','aff'],k=ks.reduce((a,b)=>S.n[a]<S.n[b]?a:b);S.n[k]=Math.min(100,S.n[k]+6*dt)}
+  if((S.n.faim<=0&&st>=6)||S.sante<=0||S.tox>=100)S.mort=true}
+function log(t){S.log.unshift(new Date().toLocaleString('fr-CA')+' — '+t);S.log=S.log.slice(0,40)}
+function say(t){const m=$('msg');m.textContent=t;m.dataset.o='';m.style.opacity=1;clearTimeout(say.t);say.t=setTimeout(()=>m.style.opacity=0,2600)}
+function ui(){$('start').style.display=S?'none':'grid';if(!S)return;if(S.mort&&!S.memDone)die();
+  $('nom').textContent=S.name;$('nom').dataset.o='';const st=stage();
+  $('info').textContent=S.mort?'Parti rejoindre les étoiles':STAGES[st][0]+' · '+(S.sex=='F'?'femelle':'mâle')+' · '+(S.temp||22).toFixed(1)+'°C'+((S.fat||0)>1.5?' · gros':'')+((S.mus||0)>1.2?' · très musclé':(S.mus||0)>.5?' · musclé':'');
+  $('needs').innerHTML=NEEDS.map(([k,e])=>{const v=Math.round(S.n[k]);return`<div class="pill ${v<30?'low':''}">${e}<i><b style="width:${v}%"></b></i></div>`}).join('')+`<div class="pill ${S.sante<50?'low':''}">❤️<i><b style="width:${S.sante}%"></b></i></div>`;
+  $('tox').innerHTML=[['pan','Paranoïa'],['tox','Toxicité'],['endu','Endurance'],['manque','Manque']].map(([k,l])=>`<div class="pill" style="margin-top:3px">${l}<i><b style="width:${Math.min(100,S[k])}%;background:${k=='endu'?'var(--leaf)':'var(--coral)'}"></b></i></div>`).join('');
+  $('jet').textContent=Math.round(S.jet);$('stk').textContent=S.stock;$('stars').textContent='⭐'.repeat(S.wanted);
+  $('aj').innerHTML='<option value="-1">Aucun</option>'+S.ajouts.map((a,i)=>`<option value="${i}" ${S.vape.aj==i?'selected':''}>${a.nom}</option>`).join('');
+  const t=S.vape.f.reduce((a,b)=>a+b,0);$('gt').textContent=`Goûts : ${t}/23`+(t>0||S.vape.aj>=0?' · ⚠ illégal en ville':'');
+  document.querySelectorAll('#dock [data-i]').forEach(b=>{const[k]=ACTS[+b.dataset.i];b.disabled=S.mort||(S.cd[k]&&Date.now()<S.cd[k])||(st<1&&k!='prop')||(st<3&&k=='ener')})}
+function act(i){const[k,,l,h,v]=ACTS[i];if(S.cd[k]&&Date.now()<S.cd[k])return;if(S.anes>Date.now())return say('Il dort (anesthésie).');if(['faim','div','prop'].includes(k)&&!act.skip)return mini(l,sc=>{act.f=.5+.5*sc;act.skip=1;act(i);act.skip=0;act.f=1});if(k=='mus'){if(stage()<6)return;S.mus=Math.min(2,(S.mus||0)+.25);S.fat=Math.max(0,(S.fat||0)-.2);S.n.ener=Math.max(0,S.n.ener-10);S.n.faim=Math.max(0,S.n.faim-8);S.cd[k]=Date.now()+36e5;S.jet+=3;burst('💪',4);say('Entraînement ✔');save();ui();return}
+  S.n[k]=Math.min(100,S.n[k]+v*(act.f||1));S.cd[k]=Date.now()+h*36e5;
+  if(k=='div'){S.n.ener=Math.max(0,S.n.ener-10);S.n.faim=Math.max(0,S.n.faim-3)}
+  S.jet+=3;S.xp+=5;burst('♥',6);say(l+' ✔');save();ui()}
+$('dock').innerHTML=ACTS.map((a,i)=>`<button data-i="${i}"><em>${a[1]}</em>${a[2]}</button>`).join('')+'<button id="tp"><em>🌡️</em>Temp.</button><button id="cb"><em>🥊</em>Combat</button><button id="jr"><em>📖</em>Journal</button><button id="an"><em>💉</em>Anesthésie</button><button id="sw"><em>🔄</em>Changer</button><button id="fm"><em>🌳</em>Famille</button><button id="vt"><em>💨</em>Vape</button>';
+$('dock').onclick=e=>{const b=e.target.closest('button');if(!b)return;
+  if(b.id=='vt')return $('vp').classList.toggle('on');if(b.id=='tp')return tempGame();if(b.id=='an')return anes();if(b.id=='sw')return swap();if(b.id=='fm')return fam();if(b.id=='cb')return combat();if(b.id=='jr')return openM('<h2>Journal</h2>'+(S.log.length?S.log.map(x=>'<div>'+x+'</div>').join(''):'Rien pour l\'instant.'));
+  if(b.dataset.i){const d=S.fx.lat&&S.fxt>0?S.fx.lat*350:0;setTimeout(()=>act(+b.dataset.i),d)}};
+$('mg').innerHTML=MGS.map(m=>`<option>${m}</option>`).join('');
+$('mg').onchange=()=>{S.vape.mg=+$('mg').value;save()};
+$('aj').onchange=()=>{S.vape.aj=+$('aj').value;save();ui()};
+document.querySelectorAll('.fl').forEach((el,i)=>el.oninput=()=>{const o=S.vape.f.reduce((a,b,j)=>a+(j==i?0:b),0);el.value=Math.min(+el.value,23-o);S.vape.f[i]=+el.value;ui()});
+$('make').onclick=create;$('ty').onchange=()=>{S.vape.t=$('ty').value;save()};$('cl').oninput=()=>{S.vape.c=$('cl').value;save()};
+
+/* ---------- Monde infini ---------- */
+const CH=640,RD=90,chunks={};
+const TOWN=[{k:'b',kind:'shop',x:110,y:250,w:110,h:110,wall:'#ffd9a8',roof:'#ff8e7f',label:'Dépanneur'},{k:'b',kind:'police',x:240,y:250,w:110,h:110,wall:'#cfe0ff',roof:'#5b7fd6',label:'Commissariat'},{k:'b',kind:'lab',x:370,y:250,w:110,h:110,wall:'#e3f7d8',roof:'#7a5bd6',label:'Laboratoire'},{k:'b',kind:'mall',x:500,y:250,w:120,h:110,wall:'#ffe1f0',roof:'#e0629c',label:'Centre commercial'},{k:'fountain',x:320,y:520}];
+function chunk(cx,cy){const k=cx+','+cy;if(chunks[k])return chunks[k];const o=[],r=mul(Math.floor(HH(cx,cy)*1e9)),x0=cx*CH+RD,y0=cy*CH+RD,w=CH-RD;
+  if(cx==0&&cy==0)TOWN.forEach(b=>o.push({...b,x:b.x+x0-RD,y:b.y+y0-RD}));
+  if(cx==-1&&cy==-1){o.push({k:'b',kind:'home',x:-480,y:-420,w:130,h:110,wall:'#fff1c9',roof:'#6fbf73',label:'Ma maison'},{k:'pond',x:-300,y:-250,rx:120,ry:42})}
+  const n=cx==0&&cy==0?4:6+Math.floor(r()*6);
+  for(let i=0;i<n;i++){const t=r(),x=x0+30+r()*(w-60),y=y0+70+r()*(w-90);
+    if(t<.14&&!(cx==0&&cy==0)){const c=Math.floor(r()*360);o.push({k:'b',kind:'house',x,y,w:90+r()*30,h:90,wall:hsl(c,70,88),roof:hsl((c+150)%360,55,68),label:''})}
+    else if(t<.6)o.push({k:'tree',x,y,s:.8+r()*.5,c:r()<.4});
+    else if(t<.78)o.push({k:'bush',x,y});else if(t<.88)o.push({k:'rock',x,y});else o.push({k:'flower',x,y,h:[330,50,200,10,280][i%5]})}
+  if(r()<.12&&!(cx==-1&&cy==-1))o.push({k:'pond',x:x0+w/2,y:y0+w/2,rx:100,ry:36});
+  return chunks[k]={o}}
+const hsl=(h,s,l,a=1)=>`hsla(${h},${s}%,${l}%,${a})`;
+const cv=$('c'),cx=cv.getContext('2d');let W,H,DPR,Z=1,T=0;
+const PIX=3;function size(){DPR=1/PIX;W=innerWidth;H=innerHeight;cv.width=Math.ceil(W*DPR);cv.height=Math.ceil(H*DPR);cx.imageSmoothingEnabled=false;Z=Math.max(.7,Math.min(W,H)/560)}
+addEventListener('resize',size);size();
+const cam={x:-300,y:-190},P0={x:-300,y:-190,dir:1,walk:0,tx:null,ty:null};
+const keys={};addEventListener('keydown',e=>{keys[e.key.toLowerCase()]=1;if(e.key=='Escape')closeM();if(e.key.toLowerCase()=='e'&&ctx&&!$('modal').classList.contains('on'))ctx.fn()});addEventListener('keyup',e=>keys[e.key.toLowerCase()]=0);
+cv.onpointerdown=e=>{if(!S)return;const x=(e.clientX-W/2)/Z+cam.x,y=(e.clientY-H/2)/Z+cam.y;
+  if(Math.abs(x-P0.x)<40&&Math.abs(y-P0.y+30)<50){S.n.aff=Math.min(100,S.n.aff+2);burst('♥',4)}else{P0.tx=x;P0.ty=y}};
+function blocked(x,y){for(let a=-1;a<=1;a++)for(let b=-1;b<=1;b++)for(const o of chunk(Math.floor(x/CH)+a,Math.floor(y/CH)+b).o)if(o.k=='b'&&x>o.x-8&&x<o.x+o.w+8&&y>o.y+o.h*.4&&y<o.y+o.h)return 1;return 0}
+const hearts=[];function burst(c,n){for(let i=0;i<n;i++)hearts.push({x:P0.x+(Math.random()-.5)*50,y:P0.y-70,vy:-1-Math.random(),vx:(Math.random()-.5),l:0,c})}
+/* ---------- Dessin ---------- */
+function rr(x,y,w,h,r){cx.beginPath();cx.roundRect(x,y,w,h,r)}
+function ground(x0,y0,x1,y1){cx.fillStyle='#8fd68f';cx.fillRect(x0,y0,x1-x0,y1-y0);
+  for(let tx=Math.floor(x0/64);tx<=x1/64;tx++)for(let ty=Math.floor(y0/64);ty<=y1/64;ty++){if(HH(tx,ty,5)<.35){cx.fillStyle='#9ddf9a';cx.fillRect(tx*64,ty*64,64,64)}}
+  const m=(v)=>((v%CH)+CH)%CH;
+  for(let tx=Math.floor(x0/CH)-1;tx<=x1/CH+1;tx++){cx.fillStyle='#e9dcb8';cx.fillRect(tx*CH,y0,RD,y1-y0);cx.fillStyle='#fffbe6';for(let y=Math.floor(y0/60)*60;y<y1;y+=60)cx.fillRect(tx*CH+RD/2-3,y,6,30)}
+  for(let ty=Math.floor(y0/CH)-1;ty<=y1/CH+1;ty++){cx.fillStyle='#e9dcb8';cx.fillRect(x0,ty*CH,x1-x0,RD);cx.fillStyle='#fffbe6';for(let x=Math.floor(x0/60)*60;x<x1;x+=60)cx.fillRect(x,ty*CH+RD/2-3,30,6)}}
+function drawObj(o){
+  if(o.k=='b'){const{x,y,w,h}=o;cx.fillStyle='rgba(0,0,0,.13)';cx.beginPath();cx.ellipse(x+w/2,y+h,w*.62,12,0,0,7);cx.fill();
+    cx.fillStyle=o.wall;rr(x,y+h*.3,w,h*.7,8);cx.fill();cx.fillStyle=o.roof;cx.beginPath();cx.moveTo(x-12,y+h*.36);cx.lineTo(x+w/2,y-h*.18);cx.lineTo(x+w+12,y+h*.36);cx.closePath();cx.fill();
+    cx.fillStyle='#b9854f';rr(x+w/2-12,y+h-38,24,38,[12,12,0,0]);cx.fill();cx.fillStyle='#bfe9f7';rr(x+12,y+h*.5,22,22,6);cx.fill();rr(x+w-34,y+h*.5,22,22,6);cx.fill();
+    if(o.label){cx.fillStyle='#fff8e7';rr(x+w/2-50,y+h*.36,100,18,8);cx.fill();cx.fillStyle='#6b4f3a';cx.font='700 14px VT323';cx.textAlign='center';cx.fillText(o.label,x+w/2,y+h*.36+13)}}
+  else if(o.k=='tree'){const s=o.s;cx.fillStyle='rgba(0,0,0,.12)';cx.beginPath();cx.ellipse(o.x,o.y+3,40*s,10*s,0,0,7);cx.fill();cx.fillStyle='#b9854f';rr(o.x-9*s,o.y-70*s,18*s,72*s,6);cx.fill();
+    cx.fillStyle=o.c?'#5fbf6e':'#72d07e';[[0,-100,44],[-28,-80,30],[28,-80,30],[0,-72,38]].forEach(([a,b,r])=>{cx.beginPath();cx.arc(o.x+a*s,o.y+b*s,r*s,0,7);cx.fill()});
+    if(o.c){cx.fillStyle='#ff8e7f';[[-20,-90],[14,-108],[26,-76]].forEach(([a,b])=>{cx.beginPath();cx.arc(o.x+a*s,o.y+b*s,5*s,0,7);cx.fill()})}}
+  else if(o.k=='bush'){cx.fillStyle='#5fbf6e';[[-12,0],[0,-6],[12,0]].forEach(([a,b])=>{cx.beginPath();cx.arc(o.x+a,o.y+b-8,12,0,7);cx.fill()})}
+  else if(o.k=='rock'){cx.fillStyle='#b8bfc9';cx.beginPath();cx.ellipse(o.x,o.y-6,16,11,0,0,7);cx.fill();cx.fillStyle='#d3d9e0';cx.beginPath();cx.ellipse(o.x-4,o.y-9,8,5,0,0,7);cx.fill()}
+  else if(o.k=='flower'){const sw=Math.sin(T*1.5+o.x)*2;cx.strokeStyle='#4fa65e';cx.lineWidth=3;cx.beginPath();cx.moveTo(o.x,o.y);cx.lineTo(o.x+sw,o.y-16);cx.stroke();cx.fillStyle=hsl(o.h,85,75);for(let k=0;k<5;k++){cx.beginPath();cx.arc(o.x+sw+Math.cos(k*1.256)*5,o.y-16+Math.sin(k*1.256)*5,4,0,7);cx.fill()}cx.fillStyle='#ffe27a';cx.beginPath();cx.arc(o.x+sw,o.y-16,3,0,7);cx.fill()}
+  else if(o.k=='pond'){cx.fillStyle='#7fd0e0';cx.beginPath();cx.ellipse(o.x,o.y,o.rx,o.ry,0,0,7);cx.fill();cx.fillStyle='#a6e6f0';cx.beginPath();cx.ellipse(o.x,o.y-3,o.rx*.92,o.ry*.85,0,0,7);cx.fill();cx.strokeStyle='#fff9';cx.lineWidth=2;const r=(T*.3)%1;cx.globalAlpha=1-r;cx.beginPath();cx.ellipse(o.x+o.rx*.3,o.y,r*o.rx*.35,r*o.ry*.35,0,0,7);cx.stroke();cx.globalAlpha=1}
+  else if(o.k=='fountain'){cx.fillStyle='#d9d3c3';cx.beginPath();cx.ellipse(o.x,o.y,70,26,0,0,7);cx.fill();cx.fillStyle='#8fdcee';cx.beginPath();cx.ellipse(o.x,o.y-3,58,20,0,0,7);cx.fill();cx.fillStyle='#d9d3c3';rr(o.x-8,o.y-52,16,50,6);cx.fill();cx.strokeStyle='#d5f6ff';cx.lineWidth=3;for(let i=0;i<5;i++){cx.beginPath();cx.moveTo(o.x,o.y-52);cx.quadraticCurveTo(o.x+(i-2)*16,o.y-78+Math.sin(T*4+i)*4,o.x+(i-2)*22,o.y-14);cx.stroke()}}
+}
+function drawBird(x,y,s,dir,walk,g,par=0,hat='',cop=0,t0=0,bw=1){
+  const hop=walk?Math.abs(Math.sin(T*9+t0)):0,sq=walk?Math.cos(T*9+t0)*.06:Math.sin(T*2.2+t0)*.025,Pc=l=>hsl(g.plume,75,l);
+  cx.save();cx.translate(x,y);cx.fillStyle='rgba(0,0,0,.16)';cx.beginPath();cx.ellipse(0,0,50*s*(1-hop*.1),11*s,0,0,7);cx.fill();
+  cx.translate(0,-hop*18*s);cx.scale(dir*s*(1+sq)*bw,s*(1-sq));
+  cx.fillStyle=hsl(g.ongle,90,62);[-18,14].forEach((dx,i)=>{const lf=walk?Math.sin(T*9+i*3)*8:0;cx.beginPath();cx.ellipse(dx+lf,-3,13,6,0,0,7);cx.fill()});
+  const bg=cx.createRadialGradient(-12,-86,6,0,-58,62);bg.addColorStop(0,Pc(78));bg.addColorStop(1,Pc(60));cx.fillStyle=bg;cx.beginPath();cx.ellipse(0,-58,54,50,0,0,7);cx.fill();
+  cx.save();cx.beginPath();cx.ellipse(0,-58,54,50,0,0,7);cx.clip();
+  if(g.motif=='tachete'){cx.fillStyle=Pc(52);[[-30,-90],[-8,-28],[28,-96],[-38,-48],[10,-74]].forEach(([a,b])=>{cx.beginPath();cx.arc(a,b,7,0,7);cx.fill()})}
+  if(g.motif=='raye'){cx.fillStyle=Pc(54);for(let i=-3;i<4;i++)cx.fillRect(i*17-3,-120,7,120)}
+  cx.fillStyle='rgba(255,255,255,.55)';cx.beginPath();cx.ellipse(10,-34,36,28,0,0,7);cx.fill();cx.restore();
+  cx.fillStyle=Pc(66);cx.save();cx.translate(-34,-58);cx.rotate(Math.sin(T*(walk?9:1.6))*.18);cx.beginPath();cx.ellipse(0,0,15,26,.2,0,7);cx.fill();cx.restore();
+  cx.fillStyle=hsl(g.cheveux,85,68);[-12,0,12].forEach((dx,i)=>{cx.save();cx.translate(dx,-106);cx.rotate((i-1)*.4+Math.sin(T*2+i)*.1);cx.beginPath();cx.ellipse(0,-8,6,14+g.coiffure%4*3,0,0,7);cx.fill();cx.restore()});
+  cx.fillStyle='rgba(255,130,150,.45)';cx.beginPath();cx.arc(34,-46,9,0,7);cx.fill();
+  const bl=(T%4)<.13?.12:1;cx.fillStyle='#3d2b2b';cx.beginPath();cx.ellipse(26,-70,8,10*bl,0,0,7);cx.fill();cx.fillStyle=hsl(g.oeil,70,70);cx.beginPath();cx.ellipse(27,-66,4,4*bl,0,0,7);cx.fill();cx.fillStyle='#fff';cx.beginPath();cx.arc(24,-75,3,0,7);cx.fill();
+  cx.fillStyle=hsl(g.bec,95,66);cx.beginPath();cx.moveTo(44,-64);cx.quadraticCurveTo(66,-62,60,-52);cx.quadraticCurveTo(52,-46,42,-52);cx.fill();
+  if(par>.4){cx.strokeStyle='#fff';cx.lineWidth=3;cx.beginPath();cx.arc(26,-70,13+Math.sin(T*6)*2,0,7);cx.stroke()}
+  if(cop){cx.fillStyle='#3d5fc4';rr(-30,-122,64,22,10);cx.fill();cx.fillStyle='#ffd36b';cx.beginPath();cx.arc(2,-112,6,0,7);cx.fill()}
+  if(hat){cx.font='38px serif';cx.textAlign='center';cx.fillText(hat,2,-104)}
+  cx.restore()}
+function drawSmall(st,x,y){cx.save();cx.translate(x,y);const g=S.g,s=1.3;
+  if(st==0){cx.fillStyle='#fffaf0';cx.beginPath();cx.ellipse(0,-30,26,34,Math.sin(T*1.5)*.08,0,7);cx.fill();cx.fillStyle=hsl(g.plume,80,80,.7);cx.beginPath();cx.ellipse(-6,-36,8,13,.3,0,7);cx.fill()}
+  else if(st<=2){const sx=Math.sin(T)*60;cx.translate(sx,Math.sin(T*2)*4);cx.fillStyle=hsl(g.plume,75,62);cx.beginPath();cx.ellipse(0,-14,28,19,0,0,7);cx.fill();cx.beginPath();cx.moveTo(-26,-14);cx.quadraticCurveTo(-52,-14+Math.sin(T*8)*15,-70,-14);cx.lineTo(-26,-7);cx.fill();if(st==2){cx.fillRect(-6,0,6,10);cx.fillRect(10,0,6,10)}cx.fillStyle='#fff';cx.beginPath();cx.arc(14,-20,8,0,7);cx.fill();cx.fillStyle='#4a3630';cx.beginPath();cx.arc(16,-20,4,0,7);cx.fill()}
+  else if(st<5){const n=st==3?4:7;cx.fillStyle='#4fb56a';cx.beginPath();cx.ellipse(0,-4,(26+n*11),9,0,0,7);cx.fill();for(let i=n-1;i>=0;i--){cx.fillStyle=hsl(g.plume+i*8,70,i%2?66:60);cx.beginPath();cx.arc(i*-22+n*9,-20-Math.abs(Math.sin(T*3+i*.6))*7,15,0,7);cx.fill()}cx.fillStyle='#4a3630';cx.beginPath();cx.arc(n*9+9,-26,3.5,0,7);cx.fill()}
+  else{cx.strokeStyle='#8b5a2b';cx.lineWidth=4;cx.beginPath();cx.moveTo(0,-150);cx.lineTo(0,-90);cx.stroke();cx.save();cx.translate(0,-90);cx.rotate(Math.sin(T*1.2)*.08);cx.fillStyle=hsl(g.plume,45,62);cx.beginPath();cx.ellipse(0,40,24,50,0,0,7);cx.fill();cx.restore()}
+  cx.restore()}
+/* ---------- PNJ, police, camionnette ---------- */
+let npcs=[],ghosts=[],van=null,ctx=null,sellT=0,pT=0;
+function spawnNPC(cop){const r=Math.random,a=r()*6.28,d=520+r()*160;
+  npcs.push({x:P0.x+Math.cos(a)*d,y:P0.y+Math.sin(a)*d,tx:null,ty:null,cop,g:genes(Math.random),name:NAMES[Math.floor(r()*NAMES.length)],budget:15+Math.floor(r()*190),taste:Array.from({length:5},()=>Math.floor(r()*8)),dir:1,walk:0,idle:r()*2})}
+function npcStep(dt){
+  const nc=npcs.filter(n=>!n.cop).length,np=npcs.filter(n=>n.cop).length;
+  if(nc<9)spawnNPC(0);if(np<1+S.wanted)spawnNPC(1);
+  npcs=npcs.filter(n=>Math.hypot(n.x-P0.x,n.y-P0.y)<1100);
+  for(const n of npcs){let sp=70;
+    if(n.cop&&S.wanted>0){const dx=P0.x-n.x,dy=P0.y-n.y,d=Math.hypot(dx,dy)||1;n.tx=P0.x;n.ty=P0.y;sp=135+S.wanted*12;
+      if(d<34){S.jet=Math.floor(S.jet/2);S.stock=0;S.wanted=0;P0.x=TOWN[1].x+55;P0.y=TOWN[1].y+150;say('🚔 Arrêté ! Tu perds la moitié de tes jetons et ton stock.');save();ui()}}
+    else{n.idle-=dt;if(n.tx===null&&n.idle<0){n.tx=n.x+(Math.random()-.5)*400;n.ty=n.y+(Math.random()-.5)*400;n.idle=2+Math.random()*3}}
+    if(n.tx!==null){const dx=n.tx-n.x,dy=n.ty-n.y,d=Math.hypot(dx,dy);if(d<6)n.tx=null,n.walk=0;else{const nx=n.x+dx/d*sp*dt,ny=n.y+dy/d*sp*dt;if(!blocked(nx,ny)){n.x=nx;n.y=ny}else n.tx=null;n.dir=dx>0?1:-1;n.walk=1}}}}
+function doorOf(o){return{x:o.x+o.w/2,y:o.y+o.h+16}}
+function findCtx(){ctx=null;if(!S||$('modal').classList.contains('on')||stage()<6){$('act').style.display='none';return}
+  let best=null;
+  for(let a=-1;a<=1;a++)for(let b=-1;b<=1;b++)for(const o of chunk(Math.floor(P0.x/CH)+a,Math.floor(P0.y/CH)+b).o)if(o.k=='b'&&o.kind!='house'){const d=doorOf(o);if(Math.hypot(P0.x-d.x,P0.y-d.y)<60)best={label:'Entrer : '+o.label,fn:()=>openB(o.kind)}}
+  for(let a=-1;a<=1;a++)for(let b=-1;b<=1;b++)for(const o of chunk(Math.floor(P0.x/CH)+a,Math.floor(P0.y/CH)+b).o)if(o.k=='fountain'&&Math.hypot(P0.x-o.x,P0.y-o.y-20)<100)best={label:'Place publique',fn:openPlace};
+  if(!best)for(const n of npcs)if(!n.cop&&Math.hypot(n.x-P0.x,n.y-P0.y)<80)best={label:'Proposer ma vape à '+n.name,fn:()=>openSell(n)};
+  ctx=best;const b=$('act');b.style.display=best?'block':'none';if(best)b.textContent=best.label+' (E)'}
+$('act').onclick=()=>ctx&&ctx.fn();
+function vanStep(dt){if(!van)return;van.x+=260*dt;if(!van.done&&van.x>=P0.x){van.done=1;S.stock+=van.n;say('📦 PAP-XPRESS a livré '+van.n+' vapes !');save();ui()}if(van.x>P0.x+1300)van=null}
+function sendVan(n){const ry=Math.floor(P0.y/CH)*CH+RD/2;van={x:P0.x-1100,y:ry,n,done:0}}
+function drawVan(){const v=van;cx.fillStyle='rgba(0,0,0,.15)';cx.beginPath();cx.ellipse(v.x,v.y+18,48,9,0,0,7);cx.fill();cx.fillStyle='#ffd36b';rr(v.x-46,v.y-30,92,46,10);cx.fill();cx.fillStyle='#fff';rr(v.x+20,v.y-24,22,16,4);cx.fill();cx.fillStyle='#e0629c';cx.font='700 13px VT323';cx.textAlign='center';cx.fillText('PAP-XPRESS',v.x-8,v.y-4);cx.fillStyle='#4a3630';[-26,26].forEach(dx=>{cx.beginPath();cx.arc(v.x+dx,v.y+16,8,0,7);cx.fill()})}
+/* ---------- Fumée ---------- */
+const sp={};
+function sprite(rgb){const k=rgb.join();if(sp[k])return sp[k];const c=document.createElement('canvas');c.width=c.height=128;const g=c.getContext('2d');
+  const r=g.createRadialGradient(64,64,4,64,64,62);r.addColorStop(0,`rgba(${rgb},.7)`);r.addColorStop(.6,`rgba(${rgb},.3)`);r.addColorStop(1,`rgba(${rgb},0)`);g.fillStyle=r;g.fillRect(0,0,128,128);return sp[k]=c}
+let SM=[],hold=0,holdT=0;
+function flav(){const f=S.vape.f,t=f.reduce((a,b)=>a+b,0);if(S.vape.t=='cigare')return[175,155,135];if(S.vape.t=='cigarette'){const c=S.vape.c;return[0,1,2].map(i=>Math.round(parseInt(c.slice(1+i*2,3+i*2),16)*.35+150))}if(!t)return[235,240,245];return[0,1,2].map(c=>Math.round(f.reduce((a,v,i)=>a+v*FCOL[i][c],0)/t*.5+125))}
+function beak(){const s=.62*SZ[Math.max(6,stage())]*S.g.taille;return{x:P0.x+P0.dir*58*s,y:P0.y-58*s}}
+function emit(n,pw,mg,thin){const b=beak(),rgb=flav(),op=Math.min(1,.3+Math.log10(mg+1)/3.2)*(1-thin*.5);
+  for(let i=0;i<n;i++)SM.push({x:b.x+(Math.random()-.5)*6,y:b.y+(Math.random()-.5)*5,vx:P0.dir*(.3+Math.random()*1.3)*pw,vy:-(.4+Math.random()*1.1)*pw,r:6+Math.random()*10*pw,gr:.15+Math.random()*.35,life:0,max:240+Math.random()*300*pw,a:op,rgb,ph:Math.random()*6.3})
+  for(let i=0;i<n/3;i++)SM.push({x:b.x,y:b.y,vx:P0.dir*(.5+Math.random()*2)*pw,vy:-(.2+Math.random()*.6)*pw,r:2+Math.random()*3,gr:.04,life:0,max:500+Math.random()*400,a:op*.7,rgb,ph:Math.random()*6.3,w:1})}
+function smoke(){for(const p of SM){p.life++;const t=p.life/p.max;p.vx+=Math.sin(p.y*.02+T*.9+p.ph)*.02+Math.sin(T*.25)*.005+(p.w?Math.sin(p.y*.05+p.ph+T*2)*.03:0);p.vx*=.992;p.vy=p.vy*.996-.006;p.x+=p.vx;p.y+=p.vy;p.r+=p.gr*(1-t)}
+  SM=SM.filter(p=>p.life<p.max);for(const p of SM){const t=p.life/p.max;const al=p.a*Math.min(1,t*6)*(1-t)**1.3;cx.globalAlpha=al*.5;cx.drawImage(sprite(p.rgb.map(c=>c*.7|0)),p.x-p.r*1.75,p.y-p.r*1.65,p.r*4,p.r*4);cx.globalAlpha=al;cx.drawImage(sprite(p.rgb),p.x-p.r*2,p.y-p.r*2,p.r*4,p.r*4)}cx.globalAlpha=1;
+  hearts.forEach(h=>{h.l++;h.x+=h.vx+Math.sin(h.l*.1)*.5;h.y+=h.vy;cx.globalAlpha=Math.max(0,1-h.l/70);cx.font='22px serif';cx.textAlign='center';cx.fillText(h.c,h.x,h.y)});cx.globalAlpha=1;while(hearts.length&&hearts[0].l>70)hearts.shift()}
+const vb=$('vape');
+vb.onpointerdown=e=>{if(S&&S.anes>Date.now()){say('Il dort (anesthésie).');return}if(!S||S.mort||stage()<6){say('Seuls les Pissourits à partir de bébé peuvent fumer.');return}if(S.vape.mg<1)return;vb.setPointerCapture(e.pointerId);hold=1;holdT=0;vb.classList.add('hold');
+  const b=beak();$('wrap').style.transformOrigin=`${(b.x-cam.x)*Z+W/2}px ${(b.y-cam.y)*Z+H/2}px`;$('wrap').style.transform='scale(1.7)'};
+vb.onpointerup=vb.onpointercancel=()=>{if(!hold)return;hold=0;vb.classList.remove('hold');$('wrap').style.transform='';exhale()};
+function exhale(){const pw=+$('pow').value*(1+qa()*.8)*(S.vape.t=='cigare'?1.25:1),mg=S.vape.mg,st=Math.min(1,holdT/2.2);emit(Math.round(28+pw*14*(.4+st)),.5+pw/9*(.5+st),mg,st);
+  const f=Math.min(2,(mg/60+pw/5)*(.4+st)),m=1-S.endu/110,aj=S.vape.aj>=0?S.ajouts[S.vape.aj]:null,k=aj?aj.k:{},fo=aj?aj.force/1000:0;
+  S.pan=Math.min(100,S.pan+(f*9+(k.para||0)*4*fo)*m);S.tox=Math.min(100,S.tox+(f*5+(k.toxe||0)*5*fo)*m);S.sante=Math.max(0,S.sante-(f*.8+(k.vita||0)*1.2*fo)*m);
+  S.endu=Math.min(90,S.endu+(.3+(k.endu||0)*.25*fo)*(1-S.endu/90));S.n.faim=Math.max(0,S.n.faim-.5+(k.nutri?k.nutri*2*fo:0));S.n.soif=Math.max(0,S.n.soif-(k.hydr||0)*3*fo);
+  S.n.div=Math.min(100,S.n.div+4+(k.recre||0)*4*fo);S.dep=Math.min(10,S.dep+mg/2000*(pw/5)+(k.dep||0)*.15*fo+(k.manq||0)*.05*fo);S.manque=Math.max(0,S.manque-30);S.fert=Math.max(0,S.fert-(k.fert||0)*15*fo);
+  if(aj){S.fx={...S.fx};for(const q in k)if(k[q])S.fx[q]=Math.max(S.fx[q]||0,Math.min(6,Math.round(k[q]*Math.max(.5,fo))));S.fxt=45+fo*30}
+  if(S.tox>=100)S.mort=true;save();ui()}
+/* ---------- Modales ---------- */
+function openM(h){$('mb').innerHTML=h+'<button onclick="closeM()">Fermer</button>';$('modal').classList.add('on')}
+function closeM(){clearInterval(TI);clearTimeout(MG.t);$('modal').classList.remove('on')}
+function openB(k){
+  if(k=='shop')openM(`<h2>Dépanneur</h2><div>Achète de la nicotine (légale) : 5 vapes livrées par PAP-XPRESS.</div><div class="row">${MGS.map(m=>`<button onclick="buyNic(${m})">${m} mg/ml<br>${nicP(m)} 🪙</button>`).join('')}</div>`);
+  if(k=='mall')openM(`<h2>Centre commercial</h2><div>Accessoires et pièces de vape.</div>${partsUI()}<div class="row">${HATS.map(([h,p])=>`<button onclick="buyHat('${h}',${p})"><em>${h}</em>${p} 🪙</button>`).join('')}<button onclick="S.hat='';save();closeM()"><em>✖</em>Retirer</button></div>`);
+  if(k=='police')openM(`<h2>Commissariat</h2><div>${S.wanted?'Tu es recherché ('+'⭐'.repeat(S.wanted)+').':'Aucun avis de recherche.'} Ici, les arômes sont interdits. Seule la nicotine pure est tolérée.</div><button onclick="payFine()">Payer l'amende (30 🪙)</button>`);
+  if(k=='home')openM(`<h2>Ma maison</h2><div>${S.name} se repose. Ton habitat (étang, jardin, nid) est à côté. Les besoins se soignent avec le dock du bas.</div><button onclick="S.n.ener=Math.min(100,S.n.ener+20);save();ui();closeM()">Se reposer un peu</button>`);
+  if(k=='lab')labUI()}
+const nicP=m=>3+Math.round(m/12);
+function buyNic(m){const p=nicP(m);if(S.jet<p)return say('Pas assez de jetons.');S.jet-=p;S.vape.mg=m;$('mg').value=m;sendVan(5);closeM();say('Commande passée : la PAP-XPRESS arrive !');save();ui()}
+function buyHat(h,p){if(S.jet<p)return say('Pas assez de jetons.');S.jet-=p;S.hat=h;closeM();save();ui()}
+function payFine(){if(S.jet<30)return say('Pas assez de jetons.');S.jet-=30;S.wanted=0;closeM();save();ui()}
+let LAB={};
+function labUI(){openM(`<h2>Laboratoire</h2><div>Mélange des molécules fictives pour créer un ajout. Chaque niveau coûte 4 🪙. Plus tu en mets, plus la force (sur 2000) monte. Certaines combinaisons réservent des surprises.</div>`+
+  FAMS.map(([k,n,e])=>`<div class="fam"><span><b>${n}</b> ${e}</span><span><button onclick="lb('${k}',-1)">−</button> <b id="l_${k}">${LAB[k]||0}</b> <button onclick="lb('${k}',1)">+</button></span></div>`).join('')+`<div>Chercheurs : ${S.rch||0} (2 🪙/h chacun) · interactions connues : ${(S.disc||[]).length}</div><div class="row"><button onclick="hire()">Engager (60 🪙)</button><button onclick="research(0)">Chercher (15 🪙)</button></div><div id="lcost"></div><button onclick="mkAjout()">Créer l'ajout</button>`);lcost()}
+function lb(k,d){LAB[k]=Math.max(0,Math.min(6,(LAB[k]||0)+d));$('l_'+k).textContent=LAB[k];lcost()}
+function lcost(){const t=Object.values(LAB).reduce((a,b)=>a+b,0);$('lcost').textContent=`Coût : ${t*4} 🪙 · Force estimée : ${force(LAB)}/2000`}
+function force(k){let f=0;for(const q in k)f+=k[q]*k[q]*38+k[q]*40;return Math.min(2000,f)}
+function mkAjout(){const t=Object.values(LAB).reduce((a,b)=>a+b,0);if(!t)return say('Choisis au moins une molécule.');if(S.jet<t*4)return say('Pas assez de jetons.');
+  S.jet-=t*4;let k={...LAB},msg='';const n=Object.values(k).filter(v=>v).length;
+  if(n>=3&&Math.random()<.45){const syn=Math.random()<.5;msg=syn?' ✨ Interaction inconnue découverte : synergie !':' ⚠ Composition instable...';if(!syn){const q=Object.keys(k).filter(x=>k[x]);k[q[Math.floor(Math.random()*q.length)]]=0}}
+  let f=force(k);(S.disc||[]).forEach(([a,b])=>{if(k[a]&&k[b]){f=Math.min(2000,Math.round(f*1.3));msg+=' 🔬 synergie connue !'}});if(msg.includes('synergie'))f=Math.min(2000,Math.round(f*1.25));
+  S.ajouts.push({nom:'Ajout '+(S.ajouts.length+1),k,force:f});S.vape.aj=S.ajouts.length-1;LAB={};closeM();say('Ajout créé (force '+f+')'+msg);save();ui()}
+function openSell(n){
+  if(S.stock<1)return say('Tu n\'as plus de vapes en stock (commande-en au dépanneur).');
+  openM(`<h2>${n.name}</h2><div>Un client potentiel. Il a un budget et des goûts. Négocie !</div><label>Prix : <input type="number" id="pr" min="1" max="500" value="40"> 🪙</label><div class="row"><button onclick="offer(${npcs.indexOf(n)})">Proposer</button></div><div id="sr"></div>`)}
+function offer(i){const n=npcs[i];if(!n)return closeM();const pr=+$('pr').value,v=S.vape,m=1-v.f.reduce((a,b,j)=>a+Math.abs(b-n.taste[j]),0)/46;
+  const lim=n.budget*(.35+m*.65)*(1+Math.log10(v.mg+1)/10)*(v.aj>=0?1.2:1)*(1+qa()*.8);
+  if(pr<=lim)return sold(n,pr);
+  if(pr<=lim*1.4){const c=Math.max(1,Math.round(lim*.9));$('sr').innerHTML=`<div>${n.name} : « Je t'en donne ${c} 🪙. »</div><button onclick="sold(npcs[${i}],${c})">Accepter</button>`}
+  else $('sr').textContent=n.name+' : « Beaucoup trop cher ! »'}
+function sold(n,p){S.jet+=p;S.stock--;S.xp+=10;closeM();say('Vendu pour '+p+' 🪙 !');
+  const ill=S.vape.f.some(x=>x>0)||S.vape.aj>=0;
+  if(ill){const cop=npcs.some(c=>c.cop&&Math.hypot(c.x-P0.x,c.y-P0.y)<420);if(cop||Math.random()<.2){S.wanted=Math.min(3,S.wanted+1);sellT=60;say('🚨 Un policier t\'a vu vendre des arômes interdits !')}}
+  n.tx=n.x+300;n.ty=n.y;save();ui()}
+/* ---------- Effets de substance ---------- */
+setInterval(()=>{const f=S&&S.fxt>0?S.fx:{},par=S?S.pan:0,n=Math.min(4,Math.max(f.chro?Math.ceil(f.chro*.67):0,par<10?0:Math.ceil(par/25)));
+  document.querySelectorAll('[data-t]').forEach(el=>{if(!el.dataset.o)el.dataset.o=el.textContent;
+    el.textContent=el.dataset.o.split(' ').map(w=>{if(!n||w.length<4)return w;const a=w.split('');for(let k=0;k<Math.min(n,a.length-2);k++){const i=1+Math.floor(Math.random()*(a.length-2)),j=1+Math.floor(Math.random()*(a.length-2));[a[i],a[j]]=[a[j],a[i]]}return a.join('')}).join(' ')})},900);
+function ghostStep(dt,f){const lv=(f.obsc||0)+(f.fant||0)+(f.best||0);
+  if(lv&&Math.random()<lv*.004){const a=Math.random()*6.28,d=120+Math.random()*250,k=[];if(f.obsc)k.push(0);if(f.fant)k.push(1);if(f.best)k.push(2);const t=k[Math.floor(Math.random()*k.length)];
+    ghosts.push({x:P0.x+Math.cos(a)*d,y:P0.y+Math.sin(a)*d,t,e:t==0?['🍄','🎁','🪑','🧸'][Math.floor(Math.random()*4)]:['🦊','🐗','🐺','🐍'][Math.floor(Math.random()*4)],g:genes(Math.random),l:0})}
+  ghosts.forEach(g=>{g.l+=dt;if(Math.hypot(g.x-P0.x,g.y-P0.y)<80)g.l=99});ghosts=ghosts.filter(g=>g.l<12)}
+/* ---------- Température, pièces, combat ---------- */
+const TEMPS=[[22,19,25],[23,20,26],[22,19,25],[21,17,25],[22,18,26],[21,19,23],[24,21,27],[23,19,27],[22,17,28],[22,16,29],[23,20,26],[24,21,26]];
+function tempGame(){if(S.cd.tp&&Date.now()<S.cd.tp)return say('Réglage possible dans '+Math.ceil((S.cd.tp-Date.now())/6e4)+' min');
+  const z=.1+Math.random()*.6,t0=performance.now();
+  openM(`<h2>Régler la température</h2><div>Idéale : ${TEMPS[stage()][0]}°C · actuelle : ${S.temp.toFixed(1)}°C. Appuie quand le curseur est dans la zone verte !</div><div style="position:relative;height:28px;border:3px solid #6b4f3a;background:#fff"><div style="position:absolute;left:${z*96}%;width:24%;height:100%;background:#7acb7f"></div><div id="tk" style="position:absolute;width:8px;height:100%;background:#ff8e7f"></div></div><button onclick="tempHit(${z})">Stop !</button>`);
+  TI=setInterval(()=>{const p=(Math.sin((performance.now()-t0)/350)+1)/2;$('tk').style.left=p*96+'%';window.TP=p},16)}
+function tempHit(z){clearInterval(TI);const p=window.TP*96,ok=p>=z*96&&p<=z*96+24,i=TEMPS[stage()][0],d=Math.sign(i-S.temp)||1;
+  S.temp+=ok?d*Math.min(1.5,Math.abs(i-S.temp)):-d;S.cd.tp=Date.now()+18e5;S.jet+=2;log('Température réglée à '+S.temp.toFixed(1)+'°C');closeM();say(ok?'Bien réglé ✔':'Raté… la température a dérivé');save();ui()}
+const PCATS=['ressort','système','chaufferette','corps','colle','tampon'],ADJ=['Rouillé','Simple','Solide','Précis','Poli','Fin','Premium','Expert','Royal','Mythique'],MAT=['Fer','Cuivre','Argent','Or','Cristal'];
+const pn=q=>ADJ[q%10]+' '+MAT[Math.floor(q/10)],qa=()=>S?PCATS.reduce((a,c)=>a+((S.parts[c]??-1)+1),0)/PCATS.length/50:0;
+function partsUI(){return`<h3>Pièces de vape (50 qualités par catégorie)</h3><div class="row"><select id="pc">${PCATS.map(c=>`<option>${c}</option>`).join('')}</select><select id="pi">${Array.from({length:50},(_,q)=>`<option value="${q}">Q${q+1} ${pn(q)} · ${3+q*2}🪙</option>`).join('')}</select><button onclick="buyPart()">Acheter</button></div><div>Équipé : ${PCATS.map(c=>c+' Q'+((S.parts[c]??-1)+1)).join(', ')}</div>`}
+function buyPart(){const c=$('pc').value,q=+$('pi').value,p=3+q*2;if(S.jet<p)return say('Pas assez de jetons.');S.jet-=p;S.parts[c]=q;log('Pièce achetée : '+c+' '+pn(q));closeM();say('Pièce installée ✔');save();ui()}
+function combat(){if(stage()<7)return say('Les combats commencent à l\'adolescence.');if(S.sante<30)return say('Trop blessé pour combattre.');
+  const me=20+(S.mus||0)*35+S.endu*.3-(S.fat||0)*8+S.sante/10,en=15+Math.random()*70;let a=0,r=[];
+  for(let i=0;i<3;i++){const w=me*(.6+Math.random()*.8)>en*(.6+Math.random()*.8);if(w)a++;r.push(`<div>Round ${i+1} : ${w?'tu domines 🥊':'tu encaisses 💥'}</div>`)}
+  const w=a>=2;S.n.ener=Math.max(0,S.n.ener-15);if(w){S.jet+=25;S.xp+=15}else S.sante=Math.max(0,S.sante-15);log(w?'Combat gagné':'Combat perdu (blessé)');
+  openM(`<h2>Combat simulé</h2><div>Ta force : ${Math.round(me)} · adversaire : ${Math.round(en)}</div>${r.join('')}<b>${w?'Victoire ! +25 🪙':'Défaite : blessé, −15 santé.'}</b><button onclick="S.def=Date.now();S.jet=Math.max(0,S.jet-5);closeM();say('Défense vérifiée ✔');save();ui()">Vérifier la défense (5 🪙)</button>`);save();ui()}
+/* ---------- Élevage, famille, mémorial ---------- */
+const PF=['born','last','seed','name','sex','g','n','sante','pan','endu','dep','manque','tox','fert','cd','fat','mus','temp','hat','fx','fxt','def','gen','mort','memDone','co','anes','nt'];
+let MG={},BOTS=[];
+function newEgg(gen){const seed=Math.floor(Math.random()*1e9),r=mul(seed);return{born:Date.now(),last:Date.now(),seed,name:'',sex:r()<.5?'F':'M',g:genes(r),n:{faim:80,soif:80,div:80,prop:90,ener:90,aff:80,conf:80},sante:100,pan:0,endu:0,dep:0,manque:0,tox:0,fert:100,cd:{},fat:0,mus:0,temp:22,hat:'',fx:{},fxt:0,def:Date.now(),gen:gen||null,mort:false,memDone:false,co:null,anes:0,nt:{}}}
+const sum=p=>({name:p.name,sex:p.sex,seed:p.seed,gen:p.gen?{pere:p.gen.pere&&{name:p.gen.pere.name},mere:p.gen.mere&&{name:p.gen.mere.name}}:null});
+function breed(A,B){const r=Math.random,g={};let mut=0;
+  ['plume','cheveux','oeil','bec','ongle','motif','taille','coiffure'].forEach(k=>{const x=r();if(x<.45)g[k]=A.g[k];else if(x<.9)g[k]=B.g[k];else{mut++;g[k]=k=='motif'?['uni','tachete','raye'][Math.floor(r()*3)]:k=='taille'?.92+r()*.2:k=='coiffure'?Math.floor(r()*15):Math.floor(r()*360)}});return{g,mut}}
+function swap(){if(!S.alt)return say('Tu n\'as qu\'un seul Pissourit.');const t={};PF.forEach(k=>t[k]=S[k]);PF.forEach(k=>{if(S.alt[k]!==undefined)S[k]=S.alt[k];else delete S[k]});S.alt=t;P0.x=-300;P0.y=-190;say('Tu t\'occupes maintenant de '+S.name);log('Changement de Pissourit : '+S.name);save();ui()}
+function anes(){if(stage()<1)return;if(S.cd.an&&Date.now()<S.cd.an)return say('Anesthésie possible dans '+Math.ceil((S.cd.an-Date.now())/36e5)+' h');S.anes=Date.now()+18e5;S.cd.an=Date.now()+432e5;log('Anesthésie de 30 min');say('💤 Anesthésié 30 min : interactions bloquées, besoins à 25 %');save();ui()}
+function die(){S.memDone=true;S.mem=S.mem||[];S.mem.push({name:S.name,st:STAGES[Math.max(0,stage())][0],born:S.born,died:Date.now(),gen:S.gen});log(S.name+' est décédé.');
+  openM(`<h2>${S.name} est parti</h2><div>Une fiche est conservée au mémorial (🌳 Famille).</div><div class="row"><button onclick="adopt(0)">Adopter un nouvel œuf</button><button onclick="adopt(1)">Un descendant de ${S.name}</button>${S.alt?`<button onclick="takeAlt()">Continuer avec ${S.alt.name}</button>`:''}</div>`)}
+function adopt(kid){const old=S.name,b=kid?breed(S,S):null,egg=newEgg(kid?{pere:sum(S),mere:null,mut:b.mut}:null);if(kid)egg.g=b.g;Object.assign(S,egg);S.name=prompt('Nom de ton Pissourit ?')||(kid?'Petit '+old:'Pissou');S.cons=0;closeM();save();ui()}
+function takeAlt(){const a=S.alt;S.alt=null;PF.forEach(k=>{if(a[k]!==undefined)S[k]=a[k]});closeM();save();ui()}
+function openPlace(){const st=stage();
+  if(!BOTS.length||Date.now()-BOTS.t>6e5){BOTS=Array.from({length:3},(_,i)=>{const r=mul(Math.floor(Math.random()*1e9));return{name:['Mimi','Kiwi','Plume','Zazou','Lulu'][Math.floor(Math.random()*5)],sex:r()<.5?'F':'M',g:genes(r),seed:Math.floor(r()*1e9),kin:Math.random()<.25,fertile:Math.random()<.8,owner:['Alex','Sam','Jo','Max','Lee'][Math.floor(Math.random()*5)]}});BOTS.t=Date.now()}
+  openM(`<h2>Place publique</h2><div>Des éleveurs cherchent un partenaire. Alliance : un mâle + une femelle fertiles (adolescent à adulte), une naissance tous les 14 jours par couple. Le bébé est élevé à deux (50 % chacun).</div>${st>=7&&st<=9?'':'<div>Ton Pissourit n\'est pas fertile pour l\'instant.</div>'}${BOTS.map((b,i)=>`<div class="fam"><span>${b.name} (${b.sex=='F'?'♀':'♂'}) de ${b.owner}${b.kin?' · de ta lignée':''}${b.fertile?'':' · pas fertile'}</span><button onclick="propose(${i})">Proposer</button></div>`).join('')}`)}
+function propose(i){const b=BOTS[i],st=stage();
+  if(st<7||st>9||S.fert<50)return say('Ton Pissourit n\'est pas fertile.');if(!b.fertile||b.sex==S.sex)return say(b.name+' ne convient pas : '+(b.sex==S.sex?'même sexe.':'pas fertile.'));
+  if(S.births[b.seed]&&Date.now()-S.births[b.seed]<12096e5)return say('Ce couple a déjà eu une naissance il y a moins de 14 jours.');
+  if(S.alt)return say('Tu as déjà 2 Pissourits : la naissance est suspendue tant qu\'une place n\'est pas libre.');
+  if(Math.random()>.75)return say(b.owner+' a refusé l\'alliance.');
+  const A=S,B=b,pere=A.sex=='M'?A:B,mere=A.sex=='F'?A:B,br=breed(A,B),egg=newEgg({pere:sum(pere),mere:sum(mere),mut:br.mut,cons:b.kin});egg.g=br.g;egg.co=b.owner;if(b.kin){egg.sante=60;egg.n.aff=60}
+  egg.name=prompt('Nom du bébé ? (vous avez 24 h pour vous entendre)')||'Bébé '+b.owner;S.alt=egg;S.births[b.seed]=Date.now();log('Naissance : '+egg.name+(b.kin?' (consanguinité : faible santé)':'')+(br.mut?' · '+br.mut+' mutation(s)':''));closeM();say('Votre alliance a été acceptée ! Un nouveau Pissourit est né !');save();ui()}
+const tl=p=>p&&p.gen?` (parents : ${[p.gen.pere,p.gen.mere].filter(Boolean).map(x=>x.name).join(', ')})`:'';
+function fam(){const g=S.gen;openM(`<h2>Famille de ${S.name}</h2>${g?`<div>♂ ${g.pere?g.pere.name+tl(g.pere):'?'}</div><div>♀ ${g.mere?g.mere.name+tl(g.mere):'?'}</div><div>Mutations : ${g.mut||0}${g.cons?' · consanguinité':''}</div>`:'<div>Premier de sa lignée.</div>'}${S.co?'<div>Co-élevé avec '+S.co+' (50 % chacun)</div>':''}${S.alt?'<div>Autre Pissourit : '+S.alt.name+'</div>':''}<h2>Mémorial</h2>${(S.mem||[]).length?S.mem.map(m=>`<div>🪦 ${m.name} — ${m.st}, né le ${new Date(m.born).toLocaleDateString('fr-CA')}</div>`).join(''):'<div>Personne pour l\'instant.</div>'}`)}
+function mini(title,cb){openM(`<h2>${title}</h2><div>Clique vite sur la case qui brille (6 fois) !</div><div style="display:grid;grid-template-columns:repeat(3,64px);gap:6px;justify-content:center">${Array.from({length:9},(_,i)=>`<button class="mcell" id="mc${i}" style="height:64px" onclick="mc(${i})"></button>`).join('')}</div>`);MG={hit:0,n:0,cb,cur:-1};mnext()}
+function mnext(){clearTimeout(MG.t);if(MG.n>=6){const f=MG.hit/6,cb=MG.cb;closeM();return cb(f)}MG.cur=Math.floor(Math.random()*9);document.querySelectorAll('.mcell').forEach(b=>b.style.background='#fff');const e=$('mc'+MG.cur);if(e)e.style.background='#ffd36b';MG.t=setTimeout(()=>{MG.n++;mnext()},1100)}
+function mc(i){if(i!=MG.cur)return;MG.hit++;MG.n++;mnext()}
+function hire(){if(S.jet<60)return say('Pas assez de jetons.');S.jet-=60;S.rch=(S.rch||0)+1;say('Chercheur engagé.');log('Chercheur engagé');save();labUI()}
+function research(free){if(!free){if(S.jet<15)return say('Pas assez de jetons.');S.jet-=15}
+  const ks=FAMS.map(f=>f[0]);if(Math.random()<.5){if(!free)say('Rien trouvé cette fois...');return}
+  const a=ks[Math.floor(Math.random()*20)],b=ks[Math.floor(Math.random()*20)];if(a==b||S.disc.some(d=>d.includes(a)&&d.includes(b)))return;S.disc.push([a,b]);
+  const n=k=>FAMS.find(f=>f[0]==k)[1];say('🔬 Interaction découverte : '+n(a)+' + '+n(b)+' (+30 % de force)');log('Découverte : '+n(a)+' + '+n(b));save();ui()}
+/* ---------- Boucle ---------- */
+let lt=performance.now(),acc=0;
+function frame(t){const rdt=Math.min(.05,(t-lt)/1000);lt=t;const f=S&&S.fxt>0?S.fx:{};if(S&&S.fxt>0){S.fxt-=rdt;if(S.fxt<=0)S.fx={}}
+  const dt=rdt*(1-(f.temp||0)*.1);T+=dt;acc+=rdt;
+  cx.setTransform(DPR,0,0,DPR,0,0);
+  if(!S){cx.fillStyle='#9fdcf2';cx.fillRect(0,0,W,H);requestAnimationFrame(frame);return}
+  const st=stage(),locked=st<6;
+  if(!S.mort&&!locked&&!(S.anes>Date.now())&&!$('modal').classList.contains('on')){
+    let dx=(keys.d||keys.arrowright?1:0)-(keys.a||keys.arrowleft||keys.q?1:0),dy=(keys.s||keys.arrowdown?1:0)-(keys.w||keys.arrowup||keys.z?1:0);
+    if(dx||dy){P0.tx=null}else if(P0.tx!==null){const ex=P0.tx-P0.x,ey=P0.ty-P0.y,d=Math.hypot(ex,ey);if(d<8)P0.tx=null;else{dx=ex/d;dy=ey/d}}
+    const l=Math.hypot(dx,dy);P0.walk=l?1:0;
+    if(l){const sp=(keys.shift?250:165)*(1-(f.moti||0)*.1)*(1-S.fert*0+0)*(S.n.ener<15?.6:1),nx=P0.x+dx/l*sp*dt/(1-(f.temp||0)*.1||1),ny=P0.y+dy/l*sp*dt/(1-(f.temp||0)*.1||1);
+      if(!blocked(nx,P0.y))P0.x=nx;if(!blocked(P0.x,ny))P0.y=ny;if(dx)P0.dir=dx>0?1:-1}
+    npcStep(dt);vanStep(dt);sellT-=dt;if(S.wanted>0&&sellT<0){sellT=40;S.wanted--;ui()}}
+  else{P0.walk=0;if(locked){P0.x=-300;P0.y=-190}}
+  S.x=P0.x;S.y=P0.y;cam.x+=(P0.x-cam.x)*Math.min(1,rdt*6);cam.y+=(P0.y-30-cam.y)*Math.min(1,rdt*6);
+  if(hold){holdT+=rdt;if(holdT>1&&Math.random()<.25)emit(1,.25,S.vape.mg,.3)}
+  ghostStep(dt,f);findCtx();
+  cv.style.filter=f.anim?`hue-rotate(${Math.sin(T*2)*f.anim*22}deg) saturate(${1+f.anim*.18})`:'';
+  const dd=(f.defo||0)/6;cx.fillStyle='#8fd68f';cx.fillRect(0,0,W,H);
+  cx.save();cx.setTransform(DPR*Z,Math.sin(T*.9)*dd*.06*DPR*Z,Math.sin(T*.7)*dd*.06*DPR*Z,DPR*Z*(1+Math.sin(T*1.3)*dd*.05),DPR*(W/2-cam.x*Z),DPR*(H/2-cam.y*Z));
+  const vx0=cam.x-W/2/Z-100,vx1=cam.x+W/2/Z+100,vy0=cam.y-H/2/Z-100,vy1=cam.y+H/2/Z+260;
+  ground(vx0,vy0,vx1,vy1);
+  const dr=[];for(let a=Math.floor(vx0/CH);a<=Math.floor(vx1/CH);a++)for(let b=Math.floor(vy0/CH);b<=Math.floor(vy1/CH);b++)for(const o of chunk(a,b).o){const by=o.k=='b'?o.y+o.h:o.y;
+    if(o.k=='pond'||o.k=='fountain'&&0){drawObj(o);continue}dr.push({y:by,f:()=>drawObj(o)})}
+  if(locked){const hx=-300,hy=-190;dr.push({y:hy,f:()=>drawSmall(st,hx,hy+(st<=2?-30:0))})}
+  else dr.push({y:P0.y,f:()=>{drawBird(P0.x,P0.y,.62*SZ[st]*S.g.taille,P0.dir,P0.walk,S.g,S.pan/100,S.hat,0,0,1+(S.fat||0)*.1+(S.mus||0)*.05);cx.fillStyle='#6b4f3a';cx.font='700 15px VT323';cx.textAlign='center';cx.fillText(S.name,P0.x,P0.y+18);if(S.anes>Date.now())cx.fillText('Zzz',P0.x+14,P0.y-84-Math.sin(T*2)*4)}});
+  npcs.forEach(n=>dr.push({y:n.y,f:()=>{drawBird(n.x,n.y,.5,n.dir,n.walk,n.g,0,'',n.cop,n.x);if(!n.cop&&Math.hypot(n.x-P0.x,n.y-P0.y)<160){cx.fillStyle='#6b4f3a';cx.font='700 14px VT323';cx.textAlign='center';cx.fillText(n.name,n.x,n.y+16)}}}));
+  ghosts.forEach(g=>dr.push({y:g.y,f:()=>{cx.globalAlpha=Math.max(0,.55*Math.min(1,g.l)*(g.l>9?(12-g.l)/3:1));if(g.t==1)drawBird(g.x,g.y,.5,1,0,g.g);else{cx.font='40px serif';cx.textAlign='center';cx.fillText(g.e,g.x,g.y)}cx.globalAlpha=1}}));
+  if(van)dr.push({y:van.y+20,f:drawVan});
+  dr.sort((a,b)=>a.y-b.y).forEach(d=>d.f());
+  if(hold){const b=beak();cx.fillStyle='rgba(255,150,70,.85)';cx.beginPath();cx.arc(b.x+P0.dir*5,b.y,3+Math.sin(T*20),0,7);cx.fill()}
+  smoke();cx.restore();
+  if(f.opt){cx.globalCompositeOperation='lighter';cx.globalAlpha=Math.min(.35,f.opt*.06);for(let i=0;i<4+f.opt;i++){cx.strokeStyle=hsl((T*60+i*70)%360,90,60);cx.lineWidth=6;cx.beginPath();cx.arc(W/2+Math.cos(T*.7+i)*W*.3,H/2+Math.sin(T*.5+i*2)*H*.3,40+i*18+Math.sin(T*2+i)*14,0,7);cx.stroke()}cx.globalAlpha=1;cx.globalCompositeOperation='source-over'}
+  if(S.pan>50){cx.fillStyle=`rgba(150,90,170,${(S.pan-50)/260})`;cx.fillRect(0,0,W,H)}
+  {const d=new Date(),h=d.getHours()+d.getMinutes()/60,l=Math.max(0,Math.min(1,.5+.62*Math.cos((h-13.5)/12*Math.PI))),sun=Math.max(0,1-Math.abs(h-18.3)/1.6);cx.globalCompositeOperation='multiply';cx.fillStyle=`rgb(${Math.round(110+l*145)},${Math.round(125+l*130-sun*20)},${Math.round(190+l*65-sun*70)})`;cx.fillRect(0,0,W,H);cx.globalCompositeOperation='source-over';if(sun>0){cx.fillStyle=`rgba(255,150,80,${sun*.18})`;cx.fillRect(0,0,W,H)}}
+  const v=cx.createRadialGradient(W/2,H/2,Math.min(W,H)*.45,W/2,H/2,Math.max(W,H)*.75);v.addColorStop(0,'rgba(255,200,120,0)');v.addColorStop(1,'rgba(255,170,110,.18)');cx.fillStyle=v;cx.fillRect(0,0,W,H);
+  if(acc>5){acc=0;if(!S.mort){tick();save();ui()}}
+  requestAnimationFrame(frame)}
+load();if(S){S.n.conf??=80;S.parts??={};S.log??=[];S.temp??=22;S.def??=Date.now();S.vape.t??='vape';S.vape.c??='#c0c0c0';S.mem??=[];S.births??={};S.disc??=[];S.rch??=0;S.alt??=null;S.gen??=null}if(S&&!S.mort){tick();P0.x=S.x||-300;P0.y=S.y||-190;cam.x=P0.x;cam.y=P0.y;if(!S.vape)S=null}ui();if(S){$('mg').value=S.vape.mg;$('ty').value=S.vape.t;$('cl').value=S.vape.c;S.vape.f.forEach((v,i)=>document.querySelectorAll('.fl')[i].value=v)}requestAnimationFrame(frame);
+</script>
+</body>
+</html>
