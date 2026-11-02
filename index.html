@@ -2016,6 +2016,201 @@ infoModal=function(){
   m.querySelector('#iPub').onchange=async e=>{const on=e.target.checked;const {error}=await sb.rpc('public_set',{p_conv:c.id,p_on:on});if(error){e.target.checked=!on;return toast(error.message)}c.is_public=on;toast(on?'Discussion rendue publique':'Discussion redevenue privée')};
 };
 $('#bInfo').onclick=infoModal;
+
+/* ---------- lot 13 : outils payants ---------- */
+S.owned=new Set();
+async function ownsLoad(){try{const i=await rpcd('inventory_me');S.owned=new Set(i.items||[])}catch(e){}return S.owned}
+const dlText=(name,text,type)=>{const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([text],{type:type||'text/plain'}));a.download=name;document.body.appendChild(a);a.click();setTimeout(()=>{URL.revokeObjectURL(a.href);a.remove()},500)};
+const dtLocal=v=>v?new Date(v).toISOString():null;
+const needBuy=e=>{const s=errMsg(e);return /non possédé|Achetez/.test(s)?s+' (boutique : onglet Boutique des Jetons)':s};
+
+/* --- outils de groupe / sondages système --- */
+async function giModal(c){
+  const cid=c?c.id:null;let st;try{st=await rpcd('tools_state',{p_conv:cid})}catch(e){return toast(errMsg(e))}
+  const kinds=c?[['poll','Sondages'],['quiz','Quiz'],['timer','Minuteur'],['task','Tâches'],['event','Événements'],['album','Album']]:[['poll','Sondages'],['quiz','Quiz']];
+  const m=modal(`<h3>${c?'Outils du groupe':'Sondages du système'}</h3><div class="row bmT" id="giT"></div><div id="giC"></div><div class="row end"><button class="ghost" data-x>Fermer</button></div>`,true);
+  const box=$('#giC',m);
+  if(c&&!st.on){
+    box.innerHTML=st.admin?`<p class="muted">Les outils ne sont pas activés pour ce groupe. ${st.owned?'':'Achetez d’abord « Outils de groupe » dans la boutique. '}Un seul administrateur qui possède l’article suffit.</p><div class="row"><button id="giOn">Activer pour ce groupe</button></div>`:'<p class="muted">Un administrateur du groupe doit activer les outils de groupe (article payant).</p>';
+    const b=$('#giOn',m);if(b)b.onclick=async()=>{try{await rpcd('tools_enable',{p_conv:cid,p_on:true});m.close();giModal(c)}catch(e){toast(needBuy(e))}};
+    return;
+  }
+  let kind=kinds[0][0];const canAdd=k=>k==='task'||k==='album'||st.admin;
+  const tabs=$('#giT',m);tabs.innerHTML=kinds.map(k=>`<button class="ghost lite" data-k="${k[0]}">${k[1]}</button>`).join('');
+  const form=k=>({
+    poll:'<input id="gfT" maxlength="200" placeholder="Question"><textarea id="gfO" rows="3" placeholder="Un choix par ligne (2 à 10)" style="margin-top:6px"></textarea>',
+    quiz:'<input id="gfT" maxlength="200" placeholder="Question"><textarea id="gfO" rows="3" placeholder="Un choix par ligne (2 à 10)" style="margin-top:6px"></textarea><input id="gfA" type="number" min="1" max="10" placeholder="Numéro de la bonne réponse" style="margin-top:6px">',
+    timer:'<input id="gfT" maxlength="200" placeholder="Nom du minuteur"><input id="gfM" type="number" min="1" max="1440" placeholder="Minutes" style="margin-top:6px">',
+    task:'<input id="gfT" maxlength="200" placeholder="Nouvelle tâche">',
+    event:'<input id="gfT" maxlength="200" placeholder="Titre de l’événement"><input id="gfD" type="datetime-local" style="margin-top:6px"><input id="gfX" maxlength="300" placeholder="Détails (facultatif)" style="margin-top:6px">',
+    album:'<input id="gfT" maxlength="200" placeholder="Légende (facultatif)"><input id="gfF" type="file" accept="image/*" style="margin-top:6px">'}[k]);
+  const item=(k,it)=>{
+    const o=it.data.options||[],tot=Object.values(it.votes).reduce((a,b)=>a+b,0),ended=it.closed||(it.due&&new Date(it.due)<new Date());
+    let h=`<div class="pgbar" style="padding:8px 0;border-bottom:1px solid var(--line)" data-i="${it.id}">`;
+    if(k==='poll'||k==='quiz'){
+      const show=it.my!=null||ended;
+      h+=`<b>${esc(it.title)}</b> <span class="muted">${it.by?'@'+esc(it.by):''}${ended?' · terminé':''}</span>`+o.map((t,i)=>{const n=it.votes[i]||0,pc=tot?Math.round(n/tot*100):0,good=k==='quiz'&&show&&Number(it.data.answer)===i;
+        return `<div class="row" style="margin-top:4px"><button class="${it.my===i?'':'ghost'} lite grow" style="text-align:left" data-v="${i}" ${ended||(k==='quiz'&&it.my!=null)?'disabled':''}>${esc(t)}${good?' (bonne réponse)':''}</button>${show?`<span class="muted" style="min-width:70px;text-align:right">${n} · ${pc} %</span>`:''}</div>`}).join('')+(show?`<div class="muted" style="margin-top:4px">${tot} réponse${tot>1?'s':''}</div>`:'');
+    }else if(k==='timer')h+=`<b>${esc(it.title)}</b> <b class="gi-t" data-due="${esc(it.due)}" style="float:right"></b>`;
+    else if(k==='task')h+=`<label class="row" style="margin:0;color:var(--text)"><input type="checkbox" data-d="${it.id}" ${it.data.done?'checked':''}> <span class="grow" style="${it.data.done?'text-decoration:line-through;opacity:.6':''}">${esc(it.title)}</span><span class="muted">${it.by?'@'+esc(it.by):''}</span></label>`;
+    else if(k==='event')h+=`<b>${esc(it.title)}</b><div class="muted">${esc(fmtDt(it.due))}${it.data.desc?' · '+esc(it.data.desc):''}</div>`;
+    else if(k==='album')h+=`<a href="${esc(it.data.url||'#')}" target="_blank" rel="noopener"><img src="${esc(it.data.url||'')}" alt="" style="max-width:100%;max-height:220px;border-radius:10px"></a><div class="muted">${esc(it.title==='Photo'?'':it.title)} ${it.by?'· @'+esc(it.by):''}</div>`;
+    const adm=[];if((k==='poll'||k==='quiz')&&!ended&&st.admin)adm.push(`<button class="ghost lite" data-c="${it.id}">Clore</button>`);
+    if(it.mine||st.admin)adm.push(`<button class="ghost lite" data-x2="${it.id}">Supprimer</button>`);
+    return h+(adm.length?`<div class="row end" style="margin-top:4px">${adm.join('')}</div>`:'')+'</div>';
+  };
+  const draw=async()=>{
+    $$('#giT [data-k]',m).forEach(b=>b.classList.toggle('on',b.dataset.k===kind));
+    let l=[];try{l=await rpcd('gi_list',{p_conv:cid,p_kind:kind})}catch(e){box.innerHTML='<p class="muted">'+esc(errMsg(e))+'</p>';return}
+    box.innerHTML=(canAdd(kind)?`<div class="gi-f" style="margin-bottom:8px">${form(kind)}<div class="row end" style="margin-top:6px"><button id="giAdd">Ajouter</button></div></div>`:'')+(l.map(it=>item(kind,it)).join('')||'<p class="muted">Rien pour le moment.</p>');
+    tick();
+  };
+  const tick=()=>{box.querySelectorAll('.gi-t').forEach(e=>{const s=Math.round((new Date(e.dataset.due)-Date.now())/1000);e.textContent=s<=0?'Terminé':(s>=3600?Math.floor(s/3600)+' h ':'')+String(Math.floor(s%3600/60)).padStart(2,'0')+':'+String(s%60).padStart(2,'0')})};
+  const iv=setInterval(()=>{if(!document.body.contains(m))return clearInterval(iv);tick()},1000);
+  tabs.onclick=e=>{const k=e.target.dataset&&e.target.dataset.k;if(k){kind=k;draw()}};
+  box.onclick=async e=>{const t=e.target,d=t.dataset||{};try{
+    if(t.id==='giAdd'){
+      const ti=$('#gfT',box).value.trim(),opt=$('#gfO',box)?$('#gfO',box).value.split('\n').map(x=>x.trim()).filter(Boolean):null;let data={},due=null,title=ti;
+      if(kind==='poll'||kind==='quiz'){data={options:opt};if(kind==='quiz')data.answer=Number($('#gfA',box).value)-1}
+      else if(kind==='timer'){const mn=Number($('#gfM',box).value);if(!(mn>0))throw new Error('Indiquez une durée en minutes');due=new Date(Date.now()+mn*60000).toISOString()}
+      else if(kind==='event'){due=dtLocal($('#gfD',box).value);if(!due)throw new Error('Choisissez une date');const x=$('#gfX',box).value.trim();if(x)data.desc=x}
+      else if(kind==='album'){const f=$('#gfF',box).files[0];if(!f)throw new Error('Choisissez une image');t.disabled=true;data.url=pubUrl(await uploadPublic(await resizeBlob(f,1600,.82),'jpg','image/jpeg'));title=ti||'Photo'}
+      await rpcd('gi_add',{p_conv:cid,p_kind:kind,p_title:title,p_data:data,p_due:due});await draw();return}
+    if(d.v!=null){await rpcd('gi_vote',{p_id:Number(t.closest('[data-i]').dataset.i),p_choice:Number(d.v)});return draw()}
+    if(d.c){await rpcd('gi_set',{p_id:Number(d.c),p_closed:true});return draw()}
+    if(d.x2){if(!confirm('Supprimer cet élément ?'))return;await rpcd('gi_del',{p_id:Number(d.x2)});return draw()}
+    if(d.d&&t.type==='checkbox'){await rpcd('gi_set',{p_id:Number(d.d),p_data:{done:t.checked}});return draw()}
+  }catch(x){toast(errMsg(x));if(t.id==='giAdd')t.disabled=false}};
+  draw();
+}
+
+/* --- outils personnels --- */
+async function piModal(){
+  const m=modal(`<h3>Outils personnels</h3><div class="row bmT" id="piT"></div><div id="piC"></div><div class="row end"><button class="ghost" data-x>Fermer</button></div>`,true);
+  const kinds=[['todo','Tâches'],['reminder','Rappels'],['agenda','Agenda'],['note','Carnet']];let kind='todo';const box=$('#piC',m);
+  $('#piT',m).innerHTML=kinds.map(k=>`<button class="ghost lite" data-k="${k[0]}">${k[1]}</button>`).join('');
+  const repN={none:'une fois',daily:'chaque jour',weekly:'chaque semaine',monthly:'chaque mois'};
+  const draw=async()=>{
+    $$('#piT [data-k]',m).forEach(b=>b.classList.toggle('on',b.dataset.k===kind));
+    let l=[],ev=[];try{l=await rpcd('pi_list',{p_kind:kind});if(kind==='agenda')ev=(await rpcd('agenda_all',{p_days:90})).filter(x=>x.src==='groupe')}catch(e){box.innerHTML='<p class="muted">'+esc(needBuy(e))+'</p>';return}
+    const f={todo:'<input id="pfT" maxlength="200" placeholder="Nouvelle tâche">',
+      reminder:'<input id="pfT" maxlength="200" placeholder="Rappel"><input id="pfD" type="datetime-local" style="margin-top:6px"><select id="pfR" style="margin-top:6px"><option value="none">Une fois</option><option value="daily">Chaque jour</option><option value="weekly">Chaque semaine</option><option value="monthly">Chaque mois</option></select>',
+      agenda:'<input id="pfT" maxlength="200" placeholder="Rendez-vous"><input id="pfD" type="datetime-local" style="margin-top:6px">',
+      note:'<input id="pfT" maxlength="200" placeholder="Titre de la note"><textarea id="pfB" rows="3" maxlength="5000" placeholder="Texte" style="margin-top:6px"></textarea>'}[kind];
+    box.innerHTML=`<div style="margin-bottom:8px">${f}<div class="row end" style="margin-top:6px"><button id="piAdd">Ajouter</button></div></div>`+
+      l.map(it=>`<div class="blkrow" data-i="${it.id}" style="align-items:flex-start">${kind==='todo'?`<input type="checkbox" data-d="${it.id}" ${it.done?'checked':''}>`:''}<div class="grow"><div style="${it.done?'text-decoration:line-through;opacity:.6':''}"><b>${esc(it.title)}</b></div>${it.due?`<div class="muted">${esc(fmtDt(it.due))}${kind==='reminder'?' · '+repN[it.rep]+(it.done?' · fait':''):''}</div>`:''}${kind==='note'?`<textarea rows="3" maxlength="5000" data-nb="${it.id}" style="margin-top:4px">${esc(it.body||'')}</textarea><div class="row end"><button class="ghost lite" data-ns="${it.id}">Enregistrer</button></div>`:''}</div><button class="ghost lite" data-x2="${it.id}">Supprimer</button></div>`).join('')+
+      (kind==='agenda'&&ev.length?'<label>Événements de vos groupes</label>'+ev.map(x=>`<div class="blkrow"><span class="grow"><b>${esc(x.title)}</b><div class="muted">${esc(fmtDt(x.due))} · ${esc(x.where||'')}</div></span></div>`).join(''):'')||'<p class="muted">Rien pour le moment.</p>';
+  };
+  $('#piT',m).onclick=e=>{const k=e.target.dataset&&e.target.dataset.k;if(k){kind=k;draw()}};
+  box.onclick=async e=>{const t=e.target,d=t.dataset||{};try{
+    if(t.id==='piAdd'){const ti=$('#pfT',box).value.trim();if(!ti)throw new Error('Saisissez un texte');
+      await rpcd('pi_add',{p_kind:kind,p_title:ti,p_body:$('#pfB',box)?$('#pfB',box).value:null,p_due:$('#pfD',box)?dtLocal($('#pfD',box).value):null,p_rep:$('#pfR',box)?$('#pfR',box).value:'none'});return draw()}
+    if(d.x2){await rpcd('pi_del',{p_id:Number(d.x2)});return draw()}
+    if(d.d&&t.type==='checkbox'){await rpcd('pi_set',{p_id:Number(d.d),p_done:t.checked});return draw()}
+    if(d.ns){await rpcd('pi_set',{p_id:Number(d.ns),p_body:box.querySelector(`[data-nb="${d.ns}"]`).value});toast('Note enregistrée')}
+  }catch(x){toast(needBuy(x))}};
+  draw();
+}
+let piBusy=false;
+async function piTick(){
+  if(piBusy||!S.me||!S.owned.has('personal_tools'))return;piBusy=true;
+  try{const r=await rpcd('pi_due');if(r.length){const m=modal(`<h3>Rappel${r.length>1?'s':''}</h3>${r.map(x=>`<div class="blkrow"><span class="grow"><b>${esc(x.title)}</b><div class="muted">${esc(fmtDt(x.due))}</div></span></div>`).join('')}<div class="row end"><button data-x>OK</button></div>`)}}catch(e){}
+  piBusy=false;
+}
+setInterval(piTick,60000);setTimeout(async()=>{await ownsLoad();piTick()},4000);
+
+/* --- message d'absence --- */
+async function absenceModal(){
+  let a={};try{a=await rpcd('absence_me')}catch(e){}
+  const m=modal(`<h3>Message d’absence</h3><p class="muted" style="margin:0">Affiché en haut de la conversation à toute personne qui vous écrit en direct.</p><textarea id="abM" rows="3" maxlength="300" placeholder="Je suis absent jusqu’à…">${esc(a.msg||'')}</textarea><label class="row" style="color:var(--text)"><input type="checkbox" id="abO" ${a.on?'checked':''}> Activé</label><div class="row end"><button class="ghost" data-x>Annuler</button><button id="abS">Enregistrer</button></div>`);
+  $('#abS',m).onclick=async()=>{try{await rpcd('absence_set',{p_msg:$('#abM',m).value,p_on:$('#abO',m).checked});toast('Enregistré');m.close()}catch(e){toast(needBuy(e))}};
+}
+async function absenceBar(){
+  const old=document.getElementById('absBar');if(old)old.remove();
+  const c=cur();if(!c||c.kind!=='direct')return;const o=other(c),p=o&&S.profiles.get(o.user_id);if(!p)return;
+  let t=null;try{t=await rpcd('absence_of',{p_username:p.username})}catch(e){}
+  if(!t||cur()!==c)return;
+  $('#msgs').insertAdjacentHTML('beforebegin',`<div id="absBar" class="sys" style="margin:0;padding:8px 12px;border-bottom:1px solid var(--line)"><b>@${esc(p.username)} est absent(e)</b> : ${esc(t)}</div>`);
+}
+{const _oc=openConv;openConv=async function(){const r=await _oc.apply(this,arguments);absenceBar();return r}}
+
+/* --- export et statistiques --- */
+async function exportModal(){
+  const m=modal(`<h3>Export et statistiques</h3><div class="row" style="flex-wrap:wrap"><button id="exJ">Exporter mes données (JSON)</button><button class="ghost" id="exC">Exporter la conversation ouverte (texte)</button></div><div id="exS"><p class="muted">Chargement…</p></div><div class="row end"><button class="ghost" data-x>Fermer</button></div>`,true);
+  $('#exJ',m).onclick=async()=>{try{dlText('communicer-donnees.json',JSON.stringify(await rpcd('export_me'),null,2),'application/json')}catch(e){toast(needBuy(e))}};
+  $('#exC',m).onclick=()=>{const c=cur();if(!c)return toast('Ouvrez d’abord une conversation');const arr=S.msgs[c.id]||[];
+    const txt=arr.filter(x=>x.kind!=='system').map(x=>{const p=S.profiles.get(x.sender_id);return `[${new Date(x.created_at).toLocaleString('fr-CA')}] ${p?'@'+p.username:'?'} : ${msgPlain(x)}`}).join('\n');
+    dlText('conversation.txt',txt||'(vide)')};
+  const box=$('#exS',m);
+  try{const s=await rpcd('stats_me');const mx=Math.max(1,...s.par_jour.map(x=>x.n));
+    box.innerHTML=`<label>Messages envoyés : ${nfmt(s.messages_total)}</label><label>Derniers 30 jours</label><div style="display:flex;align-items:flex-end;gap:2px;height:80px">${s.par_jour.map(x=>`<div title="${esc(x.d)} : ${x.n}" style="flex:1;min-width:3px;background:var(--accent);height:${Math.max(4,Math.round(x.n/mx*80))}px;border-radius:2px"></div>`).join('')||'<span class="muted">Aucun message.</span>'}</div>
+      <label>Conversations les plus actives</label>${s.par_conv.map(x=>{const c=S.convs.get(x.conv);return `<div class="blkrow"><span class="grow">${esc(c?convTitle(c):'Conversation')}</span><b>${nfmt(x.n)}</b></div>`}).join('')||'<p class="muted">—</p>'}
+      <label>Jeux</label>${statsTable(s.jeux)}`}
+  catch(e){box.innerHTML='<p class="muted">'+esc(needBuy(e))+'</p>'}
+}
+
+/* --- tournois --- */
+const trkT=n=>'T-'+String(n).padStart(6,'0');
+async function tournModal(){
+  const m=modal('<h3>Tournois</h3><div id="toC"></div><div class="row end"><button class="ghost" data-x>Fermer</button></div>',true);const box=$('#toC',m);
+  const list=async()=>{let l=[];try{l=await rpcd('t_list')}catch(e){box.innerHTML='<p class="muted">'+esc(errMsg(e))+'</p>';return}
+    const SN={open:'inscriptions ouvertes',running:'en cours',done:'terminé'};
+    box.innerHTML=`<details><summary>Organiser un tournoi (article « Tournois »)</summary><input id="toN" maxlength="60" placeholder="Nom du tournoi" style="margin-top:6px"><input id="toG" maxlength="40" placeholder="Jeu (facultatif)" style="margin-top:6px"><textarea id="toR" rows="2" maxlength="1500" placeholder="Règles (facultatif)" style="margin-top:6px"></textarea><div class="row" style="margin-top:6px"><select id="toM">${[4,8,16,32,64].map(n=>`<option value="${n}" ${n===16?'selected':''}>${n} participants au maximum</option>`).join('')}</select><button id="toC2">Créer</button></div></details>`+
+      (l.map(t=>`<div class="blkrow" data-t="${t.id}" style="cursor:pointer"><span class="grow"><b>${esc(t.name)}</b> <span class="muted">${trkT(t.id)}${t.game?' · '+esc(t.game):''}</span><div class="muted">${SN[t.status]} · ${t.n}/${t.max} inscrits${t.winner?' · vainqueur : '+esc(t.winner):''}</div></span>${t.in?'<span class="tag">inscrit</span>':''}<button class="ghost lite" data-o="${t.id}">Ouvrir</button></div>`).join('')||'<p class="muted">Aucun tournoi.</p>')};
+  const detail=async id=>{let t;try{t=await rpcd('t_get',{p_id:id})}catch(e){return toast(errMsg(e))}
+    const rounds=[...new Set(t.matches.map(x=>x.rnd))],last=Math.max(0,...rounds);
+    const rn=r=>r===last?'Finale':r===last-1&&last>2?'Demi-finales':'Tour '+r;
+    const me=t.entries.some(e=>e.me&&e.kind==='user');
+    box.innerHTML=`<div class="row"><button class="ghost lite" id="toB">Retour</button><b class="grow">${esc(t.name)} <span class="muted">${trkT(t.id)}</span></b></div>
+      <p class="muted">${esc(t.game||'')} · organisé par @${esc(t.by||'?')} · ${t.status==='open'?'inscriptions ouvertes':t.status==='running'?'en cours':'terminé — vainqueur : '+esc(t.winner||'')}</p>${t.rules?`<p style="white-space:pre-wrap">${esc(t.rules)}</p>`:''}
+      ${t.status==='open'?`<div class="row" style="flex-wrap:wrap">${me?'<button class="ghost" id="toL">Me désinscrire</button>':'<button id="toJ">M’inscrire</button>'}<button class="ghost" id="toT">Inscrire mon équipe e-Sport</button>${t.mine?'<button class="lite green" id="toS">Lancer le tournoi</button>':''}</div>`:''}
+      <label>Inscrits (${t.entries.length}/${t.max})</label><div>${t.entries.map(e=>`<span class="tag" style="margin:2px">${esc(e.label)}</span>`).join('')||'<span class="muted">Aucun inscrit.</span>'}</div>
+      ${t.matches.length?`<label>Tableau</label><div style="display:flex;gap:14px;overflow:auto">${rounds.map(r=>`<div style="min-width:170px"><div class="muted">${rn(r)}</div>${t.matches.filter(x=>x.rnd===r).map(x=>{const row=(lbl,ref)=>`<div class="row" style="padding:3px 6px;${x.win&&x.win===ref?'font-weight:700':x.win?'opacity:.5':''}"><span class="grow">${esc(lbl||'—')}</span>${t.mine&&t.status==='running'&&!x.win&&x.aref&&x.bref&&ref?`<button class="ghost lite" data-w="${x.id}" data-r="${ref}">Vainqueur</button>`:''}</div>`;return `<div style="border:1px solid var(--line);border-radius:10px;margin:6px 0">${row(x.a,x.aref)}${row(x.b,x.bref)}</div>`}).join('')}</div>`).join('')}</div>`:''}
+      ${t.mine?'<div class="row end" style="margin-top:10px"><button class="ghost" id="toD">Supprimer le tournoi</button></div>':''}`;
+    const go=async f=>{try{await f();detail(id)}catch(e){toast(errMsg(e))}};
+    const bb=$('#toB',box);bb.onclick=list;
+    const j=$('#toJ',box);if(j)j.onclick=()=>go(()=>rpcd('t_join',{p_id:id}));
+    const l=$('#toL',box);if(l)l.onclick=()=>go(()=>rpcd('t_leave',{p_id:id}));
+    const s=$('#toS',box);if(s)s.onclick=()=>go(()=>rpcd('t_start',{p_id:id}));
+    const d=$('#toD',box);if(d)d.onclick=async()=>{if(!confirm('Supprimer ce tournoi ?'))return;try{await rpcd('t_delete',{p_id:id});list()}catch(e){toast(errMsg(e))}};
+    const tm=$('#toT',box);if(tm)tm.onclick=async()=>{const own=[];for(const c of S.convs.values()){if(c.kind!=='group')continue;try{const g=await rpcd('esport_get',{p_conv:c.id});if(g.mine)own.push([c,g])}catch(e){}}
+      if(!own.length)return toast('Vous ne dirigez aucune équipe e-Sport');
+      const mm=modal(`<h3>Inscrire une équipe</h3>${own.map(([c,g],i)=>`<div class="blkrow"><span class="grow">${esc(g.name)}${g.title?' ['+esc(g.title)+']':''}</span><button class="lite" data-i="${i}">Inscrire</button></div>`).join('')}<div class="row end"><button class="ghost" data-x>Fermer</button></div>`);
+      mm.onclick=async e=>{const i=e.target.dataset&&e.target.dataset.i;if(i==null)return;try{await rpcd('t_join',{p_id:id,p_team:own[i][0].id});mm.close();detail(id)}catch(x){toast(errMsg(x))}}};
+    box.querySelectorAll('[data-w]').forEach(b=>b.onclick=()=>go(()=>rpcd('t_report',{p_match:Number(b.dataset.w),p_winner:b.dataset.r})));
+  };
+  box.onclick=async e=>{const t=e.target;
+    if(t.id==='toC2'){try{const id=await rpcd('t_create',{p_name:$('#toN',box).value,p_game:$('#toG',box).value,p_rules:$('#toR',box).value,p_max:Number($('#toM',box).value)});detail(id)}catch(x){toast(needBuy(x))}return}
+    const row=t.closest&&t.closest('[data-t]');if(row)detail(Number(row.dataset.t))};
+  list();
+}
+
+/* --- section Outils dans les réglages --- */
+async function toolsInit(m){
+  const own=await ownsLoad();
+  const L=[['pi','personal_tools','Outils personnels (tâches, rappels, agenda, carnet)',piModal],['ab','absence','Message d’absence',absenceModal],['ex','export_stats','Export et statistiques',exportModal],['to',null,'Tournois',tournModal],['sy',null,'Sondages du système',()=>giModal(null)]];
+  const box=$('#toolsBox',m);if(!box)return;
+  box.innerHTML=L.map(x=>`<button class="ghost lite" data-t="${x[0]}">${x[2]}${x[1]&&!own.has(x[1])?' (à acheter)':''}</button>`).join('');
+  box.onclick=e=>{const k=e.target.dataset&&e.target.dataset.t;const x=L.find(y=>y[0]===k);if(x)x[3]()};
+}
+
+/* --- détails du groupe : outils, tournois, équipe e-Sport --- */
+{const _ig=infoModal;infoModal=function(){
+  _ig.apply(this,arguments);
+  const c=cur();if(!c||c.kind!=='group')return;
+  const m=[...document.querySelectorAll('.modal-back')].pop();const at=m&&m.querySelector('#iLink');if(!at)return;
+  const adm=c.members.some(x=>x.user_id===S.me.id&&x.role==='admin');
+  at.insertAdjacentHTML('beforebegin',`<label>Outils et compétition</label><div class="row" style="flex-wrap:wrap"><button class="ghost lite" id="gtO">Outils du groupe</button><button class="ghost lite" id="gtT">Tournois</button></div><div id="gtE"></div>`);
+  m.querySelector('#gtO').onclick=()=>giModal(c);m.querySelector('#gtT').onclick=tournModal;
+  (async()=>{const box=m.querySelector('#gtE');let g={};try{g=await rpcd('esport_get',{p_conv:c.id})}catch(e){}
+    const view=g.name?`<div class="muted" style="margin-top:6px"><b>Équipe e-Sport : ${esc(g.name)}${g.title?' ['+esc(g.title)+']':''}</b>${g.rules?'<div style="white-space:pre-wrap">'+esc(g.rules)+'</div>':''}</div>`:'';
+    if(!adm){box.innerHTML=view;return}
+    box.innerHTML=view+`<details style="margin-top:6px"><summary>${g.name?'Modifier l’équipe e-Sport':'Créer une équipe e-Sport (article payant)'}</summary><input id="esN" maxlength="30" placeholder="Nom de l’équipe" value="${esc(g.name||'')}" style="margin-top:6px"><input id="esT" maxlength="30" placeholder="Titre (ex. Champions 2026)" value="${esc(g.title||'')}" style="margin-top:6px"><textarea id="esR" rows="3" maxlength="1500" placeholder="Règles de l’équipe" style="margin-top:6px">${esc(g.rules||'')}</textarea><div class="row end" style="margin-top:6px">${g.name&&g.mine?'<button class="ghost" id="esD">Dissoudre</button>':''}<button id="esS">Enregistrer</button></div></details>`;
+    const s=box.querySelector('#esS');s.onclick=async()=>{try{await rpcd('esport_set',{p_conv:c.id,p_name:box.querySelector('#esN').value,p_title:box.querySelector('#esT').value,p_rules:box.querySelector('#esR').value});toast('Équipe enregistrée');m.close();infoModal()}catch(e){toast(needBuy(e))}};
+    const d=box.querySelector('#esD');if(d)d.onclick=async()=>{if(!confirm('Dissoudre l’équipe ?'))return;try{await rpcd('esport_del',{p_conv:c.id});m.close();infoModal()}catch(e){toast(errMsg(e))}};
+  })();
+};$('#bInfo').onclick=infoModal}
+
 /* médaillons */
 {const _br=balRender;balRender=function(){_br();document.querySelectorAll('.balchip').forEach(c=>{let n=c.nextElementSibling;const ok=n&&n.classList.contains('medchip');const v=Number(TK.med||0);
   if(v>0&&!ok){c.insertAdjacentHTML('afterend','<span class="medchip" title="Médaillons">'+POPPY+'<b></b></span>');n=c.nextElementSibling}
@@ -2059,6 +2254,7 @@ function settingsModal(){
   <input id="sTitle" placeholder="Titre de l'onglet" value="${esc(tab.title||'')}" maxlength="60">
   <div class="row" style="margin-top:8px"><input type="file" id="sIcon" accept="image/*"><img id="sIconP" src="${esc(tab.icon||DEF_ICON)}" width="32" height="32" style="border-radius:6px"></div>
   <div class="row end" style="margin-top:8px"><button class="ghost" id="sTabReset">Réinitialiser</button><button id="sTabSave">Enregistrer</button></div>
+  <label>Outils</label><div class="row" id="toolsBox" style="flex-wrap:wrap"></div>
   <label>Apparence</label>
   <div class="row"><select id="lkMode" class="grow"><option value="light">Thème clair</option><option value="dark">Thème sombre</option><option value="auto">Automatique (selon l’appareil)</option></select></div>
   <label>Couleur du site</label><div class="lkcol" id="lkCol"></div>
@@ -2088,7 +2284,7 @@ function settingsModal(){
   $('#pSave',m).onclick=()=>{let u=$('#pUrl',m).value.trim();if(u&&!/^https?:\/\//i.test(u))u='https://'+u;if(!/^https?:\/\//i.test(u))return toast('Adresse invalide');localStorage.setItem('cm_panic',JSON.stringify({key:newKey,url:u,on:$('#pOn',m).checked}));toast('Touche rapide enregistrée')};
   $('#pReset',m).onclick=()=>{localStorage.removeItem('cm_panic');const d=getPanic();newKey=d.key;$('#pKey',m).textContent='Touche : '+d.key;$('#pUrl',m).value=d.url;$('#pOn',m).checked=true;toast('Valeurs par défaut rétablies')};
   $('#sOut',m).onclick=logout;
-  lookInit(m);
+  lookInit(m);toolsInit(m);
   (async()=>{const box=$('#sMail',m);
     const call=body=>sb.functions.invoke('account-mail',{body}).then(r=>{if(r.error||(r.data&&r.data.error))throw new Error((r.data&&r.data.error)||'Service indisponible');return r.data});
     const draw=async()=>{let e={};try{e=await rpcd('email_get')}catch(x){}
@@ -9025,6 +9221,7 @@ openProfile=async function(un){
     if(isB){const st=md.querySelector('.pf-on');if(st)st.remove();const im=md.querySelector('.pf-av img');if(im)im.remove();const h3=md.querySelector('.pf-hd .grow h3');if(h3)h3.insertAdjacentHTML('beforeend','<span class="sanc">Sanctionné</span>');return r}
     {const pid2=pid;let mv=0;try{mv=Number((await sb.rpc('medals_of',{p_username:u})).data||0)}catch(e){}
      const g0=md.querySelector('.pf-hd');if(mv>0&&g0&&!md.querySelector('.medrow'))g0.insertAdjacentHTML('afterend',`<div class="medrow">${POPPY}<b>${nfmt(mv)}</b> médaillon${mv>1?'s':''}</div>`);
+     try{const es=(await sb.rpc('esport_of',{p_username:u})).data||[];if(es.length&&g0&&!md.querySelector('.esrow'))g0.insertAdjacentHTML('afterend',es.map(x=>`<div class="esrow muted" style="margin:4px 0 0">Équipe e-Sport : <b>${esc(x.name)}</b>${x.title?' ['+esc(x.title)+']':''}</div>`).join(''))}catch(e){}
      const bar=md.querySelector('.row.end:last-of-type');
      if(bar&&pid2&&pid2!==S.me.id){
        const mineB=S.blk.get(pid2)===true;bar.insertAdjacentHTML('beforeend',`<button class="ghost" id="pfBlk">${mineB?'Débloquer':'Bloquer'}</button>${RK()>=4?'<button class="ghost" id="pfMed">Donner des médaillons</button>':''}`);
@@ -9106,7 +9303,7 @@ async function bmBuy(box,bal,show){
 async function bmShop(box,bal,show){
   const sh=await rpcd('shop_list');TK.shop=sh;bal(sh.balance);
   const own=sh.badges.filter(b=>b.owned).map(b=>b.code);
-  const grp=[['Fonctions',['lite','pin','name_color','profile_color','profile_bg','badge_slot5','send_tokens']],['Cadres',['frame_photo','frame_photo_anim','frame_profile','frame_profile_anim']],['Nom',['rename','credits_name']],['Emojis',['pack_emoji']]];
+  const grp=[['Fonctions',['lite','pin','name_color','profile_color','profile_bg','badge_slot5','send_tokens']],['Cadres',['frame_photo','frame_photo_anim','frame_profile','frame_profile_anim']],['Nom',['rename','credits_name']],['Emojis',['pack_emoji']],['Outils',['personal_tools','absence','export_stats','group_tools','tournaments','esport']]];
   const row=(name,desc,price,owned,code,extra)=>`<div class="shrow2"><div class="grow"><b>${name}</b><small>${desc}</small></div>${extra||''}${owned?'<span class="tag">possédé</span>':`<button class="lite" data-b="${esc(code)}" ${sh.balance<price?'disabled':''}>${nfmt(price)}</button>`}</div>`;
   let h='';
   grp.forEach(([t,codes])=>{h+=`<label>${t}</label>`+codes.map(c=>sh.items.find(i=>i.code===c)).filter(Boolean).map(i=>row(esc(i.name),esc(i.descr),i.price,i.owned,i.code)).join('')});
