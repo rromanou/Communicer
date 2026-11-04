@@ -7,11 +7,25 @@
    /user?usr=@pseudo   -> /?go=user&usr=pseudo
    /bots?cd=123456     -> /?go=bots&cd=123456
    /friend-request?usr=@pseudo -> /?go=friend-request&usr=pseudo
-   /ref?cd=CODE        -> /?go=ref&cd=CODE */
+   /ref?cd=CODE        -> /?go=ref&cd=CODE
+   /event?cd=CODE      -> /?go=event&cd=CODE ; /e?=CODE (raccourci)
+   /c@lien -> /?go=cu&id=lien ; /g?=x /b?=x /u?=@x /f?=@x (liens courts) */
 (function(){
   var m=location.pathname.match(/^(.*?)\/@([A-Za-z0-9_]{1,30})\/?$/);
   if(m){location.replace(m[1]+'/?u='+m[2].toLowerCase()+location.hash);return}
-  var r=location.pathname.match(/^(.*?)\/(group|user|bots|friend-request|ref)\/?$/);
+  var c=location.pathname.match(/^(.*?)\/c@([A-Za-z0-9_]{3,24})\/?$/);
+  if(c){location.replace(c[1]+'/?go=cu&id='+c[2].toLowerCase());return}
+  /* liens courts : /g?=CODE  /b?=123456  /u?=@pseudo  /f?=@pseudo */
+  var s=location.pathname.match(/^(.*?)\/(g|b|u|f|e)\/?$/);
+  if(s&&/^\?=/.test(location.search)){
+    var v=decodeURIComponent(location.search.slice(2)).replace(/^c=/,''),o=new URLSearchParams();
+    if(s[2]==='g'){o.set('go','group');o.set('id',v)}
+    else if(s[2]==='b'){o.set('go','bots');o.set('cd',v)}
+    else if(s[2]==='e'){o.set('go','event');o.set('cd',v)}
+    else{o.set('go',s[2]==='u'?'user':'friend-request');o.set('usr',v.replace(/^@/,'').toLowerCase())}
+    location.replace(s[1]+'/?'+o.toString());return
+  }
+  var r=location.pathname.match(/^(.*?)\/(group|user|bots|friend-request|ref|event)\/?$/);
   if(r){
     var q=new URLSearchParams(location.search),o=new URLSearchParams();o.set('go',r[2]);
     ['id','usr','cd'].forEach(function(k){var v=q.get(k);if(v)o.set(k,k==='usr'?v.replace(/^@/,'').toLowerCase():v)});
