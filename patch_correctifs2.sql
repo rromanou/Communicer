@@ -97,7 +97,7 @@ begin
     if v is not null and v !~ '^https://[A-Za-z0-9._~:/?#@!$&*+,;=%-]{4,250}$' then raise exception 'Lien https invalide'; end if;
     update public.profile_ext set backdrop = v where user_id = auth.uid();
   elsif p_field = 'backdrop_op' then
-    if v is null or v !~ '^[0-9]{1,2}$' or v::int < 1 or v::int > 90 then raise exception 'Opacité entre 1 et 90 %'; end if;
+    if v is null or v !~ '^[0-9]{1,2}$' or v::int < 1 or v::int > 90 then raise exception 'Opacité entre 1 et 90 %%'; end if;
     update public.profile_ext set backdrop_op = v::int where user_id = auth.uid();
   elsif p_field = 'music_vol' then
     if v is null or v !~ '^(0|1|0?\.[0-9]{1,2})$' then raise exception 'Volume invalide'; end if;
