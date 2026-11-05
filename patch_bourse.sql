@@ -395,3 +395,16 @@ grant execute on function public.crypto_order_place(text,text,numeric,numeric,bo
 revoke all on function public._cr_lock(text) from public, anon, authenticated;
 
 notify pgrst, 'reload schema';
+
+-- ---------- miniatures du marché : derniers cours par heure sur 7 jours (seulement des échanges réels) ----------
+create or replace function public.crypto_sparks() returns jsonb language plpgsql security definer stable set search_path = public as $$
+begin
+  if auth.uid() is null then raise exception 'Non connecté'; end if;
+  return coalesce((select jsonb_object_agg(symbol, arr) from (
+    select symbol, jsonb_agg(c order by t) arr from (
+      select symbol, date_bin(interval '3 hours', at, timestamptz '2000-01-01') t, (array_agg(price order by id desc))[1] c
+      from public.crypto_trades where at > now() - interval '7 days' group by 1, 2) z group by symbol) y), '{}'::jsonb);
+end $$;
+revoke all on function public.crypto_sparks() from public, anon;
+grant execute on function public.crypto_sparks() to authenticated;
+notify pgrst, 'reload schema';
