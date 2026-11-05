@@ -8904,6 +8904,129 @@ document.addEventListener('cut',e=>{const cv=S.sess?S.sess.conv:S.active;if(cv&&
 document.addEventListener('paste',e=>{const cv=S.sess?S.sess.conv:S.active;if(cv&&EV.rest(cv,'copy_paste')){e.preventDefault();EV.viol(cv,'copy_paste')}},true);
 window.addEventListener('blur',()=>{const cv=S.sess?S.sess.conv:null;if(cv&&EV.rest(cv,'leave_focus'))setTimeout(()=>{if(!document.hasFocus()&&S.sess&&S.sess.conv===cv)EV.viol(cv,'leave_focus')},1500)});
 
+/* ================= lot 15d : badges du commandant, connexions ================= */
+function evDesc(c){const n=c.n;return({login:`connecté entre le ${c.from} et le ${c.until}`,login_days:`connecté ${n} jour(s) au total`,joined_before:`inscrit avant le ${c.until}`,msgs:`${n} message(s) envoyé(s)`,friends:`${n} ami(s)`,wins:`${n} victoire(s) en jeu`,quests:`${n} quête(s) terminée(s)`,buy:`possède « ${c.name||c.item} »`})[c.k]||c.k}
+async function stBdg(m,box){
+  const sh=await rpcd('shop_list');const opts=[...sh.items.filter(i=>i.kind!=='credit').map(i=>[i.code,i.name]),...sh.badges.map(b=>[b.code,b.name])];
+  const dtv=v=>v?new Date(new Date(v).getTime()-new Date(v).getTimezoneOffset()*60000).toISOString().slice(0,16):'';
+  const draw=async()=>{const l=await rpcd('badge_def_list');
+    box.innerHTML=`<p class="muted">Badges créés par le commandant. Un badge indisponible ne peut plus être obtenu ; ceux qui l’ont déjà le gardent.</p><div class="row"><button id="bgN">Créer un badge</button></div>
+    ${l.length?l.map(b=>`<div class="evm" data-bc="${esc(b.code)}">${medal({name:b.name,tier:'special',color:b.color,glyph:b.glyph,code:b.code},24)}<span class="grow"><b>${esc(b.name)}</b> <span class="tag">${b.open?'disponible':'indisponible'}</span> <span class="muted">${b.owners} détenteur(s)${b.price?' · '+nfmt(b.price)+' jetons':''}${b.auto?' · automatique':''}</span><div class="muted">${esc(b.descr)}</div>${(b.cond||[]).length?`<div class="muted">${b.cond.map(c=>esc(evDesc(c))).join(' ; ')}</div>`:''}${b.from||b.until?`<div class="muted">Disponibilité : ${b.from?'du '+evFmt(b.from):''} ${b.until?'jusqu’au '+evFmt(b.until):''}</div>`:''}</span>
+      <button class="ghost lite" data-ed="${esc(b.code)}">Modifier</button><button class="ghost lite" data-tg="${esc(b.code)}">${b.available?'Rendre indisponible':'Rendre disponible'}</button>${b.auto?`<button class="ghost lite" data-sw="${esc(b.code)}">Attribuer maintenant</button>`:''}<button class="ghost lite" data-gv="${esc(b.code)}">Donner</button><button class="ghost lite" data-dl="${esc(b.code)}">Supprimer</button></div>`).join(''):'<p class="muted">Aucun badge créé.</p>'}`;
+    box.onclick=async e=>{const d=e.target.dataset||{};try{
+      if(e.target.id==='bgN')return form(null);
+      const cur=c=>l.find(x=>x.code===c);
+      if(d.ed)return form(cur(d.ed));
+      if(d.tg){const b=cur(d.tg);await save(b,{available:!b.available});toast(b.available?'Badge rendu indisponible':'Badge rendu disponible');return draw()}
+      if(d.sw){const n=await rpcd('badge_sweep',{p_code:d.sw});toast(n+' personne(s) ont reçu le badge');return draw()}
+      if(d.gv){const u=prompt('Noms d’utilisateur (séparés par des virgules)');if(!u)return;let n=0;for(const x of u.split(/[\s,;]+/).map(y=>y.replace(/^@/,'').trim().toLowerCase()).filter(Boolean)){await rpcd('admin_badge',{p_username:x,p_code:d.gv,p_give:true});n++}toast(n+' badge(s) donné(s)');return draw()}
+      if(d.dl){if(!confirm('Supprimer ce badge ?'))return;await rpcd('badge_def_delete',{p_code:d.dl});toast('Badge supprimé');return draw()}
+    }catch(x){toast(errMsg(x))}}};
+  const save=(b,o)=>rpcd('badge_def_save',{p_code:b.code||null,p_name:b.name,p_descr:b.descr,p_color:b.color,p_glyph:b.glyph,p_price:b.price||null,p_cond:b.cond||[],p_auto:b.auto,p_available:b.available,p_from:b.from||null,p_until:b.until||null,...(o?{p_available:o.available}:{})});
+  const form=b=>{const B=b?JSON.parse(JSON.stringify(b)):{name:'',descr:'',color:'#2f6bff',glyph:'star',price:null,cond:[],auto:true,available:true,from:null,until:null};
+    box.innerHTML=`<div class="row"><button class="ghost lite" id="bfB">Retour</button><b class="grow">${b?'Modifier le badge':'Créer un badge'}</b></div>
+      <input id="bfN" maxlength="30" placeholder="Nom du badge" value="${esc(B.name)}" style="margin-top:6px"><input id="bfD" maxlength="200" placeholder="Description" value="${esc(B.descr)}" style="margin-top:6px">
+      <div class="row" style="flex-wrap:wrap"><label>Couleur</label><input type="color" id="bfC" value="${esc(B.color)}"><label>Symbole</label><select id="bfG">${Object.keys(GLY).map(g=>`<option ${g===B.glyph?'selected':''}>${esc(g)}</option>`).join('')}</select><input id="bfP" type="number" min="1" placeholder="Prix en jetons (vide = non vendu)" value="${B.price||''}" style="width:230px"></div>
+      <label class="row" style="color:var(--text)"><input type="checkbox" id="bfA" ${B.auto?'checked':''}> Attribué automatiquement quand toutes les conditions sont remplies</label>
+      <label class="row" style="color:var(--text)"><input type="checkbox" id="bfV" ${B.available?'checked':''}> Disponible</label>
+      <div class="row" style="flex-wrap:wrap"><div class="grow"><label>Disponible à partir de</label><input type="datetime-local" id="bfF" value="${dtv(B.from)}"></div><div class="grow"><label>Indisponible à partir de</label><input type="datetime-local" id="bfU" value="${dtv(B.until)}"></div></div>
+      <label>Conditions (toutes doivent être remplies)</label><div id="bfL"></div>
+      <div class="row" style="flex-wrap:wrap"><select id="bkK"><option value="login">Connecté pendant une période</option><option value="login_days">Nombre de jours de connexion</option><option value="joined_before">Inscrit avant une date</option><option value="msgs">Messages envoyés</option><option value="friends">Amis</option><option value="wins">Victoires en jeu</option><option value="quests">Quêtes terminées</option><option value="buy">A acheté / possède</option></select>
+        <input id="bkA" type="date" style="width:150px"><input id="bkB" type="date" style="width:150px"><input id="bkN" type="number" min="1" placeholder="Nombre" style="width:110px"><select id="bkI">${opts.map(o=>`<option value="${esc(o[0])}">${esc(o[1])}</option>`).join('')}</select><button class="ghost lite" id="bkAdd">Ajouter</button></div>
+      <div class="row end"><button id="bfS">Enregistrer</button></div>`;
+    const ls=()=>{$('#bfL',box).innerHTML=B.cond.length?B.cond.map((c,i)=>`<span class="tag" style="margin:2px">${esc(evDesc(c))} <a href="#" data-x="${i}">retirer</a></span>`).join(''):'<span class="muted">Aucune condition : le badge se donne à la main.</span>'};ls();
+    const sync=()=>{const k=$('#bkK',box).value;$('#bkA',box).hidden=!['login'].includes(k);$('#bkB',box).hidden=!['login','joined_before'].includes(k);$('#bkN',box).hidden=['login','joined_before','buy'].includes(k);$('#bkI',box).hidden=k!=='buy'};sync();$('#bkK',box).onchange=sync;
+    $('#bfB',box).onclick=draw;
+    box.onclick=e=>{const x=e.target.dataset&&e.target.dataset.x;if(x!=null&&e.target.tagName==='A'){e.preventDefault();B.cond.splice(+x,1);ls()}};
+    $('#bkAdd',box).onclick=()=>{const k=$('#bkK',box).value,c={k};
+      if(k==='login'){c.from=$('#bkA',box).value;c.until=$('#bkB',box).value;if(!c.from||!c.until)return toast('Indiquez les deux dates')}
+      else if(k==='joined_before'){c.until=$('#bkB',box).value;if(!c.until)return toast('Indiquez la date')}
+      else if(k==='buy'){c.item=$('#bkI',box).value;c.name=($('#bkI',box).selectedOptions[0]||{}).textContent}
+      else{c.n=Number($('#bkN',box).value);if(!(c.n>=1))return toast('Indiquez un nombre')}
+      if(B.cond.length>=8)return toast('8 conditions au maximum');B.cond.push(c);ls()};
+    $('#bfS',box).onclick=async()=>{try{const f=$('#bfF',box).value,u=$('#bfU',box).value;
+      await save({code:b&&b.code,name:$('#bfN',box).value,descr:$('#bfD',box).value,color:$('#bfC',box).value,glyph:$('#bfG',box).value,price:Number($('#bfP',box).value)||null,cond:B.cond.map(c=>{const o={...c};delete o.name;return o}),auto:$('#bfA',box).checked,available:$('#bfV',box).checked,from:f?new Date(f).toISOString():null,until:u?new Date(u).toISOString():null});
+      toast('Badge enregistré');draw()}catch(x){toast(errMsg(x))}};
+  };
+  await draw();
+}
+setTimeout(function lg(){rpcd('login_note').then(()=>rpcd('badge_custom_sync_me')).then(n=>{if(n>0)toast('Nouveau badge obtenu')}).catch(()=>{});setTimeout(lg,20*60000)},7000);
+
+/* ================= lot 17a : Bourse (7 cryptomonnaies fondamentales) ================= */
+async function bmBourse(box,bal,show){
+  let view='m',sym=null,per='24h',side='buy',ot='limit',gone=false,ch=null,tm=null,busy=false;
+  const P=v=>v==null?'—':Number(v).toLocaleString('fr-CA',{maximumFractionDigits:4});
+  const J=v=>v==null?'—':Number(v).toLocaleString('fr-CA',{maximumFractionDigits:1});
+  const PC=v=>v==null?'—':(v>0?'+':'')+v+' %';
+  const CL=v=>v==null?'':v>0?'style="color:#1fa971"':v<0?'style="color:#e5484d"':'';
+  const dt=v=>new Date(v).toLocaleString('fr-CA',{dateStyle:'short',timeStyle:'medium'});
+  const nav=()=>`<div class="row" style="flex-wrap:wrap;margin-bottom:8px"><button class="ghost lite ${view==='m'||view==='d'?'on':''}" data-v="m">Marché</button><button class="ghost lite ${view==='p'?'on':''}" data-v="p">Portefeuille</button>${RK()>=4?`<button class="ghost lite ${view==='a'?'on':''}" data-v="a">Administration</button>`:''}</div>`;
+  const chart=(c)=>{if(!c.length)return '<p class="muted">Aucune transaction sur cette période.</p>';
+    const W=600,H=150,v=c.map(x=>x.c),mn=Math.min(...c.map(x=>x.l)),mx=Math.max(...c.map(x=>x.h)),r=mx-mn||mx||1,mv=Math.max(...c.map(x=>x.v))||1;
+    const X=i=>c.length<2?W/2:8+i*(W-16)/(c.length-1),Y=y=>8+(H-26)*(1-(y-mn)/r);
+    const line=c.map((x,i)=>`${i?'L':'M'}${X(i).toFixed(1)} ${Y(x.c).toFixed(1)}`).join(' ');
+    const bars=c.map((x,i)=>`<rect x="${(X(i)-2).toFixed(1)}" y="${(H-(x.v/mv)*16).toFixed(1)}" width="4" height="${((x.v/mv)*16).toFixed(1)}" fill="currentColor" opacity=".25"/>`).join('');
+    return `<svg viewBox="0 0 ${W} ${H}" style="width:100%;height:auto;color:var(--muted)">${bars}<path d="${line}" fill="none" stroke="#2f6bff" stroke-width="2"/>${c.length<2?`<circle cx="${X(0)}" cy="${Y(c[0].c)}" r="3" fill="#2f6bff"/>`:''}</svg><div class="muted" style="display:flex;justify-content:space-between"><span>Min ${P(mn)}</span><span>Dernier ${P(v[v.length-1])}</span><span>Max ${P(mx)}</span></div>`};
+  const drawMarket=async()=>{const l=await rpcd('crypto_market');
+    box.innerHTML=nav()+`<p class="muted">Marché commun des cryptomonnaies, payé en jetons Communicer. Un prix n’est affiché que s’il y a eu une vraie transaction ; sinon le prix initial est indiqué comme référence.</p>
+      ${l.map(a=>`<div class="shrow2" data-s="${esc(a.symbol)}" style="cursor:pointer"><div class="grow"><b>${esc(a.name)}</b> <span class="tag">${esc(a.symbol)}</span>${a.state!=='active'?' <span class="tag">suspendu</span>':''}<small>${esc(a.role)} · ${J(a.for_sale)} en vente · volume 24 h ${P(a.vol24_qty)} · capitalisation ${J(a.cap)}${a.cap_indicative?' (indicative)':''}</small></div>
+        <div style="text-align:right"><b>${a.has_price?P(a.last):'Aucun cours'}</b><div class="muted">${a.has_price?'':'réf. '+P(a.price0)+' · '}<span ${CL(a.chg24)}>${PC(a.chg24)}</span></div></div></div>`).join('')}`};
+  const drawDetail=async()=>{const [a,c,pf]=await Promise.all([rpcd('crypto_asset',{p_symbol:sym}),rpcd('crypto_chart',{p_symbol:sym,p_period:per}),rpcd('crypto_portfolio')]);
+    const pos=(pf.positions||[]).find(x=>x.symbol===sym);bal(pf.balance);
+    const rows=[['Prix actuel',a.has_price?P(a.last):'Aucun cours disponible'],['Prix initial',P(a.price0)],['Variation 24 h',PC(a.chg24)],['Variation 7 j',PC(a.chg7)],['Variation 30 j',PC(a.chg30)],['Maximum historique',P(a.high)],['Minimum historique',P(a.low)],['Offre maximale',P(a.max_supply)],['Offre en circulation',P(a.circ)],['Offre en réserve',P(a.reserve)],['Quantité en vente',P(a.for_sale)],['Quantité demandée',P(a.wanted)],['Achats cumulés (preneur)',P(a.bought_cum)],['Ventes cumulées (preneur)',P(a.sold_cum)],['Capitalisation'+(a.cap_indicative?' (indicative)':''),J(a.cap)],['Volume 24 h',P(a.vol24_qty)+' / '+J(a.vol24_val)+' jetons'],['Détenteurs',a.holders],['Ordres ouverts',a.open_orders],['Meilleur achat / vente',P(a.bid)+' / '+P(a.ask)],['Écart',P(a.spread)],['Volatilité 24 h',a.volatility24],['Pression acheteurs-vendeurs 24 h',a.pressure24==null?'—':a.pressure24]];
+    box.innerHTML=nav()+`<div class="row"><button class="ghost lite" data-v="m">Retour</button><b class="grow">${esc(a.name)} <span class="tag">${esc(a.symbol)}</span></b></div><p class="muted">${esc(a.descr)}</p>
+      <div class="row" style="flex-wrap:wrap">${['1h','24h','7d','30d','90d','1y','all'].map(p=>`<button class="ghost lite ${p===per?'on':''}" data-p="${p}">${{all:'Tout','1y':'1 an'}[p]||p}</button>`).join('')}</div>${chart(c)}
+      <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:4px 14px;margin:8px 0">${rows.map(r=>`<div class="muted">${esc(r[0])} : <b style="color:var(--text)">${esc(String(r[1]))}</b></div>`).join('')}</div>
+      <label>Ordre</label><div class="row"><button class="${side==='buy'?'':'ghost '}lite" data-sd="buy">Acheter</button><button class="${side==='sell'?'':'ghost '}lite" data-sd="sell">Vendre</button><select id="bsT"><option value="limit" ${ot==='limit'?'selected':''}>Cours limité</option><option value="market" ${ot==='market'?'selected':''}>Au marché</option></select></div>
+      <div class="row" style="flex-wrap:wrap"><input id="bsQ" type="number" min="0" step="0.0001" placeholder="Quantité" style="width:150px"><input id="bsP" type="number" min="0" step="0.0001" placeholder="Prix limite par unité" style="width:180px" ${ot==='market'?'disabled':''} value="${ot==='limit'?(side==='buy'?(a.ask||a.price0):(a.bid||a.last||a.price0)):''}"><button id="bsGo">${side==='buy'?'Acheter':'Vendre'}</button></div>
+      <div class="muted" id="bsN">${side==='buy'?'Les jetons sont réservés jusqu’à l’exécution ou l’annulation. ':'Les unités mises en vente sont verrouillées jusqu’à l’exécution ou l’annulation. '}Frais : 0,5 % retenus sur le produit de la vente. ${pos?`Vous possédez ${P(pos.qty)} ${esc(sym)} (${P(pos.locked)} verrouillées).`:''}</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px"><div><label>Offres de vente</label>${a.asks.length?a.asks.map(x=>`<div class="muted">${P(x.price)} · ${P(x.qty)}</div>`).join(''):'<div class="muted">Aucune</div>'}</div><div><label>Offres d’achat</label>${a.bids.length?a.bids.map(x=>`<div class="muted">${P(x.price)} · ${P(x.qty)}</div>`).join(''):'<div class="muted">Aucune</div>'}</div></div>
+      <label>Transactions récentes</label>${a.recent.length?a.recent.map(x=>`<div class="muted"><span ${CL(x.side==='buy'?1:-1)}>${x.side==='buy'?'achat':'vente'}</span> ${P(x.qty)} à ${P(x.price)} · ${dt(x.at)}${x.auto?' <span class="tag">automatique</span>':''}</div>`).join(''):'<div class="muted">Aucune transaction.</div>'}
+      <label>Répartition des détenteurs</label>${a.holders_top.map(h=>`<div class="muted">${esc(h.label)} : ${h.pct} %</div>`).join('')||'<div class="muted">—</div>'}
+      <label>Émissions et destructions</label>${a.supply_events.map(e=>`<div class="muted">${dt(e.at)} · ${{initial:'émission initiale',issue:'émission',burn:'destruction'}[e.kind]} ${P(e.qty)} — ${esc(e.reason)}</div>`).join('')}
+      <p class="muted">Analyses Ruther, Tachter et Ruther-Tachter : à venir.</p>`;
+    box._a=a};
+  const drawPort=async()=>{const pf=await rpcd('crypto_portfolio');bal(pf.balance);
+    const tv=pf.positions.reduce((s,x)=>s+x.value,0),tu=pf.positions.reduce((s,x)=>s+x.unrealized,0),tr=pf.positions.reduce((s,x)=>s+x.realized,0);
+    box.innerHTML=nav()+`<div class="row" style="flex-wrap:wrap;gap:14px"><div>Jetons disponibles<br><b>${J(pf.balance)}</b></div><div>Valeur des cryptomonnaies<br><b>${J(tv)}</b></div><div>Total<br><b>${J(pf.balance+tv)}</b></div><div>Gains non réalisés<br><b ${CL(tu)}>${J(tu)}</b></div><div>Gains réalisés<br><b ${CL(tr)}>${J(tr)}</b></div></div>
+      <label>Positions</label>${pf.positions.length?pf.positions.map(x=>`<div class="shrow2" data-s="${esc(x.symbol)}" style="cursor:pointer"><div class="grow"><b>${esc(x.name)}</b> <span class="tag">${esc(x.symbol)}</span><small>${P(x.qty)} unités (${P(x.locked)} verrouillées) · prix moyen ${P(x.avg_cost)} · ${x.indicative?'valeur indicative':'dernier cours '+P(x.last)}</small></div><div style="text-align:right"><b>${J(x.value)}</b><div class="muted" ${CL(x.unrealized)}>${J(x.unrealized)} non réalisé</div></div></div>`).join(''):'<p class="muted">Aucune position.</p>'}
+      <label>Ordres</label>${pf.orders.length?pf.orders.map(o=>`<div class="evm"><span class="grow">${o.side==='buy'?'Achat':'Vente'} ${esc(o.symbol)} · ${P(o.filled)} / ${P(o.qty)} à ${P(o.price)} · ${{open:'ouvert',partial:'partiel',filled:'exécuté',cancelled:'annulé'}[o.status]} <span class="muted">${dt(o.at)}</span></span>${['open','partial'].includes(o.status)?`<button class="ghost lite" data-co="${o.id}">Annuler</button>`:''}</div>`).join(''):'<p class="muted">Aucun ordre.</p>'}
+      <label>Historique des transactions</label>${pf.trades.length?pf.trades.map(t=>`<div class="muted">${dt(t.at)} · ${t.side==='buy'?'achat':'vente'} ${P(t.qty)} ${esc(t.symbol)} à ${P(t.price)} = ${J(t.value)} jetons${t.fee?' (frais '+J(t.fee)+')':''}</div>`).join(''):'<p class="muted">Aucune transaction.</p>'}`};
+  const drawAdmin=async()=>{const l=await rpcd('crypto_market');
+    box.innerHTML=nav()+`<p class="muted">Administration du marché (commandant). Toute opération est journalisée ; l’historique des transactions ne peut pas être modifié.</p>
+      <label>Monnaie</label><select id="adS">${l.map(a=>`<option value="${esc(a.symbol)}">${esc(a.symbol)} · ${esc(a.name)} (${a.state})</option>`).join('')}</select>
+      <div class="row" style="flex-wrap:wrap"><input id="adQ" type="number" min="0" step="0.0001" placeholder="Quantité" style="width:140px"><input id="adP" type="number" min="0" step="0.0001" placeholder="Prix (mise en vente)" style="width:170px"><input id="adM" class="grow" placeholder="Motif (5 caractères minimum)"></div>
+      <div class="row" style="flex-wrap:wrap"><button class="ghost" data-ad="issue">Émettre vers la trésorerie</button><button class="ghost" data-ad="burn">Détruire depuis la trésorerie</button><button class="ghost" data-ad="sell">Mettre en vente (trésorerie)</button><button class="ghost" data-ad="susp">Suspendre / réactiver</button><button class="ghost" data-ad="audit">Vérification comptable</button></div>
+      <label>Frais de bourse (points de base : 50 = 0,5 %)</label><div class="row"><input id="adF" type="number" min="0" max="1000" value="50" style="width:110px"><button class="ghost" data-ad="fee">Appliquer</button></div><pre id="adO" class="muted" style="white-space:pre-wrap"></pre>`};
+  const draw=async()=>{if(gone||busy)return;busy=true;try{if(view==='m')await drawMarket();else if(view==='d')await drawDetail();else if(view==='p')await drawPort();else await drawAdmin()}catch(e){box.innerHTML=nav()+'<p class="muted">'+esc(errMsg(e))+'</p>'}finally{busy=false}};
+  const soon=()=>{clearTimeout(tm);tm=setTimeout(()=>{if(!document.body.contains(box)){gone=true;try{sb.removeChannel(ch)}catch(e){}return}if(view!=='a'&&!(document.activeElement&&/INPUT|SELECT/.test(document.activeElement.tagName)))draw()},600)};
+  try{ch=sb.channel('crypto-'+rid()).on('postgres_changes',{event:'INSERT',schema:'public',table:'crypto_trades'},soon).subscribe()}catch(e){}
+  const iv=setInterval(()=>{if(!document.body.contains(box)){gone=true;clearInterval(iv);try{sb.removeChannel(ch)}catch(e){}return}if(view!=='a'&&!(document.activeElement&&/INPUT|SELECT/.test(document.activeElement.tagName)))draw()},15000);
+  box.onchange=e=>{if(e.target.id==='bsT'){ot=e.target.value;draw()}};
+  box.onclick=async e=>{const d=e.target.dataset||{},row=e.target.closest&&e.target.closest('[data-s]');
+    try{
+      if(d.v){view=d.v;if(d.v==='m')sym=null;return draw()}
+      if(d.p){per=d.p;return draw()}
+      if(d.sd){side=d.sd;return draw()}
+      if(row&&!d.co&&e.target.tagName!=='BUTTON'){sym=row.dataset.s;view='d';return draw()}
+      if(d.co){await rpcd('crypto_order_cancel',{p_id:+d.co});toast('Ordre annulé');return draw()}
+      if(e.target.id==='bsGo'){const a=box._a,q=Number($('#bsQ',box).value);let pr=Number($('#bsP',box).value),ioc=false;
+        if(ot==='market'){ioc=true;if(side==='buy'){if(!a.ask)throw new Error('Aucune offre de vente disponible');pr=Math.ceil(a.ask*1.05*10000)/10000}else{if(!a.bid)throw new Error('Aucune offre d’achat disponible');pr=Math.floor(a.bid*0.95*10000)/10000}}
+        if(!(q>0)||!(pr>0))throw new Error('Quantité et prix requis');
+        const total=Math.round(q*pr*10)/10;if(!confirm((side==='buy'?'Acheter ':'Vendre ')+q+' '+sym+(ot==='market'?' au marché (prix limite '+pr+')':' à '+pr)+' ? Valeur maximale : '+total+' jetons.'))return;
+        const r=await rpcd('crypto_order_place',{p_symbol:sym,p_side:side,p_qty:q,p_price:pr,p_ioc:ioc,p_idem:rid()});
+        toast(r.status==='filled'?'Ordre exécuté':r.status==='partial'?'Ordre partiellement exécuté':r.status==='cancelled'?(r.filled>0?'Exécuté en partie, le reste est annulé':'Aucune offre compatible : ordre annulé'):'Ordre placé dans le carnet');balRefresh();return draw()}
+      if(d.ad){const s=$('#adS',box).value,q=Number($('#adQ',box).value),p=Number($('#adP',box).value),mo=$('#adM',box).value,o=$('#adO',box);
+        if(d.ad==='issue'){await rpcd('crypto_issue',{p_symbol:s,p_qty:q,p_reason:mo});toast('Émission enregistrée')}
+        else if(d.ad==='burn'){await rpcd('crypto_burn',{p_symbol:s,p_qty:q,p_reason:mo});toast('Destruction enregistrée')}
+        else if(d.ad==='sell'){await rpcd('crypto_treasury_sell',{p_symbol:s,p_qty:q,p_price:p});toast('Offre de la trésorerie placée')}
+        else if(d.ad==='susp'){const mk=await rpcd('crypto_market'),cur=mk.find(x=>x.symbol===s);await rpcd('crypto_set_state',{p_symbol:s,p_state:cur.state==='active'?'suspended':'active'});toast(cur.state==='active'?'Marché suspendu':'Marché réactivé');return draw()}
+        else if(d.ad==='fee'){await rpcd('crypto_cfg_set',{p_k:'fee_bps',p_v:Number($('#adF',box).value)});toast('Frais mis à jour')}
+        else if(d.ad==='audit'){o.textContent=JSON.stringify(await rpcd('crypto_audit'),null,1)}}
+    }catch(x){toast(errMsg(x))}};
+  await draw();
+}
+
 async function goLink(){
   const g=S.pendingGo;if(!g)return;S.pendingGo=null;
   try{
@@ -9432,10 +9555,10 @@ document.addEventListener('contextmenu',e=>{
 /* ---------- panneau ---------- */
 devStaff=async function(){
   const r=RK();
-  const tabs=[['p','Progression',1],['d','Détections Ciffron',1],['b','Bots',2],['j','Journaux',1],['u','Bannissements',2],['q','Support',1],['a','Annonces',3],['s','Sanctions',2],['o','Droits',3],['v','Conversations',2],['g','Signalements',3],['k','Jetons',2],['i','Adresses IP',3],['e','Exceptions Ciffron',3],['r','Demandes',3],['t','Équipe',3],['f','Contrôle',4],['m','Courriels',3],['c','Cadres',4],['y','Équipes e-Sport',2]].filter(t=>r>=t[2]);
+  const tabs=[['p','Progression',1],['d','Détections Ciffron',1],['b','Bots',2],['j','Journaux',1],['u','Bannissements',2],['q','Support',1],['a','Annonces',3],['s','Sanctions',2],['o','Droits',3],['v','Conversations',2],['g','Signalements',3],['k','Jetons',2],['i','Adresses IP',3],['e','Exceptions Ciffron',3],['r','Demandes',3],['t','Équipe',3],['f','Contrôle',4],['m','Courriels',3],['c','Cadres',4],['y','Équipes e-Sport',2],['z','Badges',4]].filter(t=>r>=t[2]);
   const m=modal(`<h3>Administration <span class="rbadge r-${esc(S.staff)}">${esc(ROLES[S.staff]||'')}</span></h3><div class="row" id="stT" style="flex-wrap:wrap">${tabs.map(t=>`<button class="ghost lite" data-t="${t[0]}">${t[1]}</button>`).join('')}</div><div id="stC" class="devtab"></div><div class="row end"><button class="ghost" data-x>Fermer</button></div>`,true);
   m.classList.add('devmodal');
-  const T={f:stAudit,m:stMails,c:stFrames,p:stProgress,d:stDetections,b:stBots,u:stBans,s:stSanc,q:stSupport,a:stAnnonces,o:stRights,v:stConvs,g:stReports,e:stExc,j:stLogs,k:stTokens,i:stIps,r:stReqs,t:stTeam,y:stEsp};
+  const T={f:stAudit,m:stMails,c:stFrames,p:stProgress,d:stDetections,b:stBots,u:stBans,s:stSanc,q:stSupport,a:stAnnonces,o:stRights,v:stConvs,g:stReports,e:stExc,j:stLogs,k:stTokens,i:stIps,r:stReqs,t:stTeam,y:stEsp,z:stBdg};
   const show=async t=>{$$('#stT [data-t]',m).forEach(b=>b.classList.toggle('on',b.dataset.t===t));const c=$('#stC',m);c.innerHTML='<p class="muted">Chargement…</p>';try{await T[t](m,c)}catch(e){c.innerHTML='<p class="muted">'+esc(errMsg(e))+'</p>'}};
   $('#stT',m).onclick=e=>{const t=e.target.dataset&&e.target.dataset.t;if(t)show(t)};
   m._show=show;show('p');
@@ -9677,7 +9800,7 @@ const TIERN={merit:'Mérite',special:'Spécial',premium:'Premium',patron:'Mécé
 const GLY={star:'M12 6.5l1.7 3.6 3.9.5-2.9 2.7.8 3.9L12 15.2 8.5 17.2l.8-3.9-2.9-2.7 3.9-.5z',shield:'M12 6l5 2v4c0 3-2 5-5 6-3-1-5-3-5-6V8z',crown:'M7 16l-1-6 3 2 3-4 3 4 3-2-1 6z',flame:'M12 6c.7 2.7 3.5 4 3.5 7a3.5 3.5 0 0 1-7 0c0-1.4.7-2.2 1.4-2.8 0 1.4.7 2 1.4 2 0-2.8-.7-4.4.7-6.2z',bolt:'M13 6l-4 6h3l-1 6 5-7h-3z',gem:'M8 8h8l2 3-6 7-6-7z',leaf:'M7 16c0-6 4-9 10-9 0 6-3 10-9 10l-1 1z',book:'M7 7h6a2 2 0 0 1 2 2v8H9a2 2 0 0 0-2 2zM17 9v8',gear:'M12 9a3 3 0 1 0 0 6 3 3 0 0 0 0-6zM12 6v2M12 16v2M6 12h2M16 12h2',eye:'M5 12c2-3 4-4 7-4s5 1 7 4c-2 3-4 4-7 4s-5-1-7-4zM12 10.5a1.5 1.5 0 1 0 0 3 1.5 1.5 0 0 0 0-3z',heart:'M12 17s-5-3.2-5-6.6A2.6 2.6 0 0 1 12 9a2.6 2.6 0 0 1 5 1.4C17 13.800 12 17 12 17z',cpu:'M9 9h6v6H9zM11 6v3M13 6v3M11 15v3M13 15v3M6 11h3M6 13h3M15 11h3M15 13h3',code:'M10 9l-3 3 3 3M14 9l3 3-3 3',pen:'M8 16l1-3 6-6 2 2-6 6zM8 16l-1 2 2-1'};
 const BGLY={nouveau_venu:'leaf',habitue:'flame',veteran:'shield',aine:'book',champion:'crown',chasseur:'eye',ambassadeur:'heart',strategie:'gem',elite:'bolt',premier:'star',ingenieur:'gear',gardien:'shield',developpeur:'code',concepteur:'pen',fondateur:'crown',moderateur:'shield',aristocrate:'crown',cybernaute:'cpu',enigmatique:'eye',legende:'star',souverain:'crown',grand_mecene:'gem',mecene:'heart',legende_mecene:'star'};
 function medalSvg(b,sz){
-  sz=sz||20;const c=TIERC[b.tier]||'#f5b301',g=GLY[BGLY[b.code]||'star'];
+  sz=sz||20;const c=b.color||TIERC[b.tier]||'#f5b301',g=GLY[b.glyph||BGLY[b.code]||'star']||GLY.star;
   const ring=b.tier==='union'?`<defs><linearGradient id="ug${sz}" x1="0" x2="1"><stop offset=".5" stop-color="#d4af37"/><stop offset=".5" stop-color="#b8c0cc"/></linearGradient></defs><circle cx="12" cy="12" r="10" fill="url(#ug${sz})" stroke="#0004"/>`:`<circle cx="12" cy="12" r="10" fill="${c}" stroke="#0004"/>`;
   return `<svg width="${sz}" height="${sz}" viewBox="0 0 24 24" aria-hidden="true">${ring}<path d="${g}" fill="#fff" fill-opacity=".92" stroke="#0005" stroke-width=".6" stroke-linejoin="round"/></svg>`;
 }
@@ -9751,14 +9874,14 @@ openProfile=async function(un){
 };
 
 /* ---------- fenêtre du solde ---------- */
-const TABS=[['a','Accueil'],['h','Historique'],['s','Boutique'],['i','Inventaire'],['r','Parrainage'],['x','Romanomoney'],['b','Acheter']];
+const TABS=[['a','Accueil'],['h','Historique'],['s','Boutique'],['i','Inventaire'],['r','Parrainage'],['x','Romanomoney'],['k','Bourse'],['b','Acheter']];
 async function balOpen(tab){
   if(!S.me)return;
   const old=document.getElementById('balModal');if(old)old.remove();
   const m=modal(`<h3 class="balhd"><span>Jetons</span><span class="tokchip" id="bmBal">${nfmt(TK.bal)}</span></h3><div class="row bmT" id="bmT">${TABS.map(t=>`<button class="ghost lite" data-t="${t[0]}">${t[1]}</button>`).join('')}</div><div id="bmC"></div>`,true);
   m.id='balModal';m.classList.add('devmodal');
   const bal=b=>{if(b!=null){TK.bal=b;balRender()}$('#bmBal',m).textContent=nfmt(TK.bal)};
-  const T={a:bmHome,h:bmHist,s:bmShop,i:bmInv,r:bmRef,x:bmXchg,b:bmBuy};
+  const T={a:bmHome,h:bmHist,s:bmShop,i:bmInv,r:bmRef,x:bmXchg,b:bmBuy,k:bmBourse};
   const show=async t=>{$$('#bmT [data-t]',m).forEach(b=>b.classList.toggle('on',b.dataset.t===t));const c=$('#bmC',m);c.innerHTML='<p class="muted">Chargement…</p>';try{await T[t](c,bal,show)}catch(e){c.innerHTML='<p class="muted">'+esc(errMsg(e))+'</p>'}};
   $('#bmT',m).onclick=e=>{const t=e.target.dataset&&e.target.dataset.t;if(t)show(t)};
   m._show=show;show(tab||'a');return m;
@@ -9815,9 +9938,9 @@ async function bmBuy(box,bal,show){
 async function bmShop(box,bal,show){
   const sh=await rpcd('shop_list');TK.shop=sh;bal(sh.balance);
   let own=sh.badges.filter(b=>b.owned).map(b=>b.code);try{const iv=await rpcd('inventory_me');own=[...new Set(own.concat((iv.badges||[]).map(b=>b.code)))];S.owned=new Set(iv.items||[])}catch(e){}
-  const grp=[['Customize+',['customize_plus']],['Fonctions',['lite','pin','name_color','profile_color','profile_bg','badge_slot5','send_tokens']],['Cadres',['frame_photo','frame_photo_anim','frame_profile','frame_profile_anim']],['Nom',['rename','credits_name']],['Emojis',['pack_emoji']],['Outils',['personal_tools','absence','export_stats','group_tools','tournaments','esport']]];
+  const grp=[['Customize+',['customize_plus']],['Fonctions',['lite','pin','name_color','profile_color','profile_bg','badge_slot5','send_tokens']],['Cadres',['frame_photo','frame_photo_anim','frame_profile','frame_profile_anim']],['Nom',['rename','credits_name']],['Emojis',['pack_emoji']],['Outils',['personal_tools','absence','export_stats','group_tools','tournaments','esport','krypto_plus']]];
   const cpOwn=!!(sh.items.find(i=>i.code==='customize_plus')||{}).owned,CPC=['name_color','profile_color','profile_bg','badge_slot5','frame_photo','frame_photo_anim','frame_profile','frame_profile_anim','rename'];
-  const row=(name,desc,price,owned,code,extra)=>`<div class="shrow2"><div class="grow"><b>${name}</b><small>${desc}</small></div>${extra||''}${cpOwn&&CPC.includes(code)&&(code==='rename'||(sh.items.find(i=>i.code===code)||{}).via)?`<button class="lite incl" disabled title="Inclus dans Customize+">${nfmt(price)}</button>`:owned?'<span class="tag">possédé</span>':`<button class="lite" data-b="${esc(code)}" ${sh.balance<price?'disabled':''}>${nfmt(price)}</button>`}</div>`;
+  const row=(name,desc,price,owned,code,extra)=>`<div class="shrow2"><div class="grow"><b>${name}</b><small>${desc}</small></div>${extra||''}${cpOwn&&CPC.includes(code)&&code!=='rename'&&(sh.items.find(i=>i.code===code)||{}).via?`<button class="lite incl" disabled title="Inclus dans Customize+">${nfmt(price)}</button>`:owned?'<span class="tag">possédé</span>':`<button class="lite" data-b="${esc(code)}" ${sh.balance<price?'disabled':''}>${nfmt(price)}</button>`}</div>`;
   let h='';
   grp.forEach(([t,codes])=>{h+=`<label>${t}</label>`+codes.map(c=>sh.items.find(i=>i.code===c)).filter(Boolean).map(i=>row(esc(i.name),esc(i.descr),i.price,i.owned,i.code)).join('')});
   h+='<label>Badges</label>'+sh.badges.map(b=>row(`${medal(b,20)} ${esc(b.name)} <span class="tag t-${esc(b.tier)}">${esc(TIERN[b.tier])}</span>`,esc(b.descr),b.price,b.owned,b.code)).join('');
