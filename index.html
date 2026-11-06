@@ -11276,11 +11276,16 @@ if(!LITE.on()){let busy=false;
     ['hal','Hallucinations','Ombres en périphérie, mots qui changent un instant, pastilles de notification fantômes.'],
     ['fau','Animaux sauvages inexistants','Des bêtes traversent l’écran ; elles se dissolvent si vous approchez.'],
     ['ill','Illusions d’optique','Motifs qui tournent, changent de couleur, formes abstraites ; leur vitesse suit la paranoïa et la force.']];
-  const DEF=()=>({on:true,para:30,fx:Object.fromEntries(KEYS.map(k=>[k[0],{on:false,s:50}]))});
+  const DEF=()=>({on:false,para:30,fx:Object.fromEntries(KEYS.map(k=>[k[0],{on:true,s:50}]))});
+  const THR={scr:.05,mouse:.12,delay:.18,anim:.24,warp:.32,psy:.38,obj:.45,hal:.52,fau:.6,ill:.68};
+  let dose=0,smoking=false,lastDt=performance.now();
+  const CH0={hair:'court',hc:'#3b2a1d',skin:'#f1c9a5',item:'cig'};let ch={...CH0};
+  const RATE={cig:4,vape:3,cigar:7},ITEMS={cig:'Cigarette',vape:'Vapoteuse',cigar:'Cigare'};
+  const lvl=()=>Math.max(0,Math.min(1,dose/100)),sc=k=>cfg.on?Math.max(0,Math.min(1,(lvl()-THR[k])/.25)):0;
   let cfg=DEF(),run={},mx=innerWidth/2,my=innerHeight/2,fx0=mx,fy0=my,T0=performance.now();
-  const load=()=>{try{const j=JSON.parse(localStorage.getItem('cm_fx')||'null');if(j&&j.fx){const d=DEF();d.on=j.on!==false;d.para=+j.para||0;KEYS.forEach(k=>{if(j.fx[k[0]])d.fx[k[0]]={on:!!j.fx[k[0]].on,s:Math.max(0,Math.min(100,+j.fx[k[0]].s||0))}});cfg=d}}catch(e){}};
-  const save=()=>{try{localStorage.setItem('cm_fx',JSON.stringify(cfg))}catch(e){}};
-  const S_=k=>cfg.fx[k].s/100,PA=()=>cfg.para/100,R=(a,b)=>a+Math.random()*(b-a),RI=(a,b)=>Math.floor(R(a,b+1)),PK=a=>a[Math.floor(Math.random()*a.length)];
+  const load=()=>{try{const j=JSON.parse(localStorage.getItem('cm_fx2')||'null');if(j&&j.fx){const d=DEF();d.on=j.on===true;d.para=+j.para||0;KEYS.forEach(k=>{if(j.fx[k[0]])d.fx[k[0]]={on:!!j.fx[k[0]].on,s:Math.max(0,Math.min(100,+j.fx[k[0]].s||0))}});cfg=d}}catch(e){}};
+  const save=()=>{try{localStorage.setItem('cm_fx2',JSON.stringify(cfg))}catch(e){}};
+  const S_=k=>cfg.fx[k].s/100*sc(k),PA=()=>cfg.para/100*(.4+.6*lvl()),R=(a,b)=>a+Math.random()*(b-a),RI=(a,b)=>Math.floor(R(a,b+1)),PK=a=>a[Math.floor(Math.random()*a.length)];
   const KEEP='[data-fxkeep]';
   const css=document.createElement('style');css.textContent=`
   #fxLayer{position:fixed;inset:0;pointer-events:none;z-index:99980;overflow:hidden}
@@ -11292,6 +11297,14 @@ if(!LITE.on()){let busy=false;
   html.fxp body{text-shadow:var(--fxp,1px) 0 rgba(255,0,90,.38),calc(var(--fxp,1px)*-1) 0 rgba(0,190,255,.38)}
   #fxStop{position:fixed;left:10px;bottom:10px;z-index:2147483001;padding:6px 10px;font-size:12px;border-radius:8px;opacity:.85}
   .fxRing{position:fixed;width:34px;height:34px;margin:-17px 0 0 -17px;border-radius:50%;pointer-events:none;z-index:2147482990;background:conic-gradient(var(--accent,#2f81f7) var(--p,0%),transparent 0);-webkit-mask:radial-gradient(circle,transparent 11px,#000 12px);mask:radial-gradient(circle,transparent 11px,#000 12px);opacity:.9}
+  #fxHead{position:fixed;right:10px;bottom:10px;width:60px;z-index:2147483000;touch-action:none;user-select:none;-webkit-user-select:none;cursor:pointer;text-align:center;transition:transform .15s}
+  #fxHead.sm{transform:scale(1.06)}
+  #fxHead .fxHb{filter:drop-shadow(0 3px 5px rgba(0,0,0,.4))}
+  #fxHead .fxHm{height:5px;border-radius:3px;background:rgba(0,0,0,.25);margin:2px 4px 0;overflow:hidden}
+  #fxHead .fxHm i{display:block;height:100%;width:0;background:linear-gradient(90deg,#2fbf71,#e8c232,#e5484d)}
+  #fxHead .fxHc{position:absolute;left:-6px;top:-8px;font-size:10px;padding:1px 6px;border-radius:9px;opacity:.75}
+  .fxSw{width:26px;height:26px;border-radius:50%;border:2px solid var(--line);padding:0}
+  #fxChar .on{outline:2px solid var(--accent,#2f81f7)}
   #fxPanel .fxr{border-top:1px solid var(--line);padding:8px 0}
   #fxPanel .fxr input[type=range]{width:100%}
   #fxPanel small{display:block;color:var(--muted)}
@@ -11323,13 +11336,17 @@ if(!LITE.on()){let busy=false;
   let cur=null,gateOn=false;
   const onMove=e=>{mx=e.clientX;my=e.clientY;if(cur)cur.style.display=(e.target.closest&&e.target.closest(KEEP))?'none':''};
   const isFld=t=>/^(INPUT|TEXTAREA|SELECT)$/.test(t.tagName)||t.isContentEditable;
-  const gate=e=>{if(!e.isTrusted||!(run.mouse||run.delay))return;const t=e.target;if(!t.closest||t.closest(KEEP))return;let tg=t,x=e.clientX,y=e.clientY;
+  const gate=e=>{if(!e.isTrusted||!(run.mouse||run.delay)||e.detail===0)return;const t=e.target;if(!t.closest||t.closest(KEEP))return;let tg=t,x=e.clientX,y=e.clientY;
     if(run.mouse&&Math.hypot(fx0-x,fy0-y)>6){const el=document.elementFromPoint(fx0,fy0);if(el){tg=el;x=fx0;y=fy0}}
     const dl=run.delay?S_('delay')*3000:0;if(tg===t&&(!dl||isFld(t)))return;
     e.stopImmediatePropagation();e.preventDefault();
     if(dl>150){const r=document.createElement('div');r.className='fxRing';r.setAttribute('data-fxkeep','');r.style.left=x+'px';r.style.top=y+'px';document.body.appendChild(r);r.animate([{'--p':'0%'},{'--p':'100%'}],{duration:dl,id:'fx'});setTimeout(()=>r.remove(),dl+50)}
-    setTimeout(()=>{if(!tg.isConnected)return;try{if(isFld(tg))tg.focus()}catch(_){}tg.dispatchEvent(new MouseEvent('click',{bubbles:true,cancelable:true,clientX:x,clientY:y,view:window}))},dl)};
-  const gateSync=()=>{const need=run.mouse||run.delay;if(need&&!gateOn){document.addEventListener('click',gate,true);gateOn=true}if(!need&&gateOn){document.removeEventListener('click',gate,true);gateOn=false}};
+    setTimeout(()=>{if(!tg.isConnected)return;try{if(isFld(tg))tg.focus()}catch(_){}const o={bubbles:true,cancelable:true,clientX:x,clientY:y,view:window,button:0};['pointerdown','mousedown','pointerup','mouseup'].forEach(n=>tg.dispatchEvent(n[0]==='p'?new PointerEvent(n,o):new MouseEvent(n,o)));tg.dispatchEvent(new MouseEvent('click',o))},dl)};
+  const BLK=['mousedown','mouseup','pointerdown','pointerup','dblclick','auxclick','contextmenu'];
+  const blk=e=>{if(!e.isTrusted||!run.mouse||e.pointerType==='touch')return;if(e.target.closest&&e.target.closest(KEEP))return;e.stopImmediatePropagation();e.preventDefault()};
+  const gateSync=()=>{const need=run.mouse||run.delay;if(need&&!gateOn){document.addEventListener('click',gate,true);gateOn=true}if(!need&&gateOn){document.removeEventListener('click',gate,true);gateOn=false}
+    if(run.mouse&&!blkOn){BLK.forEach(n=>document.addEventListener(n,blk,true));blkOn=true}if(!run.mouse&&blkOn){BLK.forEach(n=>document.removeEventListener(n,blk,true));blkOn=false}};
+  let blkOn=false;
   const mouseStart=()=>{cur=document.createElement('div');cur.id='fxCur';cur.setAttribute('data-fxkeep','');cur.innerHTML='<svg width="22" height="28" viewBox="0 0 22 28"><path d="M2 1v22l6-5 4 9 4-2-4-9h8z" fill="#fff" stroke="#000" stroke-width="1.6" stroke-linejoin="round"/></svg>';document.body.appendChild(cur);fx0=mx;fy0=my;document.documentElement.classList.add('fxm');document.addEventListener('mousemove',onMove,true)};
   const mouseStop=()=>{document.removeEventListener('mousemove',onMove,true);document.documentElement.classList.remove('fxm');if(cur)cur.remove();cur=null};
 
@@ -11439,33 +11456,89 @@ if(!LITE.on()){let busy=false;
     requestAnimationFrame(mainLoop)};
   const M={scr:[scrStart,scrStop,()=>{scrStop();scrStart()}],mouse:[mouseStart,mouseStop],warp:[warpStart,warpStop],delay:[()=>{},()=>{}],anim:[animStart,animStop],psy:[psyStart,psyStop],obj:[()=>spawnLoop('obj'),()=>clearTimeout(timers.obj)],hal:[()=>spawnLoop('hal'),()=>clearTimeout(timers.hal)],fau:[()=>spawnLoop('fau'),()=>clearTimeout(timers.fau)],ill:[illStart,illStop]};
   const clearLayer=k=>{const l=document.getElementById('fxLayer');if(l&&!Object.keys(run).some(x=>run[x]&&/^(obj|hal|fau)$/.test(x))){l.remove();crit.length=0;raf.length=0}};
-  const stopBtn=()=>{const any=cfg.on&&KEYS.some(k=>cfg.fx[k[0]].on&&cfg.fx[k[0]].s>0);let b=document.getElementById('fxStop');if(any&&!b){b=document.createElement('button');b.id='fxStop';b.className='ghost';b.setAttribute('data-fxkeep','');b.textContent='Arrêter les effets';b.onclick=()=>FX.stopAll();document.body.appendChild(b)}if(!any&&b)b.remove()};
-  const sync=()=>{KEYS.forEach(([k])=>{const want=cfg.on&&cfg.fx[k].on&&cfg.fx[k].s>0;if(want&&!run[k]){run[k]=true;try{M[k][0]()}catch(e){console.warn('fx',k,e)}}else if(!want&&run[k]){run[k]=false;try{M[k][1]()}catch(e){}}else if(want&&M[k][2]){try{M[k][2]()}catch(e){}}});
+  const stopBtn=()=>{const any=cfg.on&&dose>0.5;let b=document.getElementById('fxStop');if(any&&!b){b=document.createElement('button');b.id='fxStop';b.className='ghost';b.setAttribute('data-fxkeep','');b.textContent='Arrêter les effets';b.onclick=()=>FX.calm();document.body.appendChild(b)}if(!any&&b)b.remove()};
+  const sync=()=>{KEYS.forEach(([k])=>{const want=cfg.on&&cfg.fx[k].on&&cfg.fx[k].s>0&&sc(k)>0;if(want&&!run[k]){run[k]=true;try{M[k][0]()}catch(e){console.warn('fx',k,e)}}else if(!want&&run[k]){run[k]=false;try{M[k][1]()}catch(e){}}else if(want&&M[k][2]){try{M[k][2]()}catch(e){}}});
     gateSync();compose();if(!Object.values(run).some(Boolean)){loopOn=false;document.documentElement.style.filter='';clearLayer()}else if(!loopOn){loopOn=true;requestAnimationFrame(mainLoop)}stopBtn()};
   let esc3=[];
-  document.addEventListener('keydown',e=>{if(e.key!=='Shift'||e.repeat)return;const n=Date.now();esc3=esc3.filter(x=>n-x<1600);esc3.push(n);if(esc3.length>=3&&KEYS.some(k=>run[k[0]])){esc3=[];FX.stopAll();try{toast('Effets arrêtés')}catch(_){}}},true);
+  document.addEventListener('keydown',e=>{if(e.key!=='Shift'||e.repeat)return;const n=Date.now();esc3=esc3.filter(x=>n-x<1600);esc3.push(n);if(esc3.length>=3&&(dose>0||KEYS.some(k=>run[k[0]]))){esc3=[];FX.calm();try{toast('Effets arrêtés')}catch(_){}}},true);
 
+  /* ---------- personnage fumeur : la dose commande les effets ---------- */
+  const HAIR={court:'Courts',longs:'Longs',frange:'Frange',chignon:'Chignon',tresses:'Tresses',cret:'Crête',afro:'Afro',chauve:'Chauve'};
+  const loadCh=()=>{try{const j=JSON.parse(localStorage.getItem('cm_fx_char')||'null');if(j)ch={...CH0,...j}}catch(e){}};
+  const saveCh=()=>{try{localStorage.setItem('cm_fx_char',JSON.stringify(ch))}catch(e){}};
+  const loadDose=()=>{try{const j=JSON.parse(localStorage.getItem('cm_fx_dose')||'null');if(j&&j.d>0){dose=Math.max(0,j.d-0.8*(Date.now()-j.t)/1000)}}catch(e){}};
+  const saveDose=()=>{try{localStorage.setItem('cm_fx_dose',JSON.stringify({d:dose,t:Date.now()}))}catch(e){}};
+  const hairBack=(h,c)=>({longs:`<path d="M14 46C10 70 12 92 22 96l10-30z M86 46c4 24 2 46-8 50L68 66z" fill="${c}"/><path d="M16 50C14 22 30 6 50 6s36 16 34 44z" fill="${c}"/>`,
+    tresses:`<path d="M16 50C14 22 30 6 50 6s36 16 34 44z" fill="${c}"/><path d="M14 50c-8 10-8 26-2 40 6-4 10-14 12-30z M86 50c8 10 8 26 2 40-6-4-10-14-12-30z" fill="${c}"/>`,
+    afro:`<circle cx="50" cy="38" r="40" fill="${c}"/>`,chignon:`<circle cx="50" cy="8" r="11" fill="${c}"/>`,cret:'',court:'',frange:'',chauve:''}[h]||'');
+  const hairFront=(h,c)=>({court:`<path d="M17 46C14 20 30 8 50 8s36 12 33 38c-4-12-12-20-33-20S21 34 17 46z" fill="${c}"/>`,
+    frange:`<path d="M16 48C13 20 30 7 50 7s37 13 34 41c-2-10-6-18-12-22-6 8-26 10-40 6-4 4-8 10-16 16z" fill="${c}"/>`,
+    longs:`<path d="M17 48C16 22 32 9 50 9s34 13 33 39c-6-14-14-24-33-24S23 34 17 48z" fill="${c}"/>`,
+    tresses:`<path d="M17 46C14 20 30 8 50 8s36 12 33 38c-4-12-12-20-33-20S21 34 17 46z" fill="${c}"/>`,
+    chignon:`<path d="M17 46C14 20 30 10 50 10s36 10 33 36c-4-12-12-20-33-20S21 34 17 46z" fill="${c}"/>`,
+    afro:`<path d="M17 44C20 24 34 16 50 16s30 8 33 28c-6-10-16-14-33-14S23 34 17 44z" fill="${c}"/>`,
+    cret:`<path d="M42 22L40 0l8 12 2-14 4 14 6-12-2 22z" fill="${c}"/><path d="M17 40c4-6 10-10 12-10M83 40c-4-6-10-10-12-10" stroke="${c}" stroke-width="3" fill="none"/>`,chauve:`<ellipse cx="40" cy="18" rx="8" ry="3.5" fill="#fff" opacity=".25"/>`}[h]||'');
+  const itemSvg=(it,on)=>{if(!on)return '';const em=`<circle class="fxEm" cx="0" cy="0" r="3" fill="#ff7a1a"><animate attributeName="opacity" values=".6;1;.7;1" dur=".6s" repeatCount="indefinite"/></circle>`;
+    if(it==='vape')return `<g transform="translate(56 66) rotate(-14)"><rect x="0" y="-4" width="34" height="8" rx="4" fill="#2b2f36"/><rect x="0" y="-4" width="8" height="8" rx="3" fill="#161a1f"/><circle cx="22" cy="0" r="1.8" fill="#37c6ff"><animate attributeName="opacity" values=".3;1;.3" dur="1s" repeatCount="indefinite"/></circle></g>`;
+    if(it==='cigar')return `<g transform="translate(56 66) rotate(-12)"><rect x="0" y="-4.5" width="36" height="9" rx="3" fill="#6b3f1d"/><rect x="22" y="-4.5" width="4" height="9" fill="#d9b25a"/><g transform="translate(37 0)"><circle r="4.4" fill="#444"/><g>${em}</g></g></g>`;
+    return `<g transform="translate(56 66) rotate(-12)"><rect x="0" y="-2.2" width="34" height="4.4" rx="1.5" fill="#f6f3ec"/><rect x="0" y="-2.2" width="9" height="4.4" rx="1.5" fill="#d98a3a"/><g transform="translate(35 0)"><circle r="2.7" fill="#555"/><g>${em}</g></g></g>`};
+  const headSvg=(c,sm,big)=>`<svg viewBox="-6 -6 112 112" width="${big||56}" height="${big||56}" style="overflow:visible">${hairBack(c.hair,c.hc)}<ellipse cx="14" cy="56" rx="5" ry="8" fill="${c.skin}"/><ellipse cx="86" cy="56" rx="5" ry="8" fill="${c.skin}"/><ellipse cx="50" cy="54" rx="36" ry="40" fill="${c.skin}"/><ellipse cx="50" cy="54" rx="36" ry="40" fill="url(#fxsh)" opacity=".18"/>
+    ${hairFront(c.hair,c.hc)}<g class="fxEy"><ellipse cx="36" cy="52" rx="6" ry="${sm?2.4:6}" fill="#fff"/><ellipse cx="64" cy="52" rx="6" ry="${sm?2.4:6}" fill="#fff"/><circle cx="37" cy="52" r="3" fill="#2a1d12"/><circle cx="65" cy="52" r="3" fill="#2a1d12"/></g><path d="M28 43q8-5 15-1M57 42q8-4 15 1" stroke="#00000066" stroke-width="2.4" fill="none" stroke-linecap="round"/><path d="M50 54q-3 8 0 11" stroke="#00000033" stroke-width="2.2" fill="none" stroke-linecap="round"/>
+    ${sm?`<ellipse cx="53" cy="72" rx="4.6" ry="3.6" fill="#b4574f"/>`:`<path d="M42 72q8 6 16 0" stroke="#a24f48" stroke-width="2.8" fill="none" stroke-linecap="round"/>`}<circle cx="27" cy="66" r="6" fill="#ff8a8a" opacity="${sm?.35:.2}"/><circle cx="73" cy="66" r="6" fill="#ff8a8a" opacity="${sm?.35:.2}"/>${itemSvg(c.item,sm)}<defs><radialGradient id="fxsh" cx=".35" cy=".3" r=".9"><stop offset="0" stop-color="#fff"/><stop offset="1" stop-color="#000"/></radialGradient></defs></svg>`;
+  let head=null,smk=null,smTm=0;
+  const puff=(n,big)=>{if(!head)return;const r=head.getBoundingClientRect(),c=smk||(smk=document.getElementById('fxSmoke'));if(!c)return;const it=ch.item;
+    for(let i=0;i<n;i++){const p=document.createElement('div'),sz=(it==='vape'?18:12)*(big?1.7:1)*R(.8,1.3),x=r.left+r.width*(it==='vape'?.78:.8)+R(-4,4),y=r.top+r.height*.66,col=it==='cigar'?'110,100,95':it==='vape'?'245,248,255':'205,205,205';
+      Object.assign(p.style,{position:'fixed',left:x+'px',top:y+'px',width:sz+'px',height:sz+'px',marginLeft:-sz/2+'px',marginTop:-sz/2+'px',borderRadius:'50%',background:`radial-gradient(circle,rgba(${col},.75),rgba(${col},0) 70%)`,filter:'blur(2px)',pointerEvents:'none'});c.appendChild(p);
+      const dx=R(-60,30)*(big?1.4:1),up=R(90,190)*(big?1.3:1),d=R(1800,3200)*(it==='vape'?1.3:1);
+      p.animate([{transform:'translate(0,0) scale(.6)',opacity:0},{opacity:.9,offset:.15},{transform:`translate(${dx*.5}px,${-up*.5}px) scale(${2.2+Math.random()*2})`,opacity:.55,offset:.55},{transform:`translate(${dx}px,${-up}px) scale(${4+Math.random()*3})`,opacity:0}],{duration:d,id:'fx',easing:'ease-out'}).onfinish=()=>p.remove()}};
+  let hTick=0,exTm=0;
+  const headMake=()=>{if(head)return;smk=document.createElement('div');smk.id='fxSmoke';smk.setAttribute('data-fxkeep','');smk.style.cssText='position:fixed;inset:0;pointer-events:none;z-index:2147482998';document.body.appendChild(smk);
+    head=document.createElement('div');head.id='fxHead';head.setAttribute('data-fxkeep','');head.title='Maintenir pour fumer';head.innerHTML='<div class="fxHb"></div><div class="fxHm"><i></i></div><button class="fxHc" type="button" aria-label="Personnaliser">Perso</button>';document.body.appendChild(head);headDraw();
+    const down=e=>{if(e.button>0||e.target.closest('.fxHc'))return;e.preventDefault();try{head.setPointerCapture(e.pointerId)}catch(_){}smoking=true;headDraw();clearInterval(hTick);hTick=setInterval(()=>puff(RI(1,2)),230);puff(2)};
+    const up=e=>{if(!smoking)return;smoking=false;clearInterval(hTick);headDraw();if(dose>8){puff(7,true);clearTimeout(exTm);exTm=setTimeout(()=>puff(5,true),380)}};
+    head.addEventListener('pointerdown',down);head.addEventListener('pointerup',up);head.addEventListener('pointercancel',up);head.addEventListener('lostpointercapture',up);head.addEventListener('contextmenu',e=>e.preventDefault());
+    head.querySelector('.fxHc').onclick=e=>{e.stopPropagation();charPanel()}};
+  const headDraw=()=>{if(!head)return;head.querySelector('.fxHb').innerHTML=headSvg(ch,smoking,56);head.classList.toggle('sm',smoking)};
+  const headKill=()=>{smoking=false;clearInterval(hTick);if(head)head.remove();head=null;const s=document.getElementById('fxSmoke');if(s)s.remove();smk=null};
+  const meter=()=>{if(!head)return;head.querySelector('.fxHm i').style.width=Math.round(lvl()*100)+'%'};
+  const charPanel=()=>{const m=modal(`<div id="fxChar"><h3>Mon personnage</h3><div class="row" style="justify-content:center"><div id="fxPrev"></div></div>
+    <label>Cheveux</label><div class="row" style="flex-wrap:wrap">${Object.entries(HAIR).map(([k,n])=>`<button class="ghost lite" data-h="${k}">${n}</button>`).join('')}</div>
+    <label>Couleur des cheveux</label><div class="row" style="flex-wrap:wrap">${['#3b2a1d','#1b1b1d','#8b5a2b','#d9b25a','#b5361f','#e8e8ea','#2f6fed','#9b59d6','#e9569e','#2fbf71'].map(c=>`<button class="fxSw" data-hc="${c}" style="background:${c}" aria-label="couleur"></button>`).join('')}<input type="color" id="fxHcI" value="${ch.hc}"></div>
+    <label>Teint</label><div class="row" style="flex-wrap:wrap">${['#fbe3cf','#f1c9a5','#d9a47c','#b57a52','#8a5a3a','#5a3a26'].map(c=>`<button class="fxSw" data-sk="${c}" style="background:${c}" aria-label="teint"></button>`).join('')}</div>
+    <label>Ce qu’il fume (maintenir la tête en bas à droite)</label><div class="row">${Object.entries(ITEMS).map(([k,n])=>`<button class="ghost lite" data-it="${k}">${n}</button>`).join('')}</div>
+    <div class="row end" style="margin-top:10px"><button data-x>Fermer</button></div></div>`,true);m.setAttribute('data-fxkeep','');
+    const draw=()=>{m.querySelector('#fxPrev').innerHTML=headSvg(ch,false,120);m.querySelectorAll('[data-h]').forEach(b=>b.classList.toggle('on',b.dataset.h===ch.hair));m.querySelectorAll('[data-it]').forEach(b=>b.classList.toggle('on',b.dataset.it===ch.item));headDraw()};
+    m.addEventListener('click',e=>{const d=e.target.dataset||{};if(d.h)ch.hair=d.h;else if(d.hc)ch.hc=d.hc;else if(d.sk)ch.skin=d.sk;else if(d.it)ch.item=d.it;else return;saveCh();draw()});
+    m.querySelector('#fxHcI').oninput=e=>{ch.hc=e.target.value;saveCh();draw()};draw()};
+  let lastSig='',lastScr=-1;
+  const doseTick=()=>{const n=performance.now(),dt=Math.min(2,(n-lastDt)/1000);lastDt=n;
+    if(cfg.on){if(smoking)dose=Math.min(100,dose+RATE[ch.item]*dt);else dose=Math.max(0,dose-0.8*dt)}else dose=0;
+    meter();const sig=KEYS.map(k=>sc(k[0])>0?1:0).join('')+(cfg.on?'1':'0'),sS=Math.round(sc('scr')*10);
+    if(sig!==lastSig||(run.scr&&sS!==lastScr)){lastSig=sig;lastScr=sS;sync()}else if(!cfg.on&&head)sync();
+    if(cfg.on&&!head)headMake();if(!cfg.on&&head)headKill();
+    const pm=document.getElementById('fxDoseV');if(pm)pm.textContent=Math.round(lvl()*100)+' %'};
+  let dsIv=0,svIv=0;
   /* ---------- panneau de réglage ---------- */
   const panel=()=>{
     const m=modal(`<div id="fxPanel"><h3>Effets sensoriels</h3>
-      <p class="muted">Effets visuels et de perception à essayer sur tout le site. Ils peuvent provoquer vertiges, malaise ou fatigue : ne les utilisez pas en cas d’épilepsie photosensible ou de sensibilité au mouvement. Un bouton « Arrêter les effets » reste affiché ; appuyer trois fois sur Maj arrête aussi tout.</p>
-      <div class="row"><label class="row" style="margin:0;color:var(--text)"><input type="checkbox" id="fxOn" ${cfg.on?'checked':''}> Effets activés</label><span class="grow"></span><button class="ghost" id="fxOff">Tout arrêter</button><button class="ghost" id="fxRst">Réinitialiser</button></div>
+      <p class="muted">Active un petit personnage en bas à droite. Les effets n’apparaissent que s’il fume : maintenez la tête pour le faire fumer (cigarette, vapoteuse ou cigare) ; plus il fume, plus il y a d’effets, et la dose redescend toute seule. Les forces ci-dessous sont les maximums. Ils peuvent provoquer vertiges, malaise ou fatigue : ne les utilisez pas en cas d’épilepsie photosensible ou de sensibilité au mouvement. Un bouton « Arrêter les effets » reste affiché ; appuyer trois fois sur Maj arrête aussi tout.</p>
+      <div class="row"><label class="row" style="margin:0;color:var(--text)"><input type="checkbox" id="fxOn" ${cfg.on?'checked':''}> Personnage et effets activés</label><span class="grow"></span><span class="muted">Dose : <b id="fxDoseV">0 %</b></span><button class="ghost" id="fxChB">Personnage</button><button class="ghost" id="fxOff">Tout arrêter</button><button class="ghost" id="fxRst">Réinitialiser</button></div>
       <div class="fxr"><b>Paranoïa</b><small>Plus elle monte, plus les apparitions sont fréquentes et les illusions rapides.</small><div class="row"><input type="range" id="fxPara" min="0" max="100" value="${cfg.para}"><span class="fxv" id="fxParaV">${cfg.para}</span></div></div>
       ${KEYS.map(([k,n,d])=>`<div class="fxr"><label class="row" style="margin:0;color:var(--text)"><input type="checkbox" data-k="${k}" ${cfg.fx[k].on?'checked':''}> <b>${n}</b></label><small>${d}</small><div class="row"><input type="range" data-s="${k}" min="0" max="100" value="${cfg.fx[k].s}"><span class="fxv" id="fxV_${k}">${cfg.fx[k].s}</span></div></div>`).join('')}
       <div class="row end" style="margin-top:10px"><button data-x>Fermer</button></div></div>`,true);
     m.setAttribute('data-fxkeep','');
     const ack=()=>{try{if(localStorage.getItem('cm_fx_ack'))return true;if(confirm('Ces effets peuvent causer des vertiges ou un inconfort visuel. Continuer ?')){localStorage.setItem('cm_fx_ack','1');return true}}catch(e){return true}return false};
-    m.addEventListener('change',e=>{const t=e.target;if(t.id==='fxOn'){if(t.checked&&!ack()){t.checked=false;return}cfg.on=t.checked}else if(t.dataset.k){if(t.checked&&!ack()){t.checked=false;return}cfg.fx[t.dataset.k].on=t.checked;if(t.checked&&cfg.fx[t.dataset.k].s===0){cfg.fx[t.dataset.k].s=50;const r=m.querySelector(`[data-s="${t.dataset.k}"]`);r.value=50;m.querySelector('#fxV_'+t.dataset.k).textContent='50'}}else return;save();sync()});
+    m.addEventListener('change',e=>{const t=e.target;if(t.id==='fxOn'){if(t.checked&&!ack()){t.checked=false;return}cfg.on=t.checked;if(!cfg.on)dose=0;doseTick()}else if(t.dataset.k){if(t.checked&&!ack()){t.checked=false;return}cfg.fx[t.dataset.k].on=t.checked;if(t.checked&&cfg.fx[t.dataset.k].s===0){cfg.fx[t.dataset.k].s=50;const r=m.querySelector(`[data-s="${t.dataset.k}"]`);r.value=50;m.querySelector('#fxV_'+t.dataset.k).textContent='50'}}else return;save();sync()});
     m.addEventListener('input',e=>{const t=e.target;if(t.id==='fxPara'){cfg.para=+t.value;m.querySelector('#fxParaV').textContent=t.value;save()}else if(t.dataset.s){const k=t.dataset.s;cfg.fx[k].s=+t.value;m.querySelector('#fxV_'+k).textContent=t.value;if(+t.value>0&&!cfg.fx[k].on&&!document.hidden){}save();clearTimeout(t._t);t._t=setTimeout(()=>{if(cfg.fx[k].on)sync()},k==='scr'?250:30);if(k==='ill'||k==='obj'||k==='hal'||k==='fau'||k==='warp'||k==='mouse'||k==='psy'||k==='anim'||k==='delay'){}}});
+    m.querySelector('#fxChB').onclick=()=>charPanel();
     m.querySelector('#fxOff').onclick=()=>{FX.stopAll();m.close()};
     m.querySelector('#fxRst').onclick=()=>{FX.stopAll();cfg=DEF();save();m.close();panel()};
   };
-  const FX=window.FX={cfg:()=>cfg,sync,panel,stopAll(){cfg.on=false;KEYS.forEach(k=>cfg.fx[k[0]].on=false);save();sync()},init(){load();addEventListener('resize',illSize);sync()}};
+  const FX=window.FX={cfg:()=>cfg,sync,panel,calm(){dose=0;saveDose();sync();meter()},stopAll(){cfg.on=false;dose=0;saveDose();save();sync();headKill()},init(){load();loadCh();loadDose();addEventListener('resize',illSize);sync();dsIv=setInterval(doseTick,250);svIv=setInterval(saveDose,2000);doseTick()}};
   const _ds2=devSettings;
   devSettings=function(m){const r=_ds2.apply(this,arguments);try{const cr=m.querySelector('.credits');if(cr&&!m.querySelector('#fxOpen')){const d=document.createElement('div');d.innerHTML='<label>Effets sensoriels</label><div class="row"><span class="grow muted">Mélange de lettres, souris ralentie, anamorphose, objets, animaux, illusions d’optique… avec réglage de la force de chaque effet.</span><button class="ghost" id="fxOpen">Régler</button></div>';cr.before(...d.childNodes);m.querySelector('#fxOpen').onclick=()=>panel()}}catch(e){}return r};
   if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',()=>FX.init());else FX.init();
 })();
-
 
 
 /* ================= DÉMARRAGE ================= */
