@@ -11394,15 +11394,13 @@ window.SMK=(function(){
   #fxHead .fxHs{position:relative;display:flex;height:6px;width:76px;margin-top:3px;border-radius:3px;overflow:hidden;opacity:.95}
   #fxHead .fxHs b{display:block;height:100%}
   #fxHead .fxHs u{position:absolute;top:-1px;bottom:-1px;left:0;width:2px;background:#fff;box-shadow:0 0 3px #000;text-decoration:none}
-  #fxHead .fxHc{position:absolute;right:-2px;top:-8px;font-size:10px;padding:1px 6px;border-radius:9px;opacity:.75}
-  #fxHead .fxBub{position:absolute;left:62px;bottom:48px;width:max-content;max-width:190px;background:#fff;color:#111;border-radius:12px;padding:6px 9px;font-size:12px;line-height:1.25;box-shadow:0 3px 10px rgba(0,0,0,.3);opacity:0;transform:translateY(4px);transition:opacity .2s,transform .2s;pointer-events:none}
+    #fxHead .fxBub{position:absolute;left:62px;bottom:48px;width:max-content;max-width:190px;background:#fff;color:#111;border-radius:12px;padding:6px 9px;font-size:12px;line-height:1.25;box-shadow:0 3px 10px rgba(0,0,0,.3);opacity:0;transform:translateY(4px);transition:opacity .2s,transform .2s;pointer-events:none}
   #fxHead .fxBub.on{opacity:1;transform:none}
   #fxHead .fxHp{height:4px;border-radius:2px;background:rgba(0,0,0,.22);margin-top:3px;width:76px;overflow:hidden}#fxHead .fxHp i{display:block;height:100%;width:0;background:#cfd6e4}
   #fxMenu{position:fixed;z-index:2147483002;background:var(--card,#fff);color:var(--text,#111);border:1px solid var(--line,#ddd);border-radius:12px;padding:8px;display:flex;flex-direction:column;gap:4px;box-shadow:0 8px 24px rgba(0,0,0,.3);max-height:60vh;overflow:auto}
-  #fxHead .fxHa{display:none;gap:3px;margin-top:4px;width:max-content}#fxHead.full .fxHa{display:flex}#fxHead .fxHa button{font-size:10px;padding:2px 6px;border-radius:8px}
-  #fxHead.zm{left:calc(50% - 38px);bottom:24vh;transition:left .5s,bottom .5s}#fxHead.zm .fxHb{scale:3.4;transform-origin:50% 100%;margin-bottom:6px;transition:scale .5s}#fxHead .fxHb{transition:scale .5s}#fxHead.zm .fxBub{left:150px;bottom:150px}
+    #fxHead.zm{left:calc(50% - 38px);bottom:24vh;transition:left .5s,bottom .5s}#fxHead.zm .fxHb{scale:3.4;transform-origin:50% 100%;margin-bottom:6px;transition:scale .5s}#fxHead .fxHb{transition:scale .5s}#fxHead.zm .fxBub{left:150px;bottom:150px}
   #fxZoom{position:fixed;inset:0;background:#000;z-index:2147482990;display:flex;justify-content:space-between;align-items:flex-start;padding:12px;color:#7d8590;font-size:12px}#fxZoom .fxZq{position:relative;z-index:2}
-  #fxMenu i{font-style:normal;opacity:.6;font-size:11px}#fxMenu button.on{outline:2px solid var(--accent,#2f81f7)}
+  #fxMenu i{font-style:normal;opacity:.6;font-size:11px}#fxMenu{font-size:13px;min-width:170px}#fxMenu .muted{font-size:11px}#fxMenu button{width:100%;text-align:left}#fxMenu button.on{outline:2px solid var(--accent,#2f81f7)}
   .fxHelp{display:grid;gap:6px}.fxHelp div{display:grid;grid-template-columns:minmax(110px,150px) 1fr;gap:10px;border-top:1px solid var(--line);padding:6px 0}.fxHelp b{font-size:13px}.fxHelp span{color:var(--muted);font-size:13px}
   #fxRehab{position:fixed;inset:0;z-index:2147482996;background:#04050a;color:#cfd3dc;display:flex;flex-direction:column;padding:16px;gap:12px;overflow:auto}
   #fxRehab .rhTop{display:flex;align-items:baseline;gap:12px;flex-wrap:wrap}#fxRehab .muted{color:#7d8590}
@@ -11424,7 +11422,7 @@ window.SMK=(function(){
   .fxSw{width:26px;height:26px;border-radius:50%;border:2px solid var(--line);padding:0}
   #fxChar .on{outline:2px solid var(--accent,#2f81f7)}
   .fxPb{display:inline-block;width:70px;height:6px;border-radius:3px;background:var(--line);vertical-align:middle;overflow:hidden}.fxPb span{display:block;height:100%}
-  .fxIt{display:flex;align-items:center;gap:8px;border-top:1px solid var(--line);padding:7px 0}
+  .fxIt{display:flex;align-items:center;gap:8px;border-top:1px solid var(--line);padding:7px 0}.fxIt .grow{min-width:0;flex:1}.fxIt select,.fxIt button{width:auto}
   .fxSt{display:grid;grid-template-columns:auto 1fr;gap:3px 12px;margin:8px 0}.fxSt span{color:var(--muted)}
   .fxPf{display:flex;gap:12px;align-items:center}
   `;document.head.appendChild(css);
@@ -11717,9 +11715,9 @@ window.SMK=(function(){
   const smkLoop=n=>{const dt=Math.min(.05,(n-smkLast)/1000);smkLast=n;sk.tick(dt);smoking=sk.stage==='inh';
     const u=head&&head.querySelector('.fxHs u');if(u)u.style.left=(sk.stage==='inh'?Math.min(100,sk.pos*100):0)+'%';
     const hp=head&&head.querySelector('.fxHp i');if(hp)hp.style.width=Math.round(Math.min(1,(sk.stage==='inh'?sk.V:sk.pool)/sk.cap())*100)+'%';
-    if(head)head.classList.toggle('full',sk.has());
+    if(head)
     if(sk.stage==='inh'&&eng&&Math.random()<.5){const m=mouth();eng.add({x:m.x+8,y:m.y,vx:6,vy:-26,s:6,ds:5,a:.14,life:1.6,drag:.6,by:-4,w:.85})}
-    if(sk.stage!=='idle'||sk.held||pend)smkRaf=requestAnimationFrame(smkLoop);else{smkRaf=0;if(hp)hp.style.width='0%';if(head)head.classList.remove('full')}};
+    if(sk.stage!=='idle'||sk.held||pend)smkRaf=requestAnimationFrame(smkLoop);else{smkRaf=0;if(hp)hp.style.width='0%';}};
   const kick=()=>{if(sk&&!smkRaf){smkLast=performance.now();smkRaf=requestAnimationFrame(smkLoop)}};
   const dsm=()=>curItem().power/100;
   const mkSmoker=()=>SMK.Smoker({E:E_ms,pw:()=>pwNow()||.1,
@@ -11748,25 +11746,23 @@ window.SMK=(function(){
     trkCv=document.createElement('canvas');trkCv.id='fxTrk';trkCv.setAttribute('data-fxkeep','');trkCv.style.cssText='position:fixed;inset:0;pointer-events:none;z-index:2147482997';document.body.appendChild(trkCv);eng=SMK.Engine(trkCv);trkSize();addEventListener('resize',trkSize);
     fog=document.createElement('div');fog.id='fxFog';fog.setAttribute('data-fxkeep','');fog.innerHTML='<i></i><i></i><i></i>';document.body.appendChild(fog);
     head=document.createElement('div');head.id='fxHead';head.setAttribute('data-fxkeep','');head.title='Maintenir la tête (ou CTRL) pour inhaler · ALT pour expirer / tricks';
-    head.innerHTML='<div class="fxHb"></div><div class="fxHm" title="Facteur d’effet"><i></i></div><div class="fxHs" title="Facteur de fumée : relâcher dans la zone dorée (sweet spot)"><b style="width:22%;background:#6b7280"></b><b style="width:40%;background:#d6c36a"></b><b style="width:23%;background:#e8b923"></b><b style="width:10%;background:#e9862a"></b><b style="width:5%;background:#d6342f"></b><u></u></div><div class="fxHp" title="Fumée en bouche"><i></i></div><div class="fxHa"><button type="button" data-a="ex">Expirer</button><button type="button" data-a="tk">Tricks</button><button type="button" data-a="sw">Avaler</button></div><button class="fxHc" type="button" aria-label="Mon personnage">Perso</button>';document.body.appendChild(head);headDraw('');
-    head.addEventListener('pointerdown',e=>{if(e.button>0||e.target.closest('.fxHc,.fxHa'))return;e.preventDefault();try{head.setPointerCapture(e.pointerId)}catch(_){}startSmoke('ptr')});
-    const up=()=>{if(sSrc==='ptr')endSmoke()};head.addEventListener('pointerup',up);head.addEventListener('pointercancel',up);head.addEventListener('lostpointercapture',up);head.addEventListener('contextmenu',e=>e.preventDefault());
-    const ha=head.querySelector('.fxHa'),exUp=()=>{if(sk)sk.exStop()};
-    ha.addEventListener('pointerdown',e=>{const a=e.target.dataset.a;if(a==='ex'){e.preventDefault();if(sk)sk.exStart();kick()}});ha.addEventListener('pointerup',exUp);ha.addEventListener('pointerleave',exUp);ha.addEventListener('pointercancel',exUp);
-    ha.addEventListener('click',e=>{const a=e.target.dataset.a;if(a==='tk')menuOpen(6000);else if(a==='sw')doSwallow()});
-    head.querySelector('.fxHc').onclick=e=>{e.stopPropagation();charPanel()}};
+    head.innerHTML='<div class="fxHb"></div><div class="fxHm" title="Facteur d’effet"><i></i></div><div class="fxHs" title="Facteur de fumée : relâcher dans la zone dorée (sweet spot)"><b style="width:22%;background:#6b7280"></b><b style="width:40%;background:#d6c36a"></b><b style="width:23%;background:#e8b923"></b><b style="width:10%;background:#e9862a"></b><b style="width:5%;background:#d6342f"></b><u></u></div><div class="fxHp" title="Fumée en bouche"><i></i></div>';document.body.appendChild(head);headDraw('');
+    head.addEventListener('pointerdown',e=>{if(e.button>0)return;e.preventDefault();try{head.setPointerCapture(e.pointerId)}catch(_){}startSmoke('ptr')});
+    const up=()=>{if(sSrc==='ptr')endSmoke()};head.addEventListener('pointerup',up);head.addEventListener('pointercancel',up);head.addEventListener('lostpointercapture',up);head.addEventListener('contextmenu',e=>e.preventDefault());};
   const headKill=()=>{smoking=false;sndInStop();menuClose();qvClose();zoomToggle(false);if(rehab)rehabClose(false);if(head)head.remove();head=null;if(smk)smk.remove();smk=null;if(fog)fog.remove();fog=null;if(trkCv)trkCv.remove();trkCv=null;eng=null;sk=null;pend=null;cancelAnimationFrame(smkRaf);smkRaf=0};
   /* touches : CTRL inhale, ALT expire, ALT + n° trick (puis 1-4 vitesse), X avale, Tab + # zoom, Tab + ! vapes */
   const typing=()=>{const a=document.activeElement;return !!a&&(/^(INPUT|TEXTAREA|SELECT)$/.test(a.tagName)||a.isContentEditable)};
   let ctrlOn=false,altOn=false,tabOn=false,altUsed=false,altTm=0,altDr=false;
+  const inhKey=()=>{try{return localStorage.getItem('cm_fx_inh')||'both'}catch(e){return 'both'}};
   const keysReset=()=>{ctrlOn=altOn=tabOn=false;clearTimeout(altTm);if(altDr&&sk)sk.exStop();altDr=false;if(sk&&sk.held)endSmoke()};
   document.addEventListener('keydown',e=>{if(!head||rehab||typing())return;const k=e.key,c=e.code||'';
-    if(k==='Control'){if(!e.repeat){ctrlOn=true;startSmoke('ctrl')}return}
+    if(k==='Control'){if(!e.repeat){ctrlOn=true;if(inhKey()!=='tab')startSmoke('ctrl')}return}
     if(k==='Alt'){e.preventDefault();if(!e.repeat&&!altOn){altOn=true;altUsed=false;menuOpen(0);clearTimeout(altTm);altTm=setTimeout(()=>{if(altOn&&!altUsed&&sk&&sk.exStart()){altDr=true;kick()}},260)}return}
-    if(k==='Tab'){tabOn=true;if(!document.activeElement||document.activeElement===document.body)e.preventDefault();return}
+    if(k==='Tab'){if(inhKey()!=='ctrl')e.preventDefault();if(!e.repeat){tabOn=true;if(inhKey()!=='ctrl')startSmoke('tab')}return}
     if(k==='Escape'){if(zoomEl)zoomToggle(false);qvClose();return}
     if(k==='Shift'||k==='Meta')return;
     if(ctrlOn&&sSrc==='ctrl'){abortSmoke();return}
+    if(tabOn&&sSrc==='tab'&&(c==='Digit3'||c==='Digit1'||k==='#'||k==='!'))abortSmoke();
     const dg=/^Digit[0-9]$/.test(c)?c.slice(5):/^Numpad[0-9]$/.test(c)?c.slice(6):/^[0-9]$/.test(k)?k:null;
     if(tabOn&&(c==='Digit3'||k==='#')){e.preventDefault();zoomToggle();return}
     if(tabOn&&(c==='Digit1'||k==='!')){e.preventDefault();qvOpen();return}
@@ -11777,7 +11773,7 @@ window.SMK=(function(){
   document.addEventListener('keyup',e=>{const k=e.key;
     if(k==='Control'){ctrlOn=false;if(sSrc==='ctrl')endSmoke()}
     else if(k==='Alt'){e.preventDefault();altOn=false;clearTimeout(altTm);if(altDr&&sk)sk.exStop();altDr=false;if(menuEl&&!pend){clearTimeout(menuTm);menuTm=setTimeout(menuClose,1600)}}
-    else if(k==='Tab')tabOn=false},true);
+    else if(k==='Tab'){tabOn=false;if(sSrc==='tab')endSmoke()}},true);
   addEventListener('blur',keysReset);
   /* réhabilitation : salle sombre, 0,3 de dépendance par minute (page visible), paranoïa -20 par minute, snake */
   const fmtDur=min=>min>=60?Math.floor(min/60)+' h '+Math.round(min%60)+' min':Math.round(min)+' min';
@@ -11874,10 +11870,10 @@ window.SMK=(function(){
     const tK=async()=>{body.innerHTML='<p class="muted">Chargement…</p>';let l;try{l=await rpcd('smoke_tricks_list')}catch(e){body.innerHTML='<p class="muted">'+esc(errMsg(e))+'</p>';return}
       ST.tricks=l.tricks.filter(t=>t.owned).map(t=>({code:t.code,uses:t.uses||0}));const sm=slotMap(),inv={};for(const k in sm)inv[sm[k]]=k;
       body.innerHTML=`<p class="muted">Jetons : <b>${nfmt(l.balance)}</b>. Chaque trick s’achète (99 à 699 jetons). Plus on le réussit, plus il se maîtrise, très lentement : la fumée devient plus blanche et il en faut moins. Assignez jusqu’à 10 tricks aux touches 1 à 9 et 0, puis faites Alt + touche en expirant (voir l’onglet Touches).</p>`+l.tricks.map(t=>{const d=SMK.TBY[t.code]||{need:0,base:0},p=Math.round((1-Math.exp(-(t.uses||0)/300))*100);
-        return `<div class="fxIt"><div class="grow"><b>${esc(t.name)}</b><div class="muted" style="font-size:12px">Fumée ${d.need} · valeur ${d.base}${t.owned?` · maîtrise ${p} % (${t.uses||0} usages)`:''}</div></div>${t.owned?`<select data-slot="${esc(t.code)}"><option value="">Touche : aucune</option>${SLK.map(k=>`<option value="${k}" ${inv[t.code]===k?'selected':''}>Touche ${k}</option>`).join('')}</select>`:`<button class="lite" data-tb="${esc(t.code)}">${nfmt(t.price)}</button>`}</div>`}).join('')};
+        return `<div class="fxIt"><div class="grow"><b>${esc(t.name)}</b><div class="muted" style="font-size:12px">Fumée ${d.need} · valeur ${d.base}</div>${t.owned?`<div class="muted" style="font-size:12px;display:flex;align-items:center;gap:6px">Maîtrise ${p} % ${pbar(p,'#2fbf71')} <span>${t.uses||0} usages</span></div>`:''}</div>${t.owned?`<select style="width:128px;flex:none" data-slot="${esc(t.code)}"><option value="">Touche : aucune</option>${SLK.map(k=>`<option value="${k}" ${inv[t.code]===k?'selected':''}>Touche ${k}</option>`).join('')}</select>`:`<button class="lite" data-tb="${esc(t.code)}">${nfmt(t.price)}</button>`}</div>`}).join('')};
     const tR=()=>{body.innerHTML=`<p>La réhabilitation fait baisser la dépendance de <b>0,3 par minute</b> (au lieu de 0,1) tant que la page reste ouverte et visible : si vous la quittez, la baisse s’arrête jusqu’à votre retour. Dans la salle, le personnage est seul, triste et bavard ; on ne peut ni fumer ni rien faire d’autre qu’attendre (un petit snake est là pour se distraire). Sa paranoïa y descend de 20 par minute. C’est gratuit et on peut en sortir quand on veut.</p><div class="fxSt"><span>Dépendance actuelle</span><b>${ST.dep.toFixed(1)} / 100</b><span>Temps pour la vider</span><b>${fmtDur(ST.dep/.3)}</b></div><div class="row end"><button id="rhGo">Entrer en réhabilitation</button></div>`};
-    const HELP=[['CTRL (maintenir)','Inhaler (ou maintenir la tête du personnage)'],['Relâcher CTRL','Arrêter d’inhaler : relâcher dans la zone dorée (sweet spot), avant la toux'],['ALT','Expirer sans trick (maintenir si la fumée est gardée en bouche : plus longtemps = plus de fumée)'],['ALT + n°','Expirer en faisant le trick placé sur cette touche (1 à 9, 0)'],['ALT + n°, puis 1 à 4','Choisir la vitesse du trick : 1 lent (0,5), 2 normal, 3 rapide (x2), 4 très rapide (x3). Sans touche : normal. Plus rapide, il passe sous le trick précédent'],['Combo','Enchaîner ALT + n° (puis vitesse) autant de fois que la fumée le permet'],['CTRL sans avoir tout expiré','Réinhaler en gardant la fumée : réserve plus grande, sensibilité plus haute, mais endurance plus basse sur cette bouffée'],['X','Avaler la fumée de la bouche : plus d’effets, aucune fumée ne ressort, endurance élevée requise (plus il y en a, plus il en faut)'],['MAJ x3','Arrêter les effets'],['TAB + #','Zoom sur le personnage, fond noir (pour bien voir la fumée et les tricks)'],['TAB + !','Changer rapidement de vape (le menu se ferme après le choix)']];
-    const tH=()=>{body.innerHTML=`<div class="fxHelp">${HELP.map(h=>`<div><b>${h[0]}</b><span>${h[1]}</span></div>`).join('')}</div><p class="muted">Les touches sont ignorées quand le curseur de saisie est dans un champ de texte. Sans clavier : maintenir la tête, puis les boutons Expirer, Tricks et Avaler.</p><div class="row end"><button class="ghost" id="zmGo">Zoom fond noir</button></div>`};
+    const HELP=[['CTRL ou TAB (maintenir)','Inhaler : au choix CTRL, TAB ou les deux (réglage ci-dessous), ou maintenir la tête du personnage'],['Relâcher la touche','Arrêter d’inhaler : relâcher dans la zone dorée (sweet spot), avant la toux'],['ALT','Expirer sans trick (maintenir si la fumée est gardée en bouche : plus longtemps = plus de fumée)'],['ALT + n°','Expirer en faisant le trick placé sur cette touche (1 à 9, 0)'],['ALT + n°, puis 1 à 4','Choisir la vitesse du trick : 1 lent (0,5), 2 normal, 3 rapide (x2), 4 très rapide (x3). Sans touche : normal. Plus rapide, il passe sous le trick précédent'],['Combo','Enchaîner ALT + n° (puis vitesse) autant de fois que la fumée le permet'],['Inhaler sans avoir tout expiré','Réinhaler en gardant la fumée : réserve plus grande, sensibilité plus haute, mais endurance plus basse sur cette bouffée'],['X','Avaler la fumée de la bouche : plus d’effets, aucune fumée ne ressort, endurance élevée requise (plus il y en a, plus il en faut)'],['MAJ x3','Arrêter les effets'],['TAB + #','Zoom sur le personnage, fond noir (pour bien voir la fumée et les tricks)'],['TAB + !','Changer rapidement de vape (le menu se ferme après le choix)']];
+    const tH=()=>{body.innerHTML=`<div class="fxHelp">${HELP.map(h=>`<div><b>${h[0]}</b><span>${h[1]}</span></div>`).join('')}</div><label>Touche pour inhaler</label><div class="row" style="flex-wrap:wrap">${[['ctrl','CTRL'],['tab','TAB'],['both','CTRL ou TAB']].map(([v,n])=>`<button class="ghost lite ${inhKey()===v?'on':''}" data-ik="${v}">${n}</button>`).join('')}</div><p class="muted">Les touches sont ignorées quand le curseur de saisie est dans un champ de texte. On peut aussi inhaler en maintenant la tête du personnage.</p><div class="row end"><button class="ghost" id="zmGo">Zoom fond noir</button></div>`};
     const FS=Object.keys(FXN);
     const tN=async()=>{try{shop=shop||await rpcd('smoke_shop')}catch(e){}
       if(!shop||!shop.vaze){body.innerHTML='<p class="muted">Le pass <b>VAZE+</b> (27 799 jetons, dans la boutique des Outils) permet de créer et vendre vos propres vapes, cigares, cigarettes et joints au thé, avec la puissance et les effets de votre choix. Vous touchez 90 % du prix à chaque vente.</p>';return}
@@ -11898,6 +11894,7 @@ window.SMK=(function(){
       if(d.buy){const it=shop.items.find(i=>i.code===d.buy);if(!confirm('Acheter « '+it.name+' » pour '+nfmt(it.price)+' jetons ?'))return;const r=await rpcd('smoke_buy',{p_code:d.buy});ST.owned.push(r);try{balRefresh()}catch(_){}toast('Objet acheté');return tO()}
       if(d.tb){const tt=SMK.TBY[d.tb];if(!confirm('Acheter « '+(tt?tt.name:'ce trick')+' » ?'))return;await rpcd('smoke_trick_buy',{p_code:d.tb});try{balRefresh()}catch(_){}ST.tricks=(ST.tricks||[]).concat({code:d.tb,uses:0});
         if(getSlots()){const cur=slotMap(),fr=SLK.find(k=>!cur[k]);if(fr){cur[fr]=d.tb;setSlots(cur)}}toast('Trick acheté');return tK()}
+      if(d.ik){try{localStorage.setItem('cm_fx_inh',d.ik)}catch(_){}return tH()}
       if(e.target.id==='rhGo'){m.close();return rehabOpen()}
       if(e.target.id==='zmGo'){m.close();return zoomToggle(true)}
       if(d.ed){edit=d.ed;return tN()}
