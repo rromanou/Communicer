@@ -63,7 +63,7 @@ begin
   insert into public.smoke_chars(user_id) values (auth.uid()) on conflict do nothing;
   insert into public.smoke_inv(user_id, code) values (auth.uid(), 'vape_basic') on conflict do nothing;
   select * into c from public.smoke_chars where user_id = auth.uid() for update;
-  d := greatest(0, c.dep - 1.5 * extract(epoch from now() - c.dep_at) / 3600);
+  d := greatest(0, c.dep - 6 * extract(epoch from now() - c.dep_at) / 3600);
   if d <> c.dep or c.dep_at < now() - interval '1 minute' then update public.smoke_chars set dep = d, dep_at = now() where user_id = auth.uid() returning * into c; end if;
   return c;
 end $$;
@@ -78,7 +78,7 @@ create or replace function public.smoke_state() returns jsonb language plpgsql s
 declare c public.smoke_chars := public._sm_row();
 begin
   return jsonb_build_object('name', c.name, 'hair', c.hair, 'hc', c.hc, 'eyes', c.eyes, 'ec', c.ec, 'skin', c.skin, 'item', c.item, 'show', c.show,
-    'dep', round(c.dep, 3), 'endurance_ms', 2000 + round(c.dep * 60)::int, 'puffs', c.puffs,
+    'dep', round(c.dep, 3), 'endurance_ms', 2000 + round(c.dep * 40)::int, 'puffs', c.puffs,
     'since_s', case when c.last_smoke is null then null else round(extract(epoch from now() - c.last_smoke)) end,
     'owned', coalesce((select jsonb_agg(public._sm_def(i.code) order by s.price) from public.smoke_inv i join public.smoke_items s on s.code = i.code where i.user_id = auth.uid()), '[]'::jsonb));
 end $$;
@@ -156,11 +156,11 @@ begin
   perform public.rate_ok('smpuff', 90, 60);
   select * into s from public.smoke_items where code = p_code;
   if not found or not exists(select 1 from public.smoke_inv where user_id = auth.uid() and code = p_code) then raise exception 'Objet non possédé'; end if;
-  if coalesce(p_ms, 0) > 2000 + round(c.dep * 60) + 1500 then q := 0; end if;
+  if coalesce(p_ms, 0) > 2000 + round(c.dep * 40) + 1500 then q := 0; end if;
   gain := s.power / 100.0 * (case when q >= 0.2 then 6 * (0.4 + 0.6 * q) else 1.2 end);
   nd := least(100, c.dep + gain);
   update public.smoke_chars set dep = nd, dep_at = now(), item = p_code, puffs = puffs + 1, last_smoke = case when q >= 0.2 then now() else last_smoke end where user_id = auth.uid();
-  return jsonb_build_object('dep', round(nd, 3), 'endurance_ms', 2000 + round(nd * 60)::int, 'since_s', case when q >= 0.2 then 0 else round(extract(epoch from now() - c.last_smoke)) end);
+  return jsonb_build_object('dep', round(nd, 3), 'endurance_ms', 2000 + round(nd * 40)::int, 'since_s', case when q >= 0.2 then 0 else round(extract(epoch from now() - c.last_smoke)) end);
 end $$;
 revoke all on function public.smoke_puff(text, numeric, int) from public, anon;
 grant execute on function public.smoke_puff(text, numeric, int) to authenticated;
@@ -206,10 +206,134 @@ begin
   select * into c from public.smoke_chars where user_id = u;
   if not found or (not c.show and u <> auth.uid()) then return null; end if;
   select * into i from public.smoke_items where code = c.item;
-  d := greatest(0, c.dep - 1.5 * extract(epoch from now() - c.dep_at) / 3600);
-  return jsonb_build_object('name', c.name, 'hair', c.hair, 'hc', c.hc, 'eyes', c.eyes, 'ec', c.ec, 'skin', c.skin, 'dep', round(d, 1), 'endurance_ms', 2000 + round(d * 60)::int,
+  d := greatest(0, c.dep - 6 * extract(epoch from now() - c.dep_at) / 3600);
+  return jsonb_build_object('name', c.name, 'hair', c.hair, 'hc', c.hc, 'eyes', c.eyes, 'ec', c.ec, 'skin', c.skin, 'dep', round(d, 1), 'endurance_ms', 2000 + round(d * 40)::int,
     'power', i.power, 'item', i.name, 'kind', i.kind, 'puffs', c.puffs, 'owned', (select count(*) from public.smoke_inv where user_id = u), 'shown', c.show);
 end $$;
 revoke all on function public.smoke_profile(text) from public, anon;
 grant execute on function public.smoke_profile(text) to authenticated;
+
+
+-- ============================================================================
+-- Tricks de fumée (achetables) — utilisés seul et dans le jeu « Fumatoir »
+-- ============================================================================
+create table if not exists public.smoke_tricks (code text primary key, name text not null, price numeric(10,1) not null check (price >= 0), sort int not null default 0);
+create table if not exists public.smoke_trick_inv (user_id uuid not null references public.profiles(id) on delete cascade, code text not null references public.smoke_tricks(code) on delete cascade,
+  bought_at timestamptz not null default now(), primary key (user_id, code));
+alter table public.smoke_trick_inv add column if not exists uses int not null default 0;
+alter table public.smoke_tricks enable row level security; alter table public.smoke_trick_inv enable row level security;
+revoke all on public.smoke_tricks, public.smoke_trick_inv from anon, authenticated;
+insert into public.smoke_tricks(code, name, price, sort) values
+ ('o_rings','O-Rings',99,1),('ghost_inhale','Ghost Inhale',129,2),('french_inhale','French Inhale',149,3),('dragon','Dragon',349,4),('waterfall','Waterfall',199,5),('jellyfish','Jellyfish',449,6),
+ ('tornado','Tornado',499,7),('smoke_bubble','Smoke Bubble',249,8),('double_ring','Double O-Ring',169,9),('triple_ring','Triple O-Ring',299,10),('bane_inhale','Bane Inhale',229,11),
+ ('triangle','Triangle',399,12),('heart','Heart',549,13),('ghost_ring','Ghost Ring',279,14),('smoke_rings','Smoke Rings',179,15),('smoke_cascade','Smoke Cascade',599,16),
+ ('mushroom','Mushroom Cloud',649,17),('vortex','Smoke Vortex',699,18)
+on conflict (code) do update set name = excluded.name, price = excluded.price, sort = excluded.sort;
+
+-- état : ajoute les tricks possédés (le trick gratuit est donné d'office)
+create or replace function public.smoke_state() returns jsonb language plpgsql security definer set search_path = public as $$
+declare c public.smoke_chars := public._sm_row();
+begin
+  return jsonb_build_object('name', c.name, 'hair', c.hair, 'hc', c.hc, 'eyes', c.eyes, 'ec', c.ec, 'skin', c.skin, 'item', c.item, 'show', c.show,
+    'dep', round(c.dep, 3), 'endurance_ms', 2000 + round(c.dep * 40)::int, 'puffs', c.puffs,
+    'since_s', case when c.last_smoke is null then null else round(extract(epoch from now() - c.last_smoke)) end,
+    'owned', coalesce((select jsonb_agg(public._sm_def(i.code) order by s.price) from public.smoke_inv i join public.smoke_items s on s.code = i.code where i.user_id = auth.uid()), '[]'::jsonb),
+    'tricks', coalesce((select jsonb_agg(jsonb_build_object('code', code, 'uses', uses) order by code) from public.smoke_trick_inv where user_id = auth.uid()), '[]'::jsonb));
+end $$;
+revoke all on function public.smoke_state() from public, anon;
+grant execute on function public.smoke_state() to authenticated;
+
+create or replace function public.smoke_tricks_list() returns jsonb language plpgsql security definer set search_path = public as $$
+begin
+  perform public._sm_row();
+  return jsonb_build_object('balance', coalesce((select balance from public.wallets where user_id = auth.uid()), 0),
+    'tricks', coalesce((select jsonb_agg(jsonb_build_object('code', t.code, 'name', t.name, 'price', t.price, 'owned', exists(select 1 from public.smoke_trick_inv i where i.user_id = auth.uid() and i.code = t.code), 'uses', coalesce((select i.uses from public.smoke_trick_inv i where i.user_id = auth.uid() and i.code = t.code), 0)) order by t.sort) from public.smoke_tricks t), '[]'::jsonb));
+end $$;
+revoke all on function public.smoke_tricks_list() from public, anon;
+grant execute on function public.smoke_tricks_list() to authenticated;
+
+create or replace function public.smoke_trick_buy(p_code text) returns void language plpgsql security definer set search_path = public as $$
+declare t public.smoke_tricks; b numeric;
+begin
+  perform public._sm_row();
+  perform public.rate_ok('smtrick', 40, 3600);
+  select * into t from public.smoke_tricks where code = p_code;
+  if not found then raise exception 'Trick introuvable'; end if;
+  if exists(select 1 from public.smoke_trick_inv where user_id = auth.uid() and code = p_code) then raise exception 'Déjà possédé'; end if;
+  if t.price > 0 then
+    insert into public.wallets(user_id) values (auth.uid()) on conflict do nothing;
+    select balance into b from public.wallets where user_id = auth.uid() for update;
+    if b < t.price then raise exception 'Jetons insuffisants'; end if;
+    perform public.tok_add(auth.uid(), -t.price, 'trick ' || t.name, null);
+    perform public.tok_add('aaaaaaaa-0000-4000-8000-000000000001'::uuid, t.price, 'trick ' || t.name, null);
+  end if;
+  insert into public.smoke_trick_inv(user_id, code) values (auth.uid(), p_code);
+end $$;
+revoke all on function public.smoke_trick_buy(text) from public, anon;
+grant execute on function public.smoke_trick_buy(text) to authenticated;
+
+
+-- ============================================================================
+-- Lot 18b : maîtrise des tricks, réhabilitation
+-- ============================================================================
+alter table public.smoke_chars add column if not exists rehab_last timestamptz;
+
+-- usage des tricks (la maîtrise monte très lentement : côté client 1 - exp(-usages/300))
+create or replace function public.smoke_trick_use(p_code text, p_n int) returns int language plpgsql security definer set search_path = public as $$
+declare u int;
+begin
+  if auth.uid() is null then raise exception 'Non connecté'; end if;
+  perform public.rate_ok('smtuse', 120, 60);
+  update public.smoke_trick_inv set uses = least(5000, uses + greatest(1, least(10, coalesce(p_n, 1)))) where user_id = auth.uid() and code = p_code returning uses into u;
+  if not found then raise exception 'Trick non possédé'; end if;
+  return u;
+end $$;
+revoke all on function public.smoke_trick_use(text, int) from public, anon;
+grant execute on function public.smoke_trick_use(text, int) to authenticated;
+
+-- réhabilitation : entrer, battement (toutes les ~10 s tant que la page est visible), sortir
+create or replace function public.smoke_rehab_start() returns jsonb language plpgsql security definer set search_path = public as $$
+declare c public.smoke_chars := public._sm_row();
+begin
+  update public.smoke_chars set rehab_last = now() where user_id = auth.uid();
+  return jsonb_build_object('dep', round(c.dep, 3));
+end $$;
+create or replace function public.smoke_rehab_tick() returns jsonb language plpgsql security definer set search_path = public as $$
+declare c public.smoke_chars := public._sm_row(); el numeric; cr numeric; nd numeric;
+begin
+  perform public.rate_ok('smrehab', 40, 60);
+  if c.rehab_last is null then return jsonb_build_object('dep', round(c.dep, 3), 'active', false); end if;
+  el := extract(epoch from now() - c.rehab_last);
+  -- page cachée / fermée : pas de crédit (au-delà de 15 s on ne rattrape rien)
+  cr := case when el <= 15 then el else 0 end;
+  -- 0,3 par minute au total : 0,1 naturel (déjà appliqué) + 0,2 de réhabilitation
+  nd := greatest(0, c.dep - 0.2 * cr / 60);
+  update public.smoke_chars set dep = nd, dep_at = now(), rehab_last = now() where user_id = auth.uid();
+  return jsonb_build_object('dep', round(nd, 3), 'endurance_ms', 2000 + round(nd * 40)::int, 'active', true);
+end $$;
+create or replace function public.smoke_rehab_stop() returns jsonb language plpgsql security definer set search_path = public as $$
+declare c public.smoke_chars := public._sm_row();
+begin
+  update public.smoke_chars set rehab_last = null where user_id = auth.uid();
+  return jsonb_build_object('dep', round(c.dep, 3), 'endurance_ms', 2000 + round(c.dep * 40)::int);
+end $$;
+revoke all on function public.smoke_rehab_start(), public.smoke_rehab_tick(), public.smoke_rehab_stop() from public, anon;
+grant execute on function public.smoke_rehab_start(), public.smoke_rehab_tick(), public.smoke_rehab_stop() to authenticated;
+
+-- pas de bouffée pendant la réhabilitation (battement récent)
+create or replace function public.smoke_puff(p_code text, p_q numeric, p_ms int) returns jsonb language plpgsql security definer set search_path = public as $$
+declare c public.smoke_chars := public._sm_row(); s public.smoke_items; q numeric := greatest(0, least(1, coalesce(p_q, 0))); gain numeric; nd numeric;
+begin
+  perform public.rate_ok('smpuff', 120, 60);
+  if c.rehab_last is not null and c.rehab_last > now() - interval '60 seconds' then raise exception 'En réhabilitation : impossible de fumer'; end if;
+  select * into s from public.smoke_items where code = p_code;
+  if not found or not exists(select 1 from public.smoke_inv where user_id = auth.uid() and code = p_code) then raise exception 'Objet non possédé'; end if;
+  if coalesce(p_ms, 0) > 2000 + round(c.dep * 40) + 2500 then q := 0; end if;
+  gain := s.power / 100.0 * (case when q >= 0.2 then 6 * (0.4 + 0.6 * q) else 1.2 end);
+  nd := least(100, c.dep + gain);
+  update public.smoke_chars set dep = nd, dep_at = now(), item = p_code, puffs = puffs + 1, last_smoke = case when q >= 0.2 then now() else last_smoke end where user_id = auth.uid();
+  return jsonb_build_object('dep', round(nd, 3), 'endurance_ms', 2000 + round(nd * 40)::int, 'since_s', case when q >= 0.2 then 0 else round(extract(epoch from now() - c.last_smoke)) end);
+end $$;
+revoke all on function public.smoke_puff(text, numeric, int) from public, anon;
+grant execute on function public.smoke_puff(text, numeric, int) to authenticated;
 notify pgrst, 'reload schema';
