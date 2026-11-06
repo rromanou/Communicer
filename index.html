@@ -7579,6 +7579,7 @@ async function openProfile(un,push=true){
     ${statsTable(stats)}
     <div class="row end" style="margin-top:14px;flex-wrap:wrap"><button class="ghost" id="pfCopy">Copier le lien</button>${mine?'':fr?`<button id="pfMsg">Envoyer un message</button>`:`<button id="pfAdd">Ajouter en ami</button>`}<button class="ghost" data-x>Fermer</button></div>
   </div>`,true);
+  try{smokeProfileInto(m,p)}catch(e){}
   if(push)try{history.pushState({u:p.username},'',PBASE+'/@'+p.username)}catch(e){}
   {const un=$('#pfUn',m);if(un){let tip=null,tm=null,cache=null;
     const hide=()=>{clearTimeout(tm);if(tip){tip.remove();tip=null}};
@@ -9987,7 +9988,7 @@ async function bmBuy(box,bal,show){
 async function bmShop(box,bal,show){
   const sh=await rpcd('shop_list');TK.shop=sh;bal(sh.balance);
   let own=sh.badges.filter(b=>b.owned).map(b=>b.code);try{const iv=await rpcd('inventory_me');own=[...new Set(own.concat((iv.badges||[]).map(b=>b.code)))];S.owned=new Set(iv.items||[])}catch(e){}
-  const grp=[['Customize+',['customize_plus']],['Fonctions',['lite','pin','name_color','profile_color','profile_bg','badge_slot5','send_tokens']],['Cadres',['frame_photo','frame_photo_anim','frame_profile','frame_profile_anim']],['Nom',['rename','credits_name']],['Emojis',['pack_emoji']],['Outils',['personal_tools','absence','export_stats','group_tools','tournaments','esport','krypto_plus']]];
+  const grp=[['Customize+',['customize_plus']],['Fonctions',['lite','pin','name_color','profile_color','profile_bg','badge_slot5','send_tokens']],['Cadres',['frame_photo','frame_photo_anim','frame_profile','frame_profile_anim']],['Nom',['rename','credits_name']],['Emojis',['pack_emoji']],['Outils',['personal_tools','absence','export_stats','group_tools','tournaments','esport','krypto_plus','vaze_plus']]];
   const cpOwn=!!(sh.items.find(i=>i.code==='customize_plus')||{}).owned,CPC=['name_color','profile_color','profile_bg','badge_slot5','frame_photo','frame_photo_anim','frame_profile','frame_profile_anim','rename'];
   const row=(name,desc,price,owned,code,extra)=>`<div class="shrow2"><div class="grow"><b>${name}</b><small>${desc}</small></div>${extra||''}${cpOwn&&CPC.includes(code)&&code!=='rename'&&(sh.items.find(i=>i.code===code)||{}).via?`<button class="lite incl" disabled title="Inclus dans Customize+">${nfmt(price)}</button>`:owned?'<span class="tag">possédé</span>':`<button class="lite" data-b="${esc(code)}" ${sh.balance<price?'disabled':''}>${nfmt(price)}</button>`}</div>`;
   let h='';
@@ -11263,52 +11264,54 @@ if(!LITE.on()){let busy=false;
     return _ds.apply(this,arguments)};
 })();
 
-/* ================= EFFETS SENSORIELS (réglables dans Paramètres) ================= */
+/* ================= PERSONNAGE ET EFFETS (la fumée commande les effets) ================= */
 (function(){
-  const KEYS=[
-    ['scr','Lettres mélangées','Trois lettres de chaque mot sont mélangées, partout sur le site et dans les messages. La force règle la part des mots touchés.'],
-    ['mouse','Souris ralentie','Le curseur traîne derrière votre main ; les clics se font à l’endroit où il se trouve vraiment.'],
-    ['warp','Anamorphose','Tout le site se déforme, ondule et se penche.'],
-    ['delay','Clics retardés','Chaque clic est enregistré avec un retard (jusqu’à 3 secondes).'],
-    ['anim','Animations ralenties','Les animations et transitions du site sont ralenties (jusqu’à 6 fois).'],
-    ['psy','Animations hallucinogènes','Chaque animation se couvre de couleurs changeantes, de halos et de déformations.'],
-    ['obj','Objets au hasard','Des objets réalistes apparaissent puis disparaissent.'],
-    ['hal','Hallucinations','Ombres en périphérie, mots qui changent un instant, pastilles de notification fantômes.'],
-    ['fau','Animaux sauvages inexistants','Des bêtes traversent l’écran ; elles se dissolvent si vous approchez.'],
-    ['ill','Illusions d’optique','Motifs qui tournent, changent de couleur, formes abstraites ; leur vitesse suit la paranoïa et la force.']];
-  const DEF=()=>({on:false,para:30,fx:Object.fromEntries(KEYS.map(k=>[k[0],{on:true,s:50}]))});
+  const KEYS=['scr','mouse','warp','delay','anim','psy','obj','hal','fau','ill'].map(k=>[k]);
   const THR={scr:.05,mouse:.12,delay:.18,anim:.24,warp:.32,psy:.38,obj:.45,hal:.52,fau:.6,ill:.68};
-  let dose=0,smoking=false,lastDt=performance.now();
-  const CH0={hair:'court',hc:'#3b2a1d',skin:'#f1c9a5',item:'cig'};let ch={...CH0};
-  const RATE={cig:4,vape:3,cigar:7},ITEMS={cig:'Cigarette',vape:'Vapoteuse',cigar:'Cigare'};
-  const lvl=()=>Math.max(0,Math.min(1,dose/100)),sc=k=>cfg.on?Math.max(0,Math.min(1,(lvl()-THR[k])/.25)):0;
-  let cfg=DEF(),run={},mx=innerWidth/2,my=innerHeight/2,fx0=mx,fy0=my,T0=performance.now();
-  const load=()=>{try{const j=JSON.parse(localStorage.getItem('cm_fx2')||'null');if(j&&j.fx){const d=DEF();d.on=j.on===true;d.para=+j.para||0;KEYS.forEach(k=>{if(j.fx[k[0]])d.fx[k[0]]={on:!!j.fx[k[0]].on,s:Math.max(0,Math.min(100,+j.fx[k[0]].s||0))}});cfg=d}}catch(e){}};
-  const save=()=>{try{localStorage.setItem('cm_fx2',JSON.stringify(cfg))}catch(e){}};
-  const S_=k=>cfg.fx[k].s/100*sc(k),PA=()=>cfg.para/100*(.4+.6*lvl()),R=(a,b)=>a+Math.random()*(b-a),RI=(a,b)=>Math.floor(R(a,b+1)),PK=a=>a[Math.floor(Math.random()*a.length)];
+  const RM=(window.matchMedia&&matchMedia('(prefers-reduced-motion: reduce)').matches)?new Set(['warp','psy','ill']):new Set();
+  let dose=0,smoking=false,lastDt=performance.now(),boost=0,craving=0,ST=null,cfg={on:false};
+  const lvl=()=>Math.max(0,Math.min(1,dose/100)),pwNow=()=>{const it=ST&&ST.owned.find(i=>i.code===ST.item);return it?it.power/100:.1},EF=()=>lvl()*(.1+.9*pwNow()),sc=k=>cfg.on?Math.max(0,Math.min(1,(EF()-THR[k])/.25)):0;
+  const sm={};
+  const itemNow=()=>ST&&ST.owned.find(i=>i.code===ST.item)||null;
+  const B=()=>Math.max(craving*(.5+.5*(ST?ST.dep:0)/100),boost);
+  const rawS=k=>{if(!ST||RM.has(k))return 0;const it=itemNow(),pw=it?it.power/100:.1,w=it?(it.fx[k]||0):0;return Math.max(0,Math.min(1,sc(k)*w*(.45+.55*pw)*(1-.55*ST.dep/100)*(1+.6*B())))};
+  const S_=k=>sm[k]||0;
+  const PA=()=>B();
+  let run={},mx=innerWidth/2,my=innerHeight/2,fx0=mx,fy0=my,T0=performance.now();
+  const R=(a,b)=>a+Math.random()*(b-a),RI=(a,b)=>Math.floor(R(a,b+1)),PK=a=>a[Math.floor(Math.random()*a.length)];
   const KEEP='[data-fxkeep]';
   const css=document.createElement('style');css.textContent=`
   #fxLayer{position:fixed;inset:0;pointer-events:none;z-index:99980;overflow:hidden}
   #fxLayer>*{position:absolute;pointer-events:none}
   #fxIll{position:fixed;inset:0;width:100%;height:100%;pointer-events:none;z-index:99985;mix-blend-mode:overlay}
   #fxCur{position:fixed;left:0;top:0;width:22px;height:28px;pointer-events:none;z-index:2147483000;will-change:transform;filter:drop-shadow(0 1px 2px rgba(0,0,0,.5))}
-  html.fxm,html.fxm *{cursor:none!important}
-  html.fxm [data-fxkeep],html.fxm [data-fxkeep] *{cursor:auto!important}
+  html.fxm.fxm.fxm,html.fxm.fxm.fxm *,html.fxm.fxm.fxm *::before,html.fxm.fxm.fxm *::after{cursor:none!important}
+  html.fxm.fxm.fxm.fxm [data-fxkeep],html.fxm.fxm.fxm.fxm [data-fxkeep] *{cursor:auto!important}
   html.fxp body{text-shadow:var(--fxp,1px) 0 rgba(255,0,90,.38),calc(var(--fxp,1px)*-1) 0 rgba(0,190,255,.38)}
-  #fxStop{position:fixed;left:10px;bottom:10px;z-index:2147483001;padding:6px 10px;font-size:12px;border-radius:8px;opacity:.85}
-  .fxRing{position:fixed;width:34px;height:34px;margin:-17px 0 0 -17px;border-radius:50%;pointer-events:none;z-index:2147482990;background:conic-gradient(var(--accent,#2f81f7) var(--p,0%),transparent 0);-webkit-mask:radial-gradient(circle,transparent 11px,#000 12px);mask:radial-gradient(circle,transparent 11px,#000 12px);opacity:.9}
-  #fxHead{position:fixed;right:10px;bottom:10px;width:60px;z-index:2147483000;touch-action:none;user-select:none;-webkit-user-select:none;cursor:pointer;text-align:center;transition:transform .15s}
-  #fxHead.sm{transform:scale(1.06)}
-  #fxHead .fxHb{filter:drop-shadow(0 3px 5px rgba(0,0,0,.4))}
-  #fxHead .fxHm{height:5px;border-radius:3px;background:rgba(0,0,0,.25);margin:2px 4px 0;overflow:hidden}
+    .fxRing{position:fixed;width:34px;height:34px;margin:-17px 0 0 -17px;border-radius:50%;pointer-events:none;z-index:2147482990;background:conic-gradient(var(--accent,#2f81f7) var(--p,0%),transparent 0);-webkit-mask:radial-gradient(circle,transparent 11px,#000 12px);mask:radial-gradient(circle,transparent 11px,#000 12px);opacity:.9}
+  #fxHead{position:fixed;left:10px;bottom:10px;width:84px;z-index:2147483000;touch-action:none;user-select:none;-webkit-user-select:none;cursor:pointer;transform-origin:0 100%;transition:transform 1s cubic-bezier(.3,.8,.3,1)}
+  #fxHead .fxHb{filter:drop-shadow(0 3px 5px rgba(0,0,0,.4));width:60px}
+  #fxHead.shk .fxHb{animation:fxShk .12s linear infinite}
+  @keyframes fxShk{0%{transform:translate(0,0) rotate(0)}25%{transform:translate(-2px,1px) rotate(-3deg)}50%{transform:translate(2px,-1px) rotate(3deg)}75%{transform:translate(-1px,-2px) rotate(-2deg)}100%{transform:translate(0,0)}}
+  #fxHead .fxHm{height:5px;border-radius:3px;background:rgba(0,0,0,.25);margin:2px 0 0;overflow:hidden;width:76px}
   #fxHead .fxHm i{display:block;height:100%;width:0;background:linear-gradient(90deg,#2fbf71,#e8c232,#e5484d)}
-  #fxHead .fxHc{position:absolute;left:-6px;top:-8px;font-size:10px;padding:1px 6px;border-radius:9px;opacity:.75}
+  #fxHead .fxHs{position:relative;display:flex;height:6px;width:76px;margin-top:3px;border-radius:3px;overflow:hidden;opacity:.95}
+  #fxHead .fxHs b{display:block;height:100%}
+  #fxHead .fxHs u{position:absolute;top:-1px;bottom:-1px;left:0;width:2px;background:#fff;box-shadow:0 0 3px #000;text-decoration:none}
+  #fxHead .fxHc{position:absolute;right:-2px;top:-8px;font-size:10px;padding:1px 6px;border-radius:9px;opacity:.75}
+  #fxHead .fxBub{position:absolute;left:62px;bottom:48px;width:max-content;max-width:190px;background:#fff;color:#111;border-radius:12px;padding:6px 9px;font-size:12px;line-height:1.25;box-shadow:0 3px 10px rgba(0,0,0,.3);opacity:0;transform:translateY(4px);transition:opacity .2s,transform .2s;pointer-events:none}
+  #fxHead .fxBub.on{opacity:1;transform:none}
+  #fxFog{position:fixed;inset:0;pointer-events:none;z-index:99979;opacity:0;transition:opacity 1.2s}
+  #fxFog i{position:absolute;width:70vmax;height:70vmax;border-radius:50%;filter:blur(60px);background:radial-gradient(circle,rgba(220,220,220,.9),rgba(220,220,220,0) 70%);animation:fxDr 22s ease-in-out infinite alternate}
+  #fxFog i:nth-child(1){left:-20vmax;top:-10vmax}#fxFog i:nth-child(2){right:-25vmax;top:10vmax;animation-duration:30s}#fxFog i:nth-child(3){left:20vw;bottom:-35vmax;animation-duration:26s}
+  #fxFog.joint i{background:radial-gradient(circle,rgba(190,215,170,.9),rgba(190,215,170,0) 70%)}#fxFog.cigar i{background:radial-gradient(circle,rgba(150,135,120,.9),rgba(150,135,120,0) 70%)}
+  @keyframes fxDr{from{transform:translate(0,0) scale(1)}to{transform:translate(8vw,6vh) scale(1.25)}}
   .fxSw{width:26px;height:26px;border-radius:50%;border:2px solid var(--line);padding:0}
   #fxChar .on{outline:2px solid var(--accent,#2f81f7)}
-  #fxPanel .fxr{border-top:1px solid var(--line);padding:8px 0}
-  #fxPanel .fxr input[type=range]{width:100%}
-  #fxPanel small{display:block;color:var(--muted)}
-  #fxPanel .fxv{min-width:38px;text-align:right}
+  .fxPb{display:inline-block;width:70px;height:6px;border-radius:3px;background:var(--line);vertical-align:middle;overflow:hidden}.fxPb span{display:block;height:100%}
+  .fxIt{display:flex;align-items:center;gap:8px;border-top:1px solid var(--line);padding:7px 0}
+  .fxSt{display:grid;grid-template-columns:auto 1fr;gap:3px 12px;margin:8px 0}.fxSt span{color:var(--muted)}
+  .fxPf{display:flex;gap:12px;align-items:center}
   `;document.head.appendChild(css);
   try{CSS.registerProperty({name:'--p',syntax:'<percentage>',inherits:false,initialValue:'0%'})}catch(_){}
   const layer=()=>{let l=document.getElementById('fxLayer');if(!l){l=document.createElement('div');l.id='fxLayer';l.setAttribute('data-fxkeep','');document.body.appendChild(l)}return l};
@@ -11334,20 +11337,27 @@ if(!LITE.on()){let busy=false;
 
   /* ---------- 2. souris ralentie + 4. clics retardés (porte commune) ---------- */
   let cur=null,gateOn=false;
-  const onMove=e=>{mx=e.clientX;my=e.clientY;if(cur)cur.style.display=(e.target.closest&&e.target.closest(KEEP))?'none':''};
+  const onMove=e=>{mx=e.clientX;my=e.clientY;const kp=e.target.closest&&e.target.closest(KEEP);if(cur)cur.style.display=kp?'none':'';if(kp){fx0=mx;fy0=my;if(cur)cur.style.transform=`translate(${fx0}px,${fy0}px)`}};
   const isFld=t=>/^(INPUT|TEXTAREA|SELECT)$/.test(t.tagName)||t.isContentEditable;
-  const gate=e=>{if(!e.isTrusted||!(run.mouse||run.delay)||e.detail===0)return;const t=e.target;if(!t.closest||t.closest(KEEP))return;let tg=t,x=e.clientX,y=e.clientY;
-    if(run.mouse&&Math.hypot(fx0-x,fy0-y)>6){const el=document.elementFromPoint(fx0,fy0);if(el){tg=el;x=fx0;y=fy0}}
-    const dl=run.delay?S_('delay')*3000:0;if(tg===t&&(!dl||isFld(t)))return;
-    e.stopImmediatePropagation();e.preventDefault();
+  let redir=null,dec=false;
+  const decide=(e)=>{const el=Math.hypot(fx0-e.clientX,fy0-e.clientY)>6?document.elementFromPoint(fx0,fy0):null;redir=(el&&el!==e.target)?el:null;dec=true};
+  const blk=e=>{if(!e.isTrusted||!run.mouse||e.pointerType==='touch')return;const t=e.target;if(t.closest&&t.closest(KEEP))return;
+    if((e.type==='pointerdown'||e.type==='mousedown')&&(e.type==='pointerdown'||!dec))decide(e);
+    if(!redir)return;e.stopImmediatePropagation();e.preventDefault()};
+  const gate=e=>{if(!e.isTrusted||!(run.mouse||run.delay)||e.detail===0)return;const t=e.target;if(!t.closest||t.closest(KEEP)){redir=null;dec=false;return}
+    const rd=redir;redir=null;dec=false;const dl=run.delay?S_('delay')*3000:0;if(!rd&&(!dl||isFld(t)))return;
+    e.stopImmediatePropagation();e.preventDefault();const tg=rd||t,x=rd?fx0:e.clientX,y=rd?fy0:e.clientY;
     if(dl>150){const r=document.createElement('div');r.className='fxRing';r.setAttribute('data-fxkeep','');r.style.left=x+'px';r.style.top=y+'px';document.body.appendChild(r);r.animate([{'--p':'0%'},{'--p':'100%'}],{duration:dl,id:'fx'});setTimeout(()=>r.remove(),dl+50)}
-    setTimeout(()=>{if(!tg.isConnected)return;try{if(isFld(tg))tg.focus()}catch(_){}const o={bubbles:true,cancelable:true,clientX:x,clientY:y,view:window,button:0};['pointerdown','mousedown','pointerup','mouseup'].forEach(n=>tg.dispatchEvent(n[0]==='p'?new PointerEvent(n,o):new MouseEvent(n,o)));tg.dispatchEvent(new MouseEvent('click',o))},dl)};
+    setTimeout(()=>{if(!tg.isConnected)return;const o={bubbles:true,cancelable:true,clientX:x,clientY:y,view:window,button:0};try{if(isFld(tg))tg.focus()}catch(_){}
+      if(rd)['pointerdown','mousedown','pointerup','mouseup'].forEach(n=>tg.dispatchEvent(n[0]==='p'?new PointerEvent(n,o):new MouseEvent(n,o)));tg.dispatchEvent(new MouseEvent('click',o))},dl)};
   const BLK=['mousedown','mouseup','pointerdown','pointerup','dblclick','auxclick','contextmenu'];
-  const blk=e=>{if(!e.isTrusted||!run.mouse||e.pointerType==='touch')return;if(e.target.closest&&e.target.closest(KEEP))return;e.stopImmediatePropagation();e.preventDefault()};
+  const wheel=e=>{if(!run.mouse||e.ctrlKey||(e.target.closest&&e.target.closest(KEEP)))return;const f=1-.85*S_('mouse');if(f>=.97)return;let el=e.target;
+    while(el&&el!==document.body&&el!==document.documentElement){const cs=getComputedStyle(el);if(/(auto|scroll)/.test(cs.overflowY)&&el.scrollHeight>el.clientHeight+1)break;el=el.parentElement}
+    if(!el||el===document.body||el===document.documentElement)el=document.scrollingElement||document.documentElement;e.preventDefault();el.scrollBy({top:e.deltaY*f,left:e.deltaX*f})};
   const gateSync=()=>{const need=run.mouse||run.delay;if(need&&!gateOn){document.addEventListener('click',gate,true);gateOn=true}if(!need&&gateOn){document.removeEventListener('click',gate,true);gateOn=false}
-    if(run.mouse&&!blkOn){BLK.forEach(n=>document.addEventListener(n,blk,true));blkOn=true}if(!run.mouse&&blkOn){BLK.forEach(n=>document.removeEventListener(n,blk,true));blkOn=false}};
+    if(run.mouse&&!blkOn){BLK.forEach(n=>document.addEventListener(n,blk,true));document.addEventListener('wheel',wheel,{passive:false,capture:true});blkOn=true}if(!run.mouse&&blkOn){BLK.forEach(n=>document.removeEventListener(n,blk,true));document.removeEventListener('wheel',wheel,{capture:true});blkOn=false;redir=null;dec=false}};
   let blkOn=false;
-  const mouseStart=()=>{cur=document.createElement('div');cur.id='fxCur';cur.setAttribute('data-fxkeep','');cur.innerHTML='<svg width="22" height="28" viewBox="0 0 22 28"><path d="M2 1v22l6-5 4 9 4-2-4-9h8z" fill="#fff" stroke="#000" stroke-width="1.6" stroke-linejoin="round"/></svg>';document.body.appendChild(cur);fx0=mx;fy0=my;document.documentElement.classList.add('fxm');document.addEventListener('mousemove',onMove,true)};
+  const mouseStart=()=>{cur=document.createElement('div');cur.id='fxCur';cur.setAttribute('data-fxkeep','');cur.innerHTML='<svg width="22" height="28" viewBox="0 0 22 28"><path d="M2 1v22l6-5 4 9 4-2-4-9h8z" fill="#fff" stroke="#000" stroke-width="1.6" stroke-linejoin="round"/></svg>';document.body.appendChild(cur);fx0=mx;fy0=my;cur.style.transform=`translate(${fx0}px,${fy0}px)`;document.documentElement.classList.add('fxm');document.addEventListener('mousemove',onMove,true)};
   const mouseStop=()=>{document.removeEventListener('mousemove',onMove,true);document.documentElement.classList.remove('fxm');if(cur)cur.remove();cur=null};
 
   /* ---------- 3. anamorphose ---------- */
@@ -11456,87 +11466,161 @@ if(!LITE.on()){let busy=false;
     requestAnimationFrame(mainLoop)};
   const M={scr:[scrStart,scrStop,()=>{scrStop();scrStart()}],mouse:[mouseStart,mouseStop],warp:[warpStart,warpStop],delay:[()=>{},()=>{}],anim:[animStart,animStop],psy:[psyStart,psyStop],obj:[()=>spawnLoop('obj'),()=>clearTimeout(timers.obj)],hal:[()=>spawnLoop('hal'),()=>clearTimeout(timers.hal)],fau:[()=>spawnLoop('fau'),()=>clearTimeout(timers.fau)],ill:[illStart,illStop]};
   const clearLayer=k=>{const l=document.getElementById('fxLayer');if(l&&!Object.keys(run).some(x=>run[x]&&/^(obj|hal|fau)$/.test(x))){l.remove();crit.length=0;raf.length=0}};
-  const stopBtn=()=>{const any=cfg.on&&dose>0.5;let b=document.getElementById('fxStop');if(any&&!b){b=document.createElement('button');b.id='fxStop';b.className='ghost';b.setAttribute('data-fxkeep','');b.textContent='Arrêter les effets';b.onclick=()=>FX.calm();document.body.appendChild(b)}if(!any&&b)b.remove()};
-  const sync=()=>{KEYS.forEach(([k])=>{const want=cfg.on&&cfg.fx[k].on&&cfg.fx[k].s>0&&sc(k)>0;if(want&&!run[k]){run[k]=true;try{M[k][0]()}catch(e){console.warn('fx',k,e)}}else if(!want&&run[k]){run[k]=false;try{M[k][1]()}catch(e){}}else if(want&&M[k][2]){try{M[k][2]()}catch(e){}}});
-    gateSync();compose();if(!Object.values(run).some(Boolean)){loopOn=false;document.documentElement.style.filter='';clearLayer()}else if(!loopOn){loopOn=true;requestAnimationFrame(mainLoop)}stopBtn()};
+  const sync=()=>{KEYS.forEach(([k])=>{const want=cfg.on&&S_(k)>.02;if(want&&!run[k]){run[k]=true;try{M[k][0]()}catch(e){console.warn('fx',k,e)}}else if(!want&&run[k]){run[k]=false;try{M[k][1]()}catch(e){}}else if(want&&M[k][2]){try{M[k][2]()}catch(e){}}});
+    gateSync();compose();if(!Object.values(run).some(Boolean)){loopOn=false;document.documentElement.style.filter='';clearLayer()}else if(!loopOn){loopOn=true;requestAnimationFrame(mainLoop)}};
   let esc3=[];
   document.addEventListener('keydown',e=>{if(e.key!=='Shift'||e.repeat)return;const n=Date.now();esc3=esc3.filter(x=>n-x<1600);esc3.push(n);if(esc3.length>=3&&(dose>0||KEYS.some(k=>run[k[0]]))){esc3=[];FX.calm();try{toast('Effets arrêtés')}catch(_){}}},true);
-
-  /* ---------- personnage fumeur : la dose commande les effets ---------- */
+  /* ---------- personnage : état serveur, dépendance, fumée ---------- */
   const HAIR={court:'Courts',longs:'Longs',frange:'Frange',chignon:'Chignon',tresses:'Tresses',cret:'Crête',afro:'Afro',chauve:'Chauve'};
-  const loadCh=()=>{try{const j=JSON.parse(localStorage.getItem('cm_fx_char')||'null');if(j)ch={...CH0,...j}}catch(e){}};
-  const saveCh=()=>{try{localStorage.setItem('cm_fx_char',JSON.stringify(ch))}catch(e){}};
-  const loadDose=()=>{try{const j=JSON.parse(localStorage.getItem('cm_fx_dose')||'null');if(j&&j.d>0){dose=Math.max(0,j.d-0.8*(Date.now()-j.t)/1000)}}catch(e){}};
+  const EYES={ronds:'Ronds',fins:'Fins',grands:'Grands',endormis:'Endormis',joyeux:'Joyeux'};
+  const KIND={vape:'Vape',cigar:'Cigare',cigarette:'Cigarette',joint:'Joint au thé'};
+  const FXN={scr:'Lettres',mouse:'Souris',delay:'Clics',anim:'Animations lentes',warp:'Anamorphose',psy:'Couleurs',obj:'Objets',hal:'Hallucinations',fau:'Animaux',ill:'Illusions'};
+  const NORMAL=['Salut !','Comment ça va ?','Belle journée, non ?','Tu fais quoi ?','Content de te voir.','T’as bien dormi ?','Tout est calme par ici.','Bonjour, {n} à ton service.','On discute un peu ?','Tu as de beaux messages.','Je regarde les conversations défiler.','Ça va bien de ton côté ?','Quoi de neuf aujourd’hui ?'];
+  const NAG=['Ma vape… où est ma vape ?','Donne-moi une bouffée. Une seule.','JE VEUX MA VAPE !!','Tu m’écoutes ? Ma vape !','Juste une petite bouffée, promis.','Je tremble… maintiens-moi.','Maintiens ma tête, s’il te plaît !','J’ai besoin de ma dose maintenant.','Les murs bougent, donne-moi ma vape.','Tout le monde me regarde, j’ai besoin de fumer.','Créateur, tu m’abandonnes ?','Je vais faire une bêtise.','J’ai vu un poisson dans le clavier.','Les lettres me parlent. Fume-moi.','Mes doigts sont devenus des saucisses.','Ma vape a dit mon nom… non ?','Pourquoi le plafond est mouillé ?','Je compte les pixels : trois, sept, banane.','Si tu me fumes pas, je mange ton clavier.','AAAAH ! MA DOSE !!!','Un petit nuage, un tout petit.','Tu m’entends ? TU M’ENTENDS ?','Je suis le roi des nuages… donne-moi des nuages.','Le Wi-Fi sent le tabac.','C’est urgent, c’est très urgent, c’est le plus urgent.','{n} a faim de fumée !','Je vais crier jusqu’à ce que tu me fumes !','Mon cerveau fait des cabrioles, aide-moi.'];
+  const loadDose=()=>{try{const j=JSON.parse(localStorage.getItem('cm_fx_dose')||'null');if(j&&j.d>0)dose=Math.max(0,j.d-0.8*(Date.now()-j.t)/1000)}catch(e){}};
   const saveDose=()=>{try{localStorage.setItem('cm_fx_dose',JSON.stringify({d:dose,t:Date.now()}))}catch(e){}};
-  const hairBack=(h,c)=>({longs:`<path d="M14 46C10 70 12 92 22 96l10-30z M86 46c4 24 2 46-8 50L68 66z" fill="${c}"/><path d="M16 50C14 22 30 6 50 6s36 16 34 44z" fill="${c}"/>`,
-    tresses:`<path d="M16 50C14 22 30 6 50 6s36 16 34 44z" fill="${c}"/><path d="M14 50c-8 10-8 26-2 40 6-4 10-14 12-30z M86 50c8 10 8 26 2 40-6-4-10-14-12-30z" fill="${c}"/>`,
-    afro:`<circle cx="50" cy="38" r="40" fill="${c}"/>`,chignon:`<circle cx="50" cy="8" r="11" fill="${c}"/>`,cret:'',court:'',frange:'',chauve:''}[h]||'');
-  const hairFront=(h,c)=>({court:`<path d="M17 46C14 20 30 8 50 8s36 12 33 38c-4-12-12-20-33-20S21 34 17 46z" fill="${c}"/>`,
-    frange:`<path d="M16 48C13 20 30 7 50 7s37 13 34 41c-2-10-6-18-12-22-6 8-26 10-40 6-4 4-8 10-16 16z" fill="${c}"/>`,
-    longs:`<path d="M17 48C16 22 32 9 50 9s34 13 33 39c-6-14-14-24-33-24S23 34 17 48z" fill="${c}"/>`,
-    tresses:`<path d="M17 46C14 20 30 8 50 8s36 12 33 38c-4-12-12-20-33-20S21 34 17 46z" fill="${c}"/>`,
-    chignon:`<path d="M17 46C14 20 30 10 50 10s36 10 33 36c-4-12-12-20-33-20S21 34 17 46z" fill="${c}"/>`,
-    afro:`<path d="M17 44C20 24 34 16 50 16s30 8 33 28c-6-10-16-14-33-14S23 34 17 44z" fill="${c}"/>`,
-    cret:`<path d="M42 22L40 0l8 12 2-14 4 14 6-12-2 22z" fill="${c}"/><path d="M17 40c4-6 10-10 12-10M83 40c-4-6-10-10-12-10" stroke="${c}" stroke-width="3" fill="none"/>`,chauve:`<ellipse cx="40" cy="18" rx="8" ry="3.5" fill="#fff" opacity=".25"/>`}[h]||'');
-  const itemSvg=(it,on)=>{if(!on)return '';const em=`<circle class="fxEm" cx="0" cy="0" r="3" fill="#ff7a1a"><animate attributeName="opacity" values=".6;1;.7;1" dur=".6s" repeatCount="indefinite"/></circle>`;
-    if(it==='vape')return `<g transform="translate(56 66) rotate(-14)"><rect x="0" y="-4" width="34" height="8" rx="4" fill="#2b2f36"/><rect x="0" y="-4" width="8" height="8" rx="3" fill="#161a1f"/><circle cx="22" cy="0" r="1.8" fill="#37c6ff"><animate attributeName="opacity" values=".3;1;.3" dur="1s" repeatCount="indefinite"/></circle></g>`;
-    if(it==='cigar')return `<g transform="translate(56 66) rotate(-12)"><rect x="0" y="-4.5" width="36" height="9" rx="3" fill="#6b3f1d"/><rect x="22" y="-4.5" width="4" height="9" fill="#d9b25a"/><g transform="translate(37 0)"><circle r="4.4" fill="#444"/><g>${em}</g></g></g>`;
-    return `<g transform="translate(56 66) rotate(-12)"><rect x="0" y="-2.2" width="34" height="4.4" rx="1.5" fill="#f6f3ec"/><rect x="0" y="-2.2" width="9" height="4.4" rx="1.5" fill="#d98a3a"/><g transform="translate(35 0)"><circle r="2.7" fill="#555"/><g>${em}</g></g></g>`};
-  const headSvg=(c,sm,big)=>`<svg viewBox="-6 -6 112 112" width="${big||56}" height="${big||56}" style="overflow:visible">${hairBack(c.hair,c.hc)}<ellipse cx="14" cy="56" rx="5" ry="8" fill="${c.skin}"/><ellipse cx="86" cy="56" rx="5" ry="8" fill="${c.skin}"/><ellipse cx="50" cy="54" rx="36" ry="40" fill="${c.skin}"/><ellipse cx="50" cy="54" rx="36" ry="40" fill="url(#fxsh)" opacity=".18"/>
-    ${hairFront(c.hair,c.hc)}<g class="fxEy"><ellipse cx="36" cy="52" rx="6" ry="${sm?2.4:6}" fill="#fff"/><ellipse cx="64" cy="52" rx="6" ry="${sm?2.4:6}" fill="#fff"/><circle cx="37" cy="52" r="3" fill="#2a1d12"/><circle cx="65" cy="52" r="3" fill="#2a1d12"/></g><path d="M28 43q8-5 15-1M57 42q8-4 15 1" stroke="#00000066" stroke-width="2.4" fill="none" stroke-linecap="round"/><path d="M50 54q-3 8 0 11" stroke="#00000033" stroke-width="2.2" fill="none" stroke-linecap="round"/>
-    ${sm?`<ellipse cx="53" cy="72" rx="4.6" ry="3.6" fill="#b4574f"/>`:`<path d="M42 72q8 6 16 0" stroke="#a24f48" stroke-width="2.8" fill="none" stroke-linecap="round"/>`}<circle cx="27" cy="66" r="6" fill="#ff8a8a" opacity="${sm?.35:.2}"/><circle cx="73" cy="66" r="6" fill="#ff8a8a" opacity="${sm?.35:.2}"/>${itemSvg(c.item,sm)}<defs><radialGradient id="fxsh" cx=".35" cy=".3" r=".9"><stop offset="0" stop-color="#fff"/><stop offset="1" stop-color="#000"/></radialGradient></defs></svg>`;
-  let head=null,smk=null,smTm=0;
-  const puff=(n,big)=>{if(!head)return;const r=head.getBoundingClientRect(),c=smk||(smk=document.getElementById('fxSmoke'));if(!c)return;const it=ch.item;
-    for(let i=0;i<n;i++){const p=document.createElement('div'),sz=(it==='vape'?18:12)*(big?1.7:1)*R(.8,1.3),x=r.left+r.width*(it==='vape'?.78:.8)+R(-4,4),y=r.top+r.height*.66,col=it==='cigar'?'110,100,95':it==='vape'?'245,248,255':'205,205,205';
+  const sndOn=()=>{try{return localStorage.getItem('cm_fx_snd')!=='0'}catch(e){return true}};
+  const eyeSvg=(c,mode)=>{const e=c.eyes,k=c._t?c._t[0]:c.ec,scl=c._t?c._t[1]:'#fff',sm=mode==='smoke',cg=mode==='cough',an=mode==='angry';let rx=6,ry=6,ir=3;if(e==='fins'){ry=3.6}if(e==='grands'){rx=7.5;ry=7.5;ir=4}if(e==='endormis'){ry=2.6}
+    if(cg)return `<path d="M30 48l12 7M42 48l-12 7M58 48l12 7M70 48l-12 7" stroke="#222" stroke-width="2.6" stroke-linecap="round"/>`;
+    if(e==='joyeux'&&!an&&!c._t)return `<path d="M29 54q7-9 14 0M57 54q7-9 14 0" stroke="${k}" stroke-width="3.2" fill="none" stroke-linecap="round"/>`;
+    if(sm)ry=Math.min(ry,2.4);if(an)ry=Math.min(ry,5);
+    return `<ellipse cx="36" cy="52" rx="${rx}" ry="${ry}" fill="${scl}"/><ellipse cx="64" cy="52" rx="${rx}" ry="${ry}" fill="${scl}"/><ellipse cx="37" cy="52" rx="${ir}" ry="${Math.min(ir,ry)}" fill="${k}"/><ellipse cx="65" cy="52" rx="${ir}" ry="${Math.min(ir,ry)}" fill="${k}"/><circle cx="38.2" cy="50.6" r="1" fill="#fff"/><circle cx="66.2" cy="50.6" r="1" fill="#fff"/>`};
+  const hairBack=(h,c)=>({longs:`<path d="M14 46C10 70 12 92 22 96l10-30z M86 46c4 24 2 46-8 50L68 66z" fill="${c}"/><path d="M16 50C14 22 30 6 50 6s36 16 34 44z" fill="${c}"/>`,tresses:`<path d="M16 50C14 22 30 6 50 6s36 16 34 44z" fill="${c}"/><path d="M14 50c-8 10-8 26-2 40 6-4 10-14 12-30z M86 50c8 10 8 26 2 40-6-4-10-14-12-30z" fill="${c}"/>`,afro:`<circle cx="50" cy="38" r="40" fill="${c}"/>`,chignon:`<circle cx="50" cy="8" r="11" fill="${c}"/>`}[h]||'');
+  const hairFront=(h,c)=>({court:`<path d="M17 46C14 20 30 8 50 8s36 12 33 38c-4-12-12-20-33-20S21 34 17 46z" fill="${c}"/>`,frange:`<path d="M16 48C13 20 30 7 50 7s37 13 34 41c-2-10-6-18-12-22-6 8-26 10-40 6-4 4-8 10-16 16z" fill="${c}"/>`,longs:`<path d="M17 48C16 22 32 9 50 9s34 13 33 39c-6-14-14-24-33-24S23 34 17 48z" fill="${c}"/>`,tresses:`<path d="M17 46C14 20 30 8 50 8s36 12 33 38c-4-12-12-20-33-20S21 34 17 46z" fill="${c}"/>`,chignon:`<path d="M17 46C14 20 30 10 50 10s36 10 33 36c-4-12-12-20-33-20S21 34 17 46z" fill="${c}"/>`,afro:`<path d="M17 44C20 24 34 16 50 16s30 8 33 28c-6-10-16-14-33-14S23 34 17 44z" fill="${c}"/>`,cret:`<path d="M42 22L40 0l8 12 2-14 4 14 6-12-2 22z" fill="${c}"/><path d="M17 40c4-6 10-10 12-10M83 40c-4-6-10-10-12-10" stroke="${c}" stroke-width="3" fill="none"/>`,chauve:`<ellipse cx="40" cy="18" rx="8" ry="3.5" fill="#fff" opacity=".25"/>`}[h]||'');
+  const itemSvg=(kind,on)=>{if(!on)return '';const em=`<circle cx="0" cy="0" r="3" fill="#ff7a1a"><animate attributeName="opacity" values=".6;1;.7;1" dur=".6s" repeatCount="indefinite"/></circle>`;
+    if(kind==='vape')return `<g transform="translate(56 68) rotate(-14)"><rect x="0" y="-4" width="34" height="8" rx="4" fill="#2b2f36"/><rect x="0" y="-4" width="8" height="8" rx="3" fill="#161a1f"/><circle cx="22" cy="0" r="1.8" fill="#37c6ff"><animate attributeName="opacity" values="0.3;1;0.3" dur="1s" repeatCount="indefinite"/></circle></g>`;
+    if(kind==='cigar')return `<g transform="translate(56 68) rotate(-12)"><rect x="0" y="-4.5" width="36" height="9" rx="3" fill="#6b3f1d"/><rect x="22" y="-4.5" width="4" height="9" fill="#d9b25a"/><g transform="translate(37 0)"><circle r="4.4" fill="#444"/>${em}</g></g>`;
+    if(kind==='joint')return `<g transform="translate(56 68) rotate(-12)"><path d="M0 -1.6L36 -4.6V4.6L0 1.6z" fill="#efe6c9"/><path d="M6 -1.4L10 -1.8V1.8L6 1.4z" fill="#c7b98d"/><g transform="translate(36 0)"><circle r="3.6" fill="#6a5a2e"/>${em}</g></g>`;
+    return `<g transform="translate(56 68) rotate(-12)"><rect x="0" y="-2.2" width="34" height="4.4" rx="1.5" fill="#f6f3ec"/><rect x="0" y="-2.2" width="9" height="4.4" rx="1.5" fill="#d98a3a"/><g transform="translate(35 0)"><circle r="2.7" fill="#555"/>${em}</g></g>`};
+  const headSvg=(c,mode,size,kind)=>{const sm=mode==='smoke',an=mode==='angry',cg=mode==='cough';return `<svg viewBox="-6 -6 112 112" width="${size||56}" height="${size||56}" style="overflow:visible">${hairBack(c.hair,c.hc)}<ellipse cx="14" cy="56" rx="5" ry="8" fill="${c.skin}"/><ellipse cx="86" cy="56" rx="5" ry="8" fill="${c.skin}"/><ellipse cx="50" cy="54" rx="36" ry="40" fill="${c.skin}"/><ellipse cx="50" cy="54" rx="36" ry="40" fill="url(#fxsh)" opacity=".18"/>
+    ${hairFront(c.hair,c.hc)}${eyeSvg(c,mode)}${an?`<path d="M26 40l16 6M74 40l-16 6" stroke="#3a1a10" stroke-width="3.4" stroke-linecap="round"/>`:`<path d="M28 43q8-5 15-1M57 42q8-4 15 1" stroke="#00000066" stroke-width="2.4" fill="none" stroke-linecap="round"/>`}<path d="M50 54q-3 8 0 11" stroke="#00000033" stroke-width="2.2" fill="none" stroke-linecap="round"/>
+    ${an?`<path d="M36 70q14-6 28 0q-2 14-14 14t-14-14z" fill="#7a2420"/><path d="M38 71h24" stroke="#fff" stroke-width="3"/>`:cg?`<ellipse cx="50" cy="74" rx="8" ry="6" fill="#7a2420"/>`:sm?`<ellipse cx="53" cy="72" rx="4.6" ry="3.6" fill="#b4574f"/>`:`<path d="M42 72q8 6 16 0" stroke="#a24f48" stroke-width="2.8" fill="none" stroke-linecap="round"/>`}<circle cx="27" cy="66" r="6" fill="${an?'#ff3b3b':'#ff8a8a'}" opacity="${an?.5:sm?.35:.2}"/><circle cx="73" cy="66" r="6" fill="${an?'#ff3b3b':'#ff8a8a'}" opacity="${an?.5:sm?.35:.2}"/>${itemSvg(kind||'vape',sm)}<defs><radialGradient id="fxsh" cx=".35" cy=".3" r=".9"><stop offset="0" stop-color="#fff"/><stop offset="1" stop-color="#000"/></radialGradient></defs></svg>`};
+  /* sons */
+  let AC=null,NB=null;
+  const aud=()=>{if(!sndOn())return null;try{if(!AC){AC=new (window.AudioContext||window.webkitAudioContext)();const l=AC.sampleRate*2,b=AC.createBuffer(1,l,AC.sampleRate),d=b.getChannelData(0);for(let i=0;i<l;i++)d[i]=Math.random()*2-1;NB=b}if(AC.state==='suspended')AC.resume();return AC}catch(e){return null}};
+  let inh=null;
+  const sndIn=(kind,dur)=>{const a=aud();if(!a)return;const s=a.createBufferSource();s.buffer=NB;s.loop=true;const f=a.createBiquadFilter();f.type='bandpass';f.Q.value=1.2;f.frequency.setValueAtTime(380,a.currentTime);f.frequency.linearRampToValueAtTime(1700,a.currentTime+dur/1000);const g=a.createGain();g.gain.setValueAtTime(0,a.currentTime);g.gain.linearRampToValueAtTime(.22,a.currentTime+.18);s.connect(f);f.connect(g);g.connect(a.destination);s.start();let cr=0;
+    if(kind==='joint'||kind==='cigarette'||kind==='cigar')cr=setInterval(()=>{const b=a.createBufferSource();b.buffer=NB;const gg=a.createGain();gg.gain.setValueAtTime(.18*Math.random(),a.currentTime);gg.gain.exponentialRampToValueAtTime(.001,a.currentTime+.03);b.connect(gg);gg.connect(a.destination);b.start(0,Math.random(),.04)},kind==='joint'?55:110);
+    if(kind==='vape')cr=setInterval(()=>{const o=a.createOscillator(),gg=a.createGain();o.frequency.value=500+Math.random()*900;gg.gain.setValueAtTime(.05,a.currentTime);gg.gain.exponentialRampToValueAtTime(.001,a.currentTime+.06);o.connect(gg);gg.connect(a.destination);o.start();o.stop(a.currentTime+.07)},90);
+    inh={s,g,cr,a}};
+  const sndInStop=()=>{if(!inh)return;const {s,g,cr,a}=inh;clearInterval(cr);try{g.gain.cancelScheduledValues(a.currentTime);g.gain.setValueAtTime(g.gain.value,a.currentTime);g.gain.linearRampToValueAtTime(0,a.currentTime+.08);s.stop(a.currentTime+.1)}catch(e){}inh=null};
+  const sndOut=pw=>{const a=aud();if(!a)return;const s=a.createBufferSource();s.buffer=NB;const f=a.createBiquadFilter();f.type='lowpass';f.frequency.setValueAtTime(1600,a.currentTime);f.frequency.exponentialRampToValueAtTime(300,a.currentTime+1+pw);const g=a.createGain();g.gain.setValueAtTime(.05,a.currentTime);g.gain.linearRampToValueAtTime(.2+pw*.15,a.currentTime+.12);g.gain.exponentialRampToValueAtTime(.001,a.currentTime+1+pw*1.3);s.connect(f);f.connect(g);g.connect(a.destination);s.start(0,Math.random());s.stop(a.currentTime+2.5)};
+  const sndCough=()=>{const a=aud();if(!a)return;for(let i=0;i<3;i++){const t=a.currentTime+i*.2,s=a.createBufferSource();s.buffer=NB;const f=a.createBiquadFilter();f.type='bandpass';f.frequency.value=900;f.Q.value=.8;const g=a.createGain();g.gain.setValueAtTime(.4,t);g.gain.exponentialRampToValueAtTime(.001,t+.13);s.connect(f);f.connect(g);g.connect(a.destination);s.start(t,Math.random());s.stop(t+.15);const o=a.createOscillator(),og=a.createGain();o.frequency.setValueAtTime(150,t);o.frequency.exponentialRampToValueAtTime(70,t+.12);og.gain.setValueAtTime(.3,t);og.gain.exponentialRampToValueAtTime(.001,t+.14);o.connect(og);og.connect(a.destination);o.start(t);o.stop(t+.15)}};
+  const shout=txt=>{if(!sndOn()||!window.speechSynthesis)return;try{speechSynthesis.cancel();const u=new SpeechSynthesisUtterance(txt.replace(/[!?]+/g,m=>m));u.lang='fr-CA';u.rate=1.1+craving*.25;u.pitch=1.2+craving*.7;u.volume=Math.min(1,.55+craving*.45);speechSynthesis.speak(u)}catch(e){}};
+  /* fumée */
+  let head=null,smk=null,hTick=0,bubTm=0,fog=null;
+  const curItem=()=>itemNow()||{kind:'vape',power:10,name:'Vape basic',fx:{}};
+  const puff=(n,big)=>{if(!head)return;const hb=head.querySelector('.fxHb svg');if(!hb)return;const r=hb.getBoundingClientRect(),c=smk;if(!c)return;const it=curItem(),pw=it.power/100,kind=it.kind;
+    for(let i=0;i<n;i++){const p=document.createElement('div'),sz=(kind==='vape'?18:12)*(big?1.6:1)*(.8+pw*1.1)*R(.8,1.3),x=r.left+r.width*(kind==='vape'?.8:.82)+R(-4,4),y=r.top+r.height*.68,col=kind==='joint'?'170,190,160':kind==='cigar'?'110,100,95':kind==='vape'?'245,248,255':'205,205,205';
       Object.assign(p.style,{position:'fixed',left:x+'px',top:y+'px',width:sz+'px',height:sz+'px',marginLeft:-sz/2+'px',marginTop:-sz/2+'px',borderRadius:'50%',background:`radial-gradient(circle,rgba(${col},.75),rgba(${col},0) 70%)`,filter:'blur(2px)',pointerEvents:'none'});c.appendChild(p);
-      const dx=R(-60,30)*(big?1.4:1),up=R(90,190)*(big?1.3:1),d=R(1800,3200)*(it==='vape'?1.3:1);
-      p.animate([{transform:'translate(0,0) scale(.6)',opacity:0},{opacity:.9,offset:.15},{transform:`translate(${dx*.5}px,${-up*.5}px) scale(${2.2+Math.random()*2})`,opacity:.55,offset:.55},{transform:`translate(${dx}px,${-up}px) scale(${4+Math.random()*3})`,opacity:0}],{duration:d,id:'fx',easing:'ease-out'}).onfinish=()=>p.remove()}};
-  let hTick=0,exTm=0;
+      const dx=R(-70,40)*(big?1.4:1)*(1+pw),up=R(90,190)*(big?1.3:1)*(.8+pw*.8),d=R(1800,3200)*(kind==='vape'?1.3:1)*(.9+pw*.6);
+      p.animate([{transform:'translate(0,0) scale(.6)',opacity:0},{opacity:.9,offset:.15},{transform:`translate(${dx*.5}px,${-up*.5}px) scale(${2.2+Math.random()*2.5})`,opacity:.55,offset:.55},{transform:`translate(${dx}px,${-up}px) scale(${4+Math.random()*3+pw*3})`,opacity:0}],{duration:d,id:'fx',easing:'ease-out'}).onfinish=()=>p.remove()}};
+  const say=(txt,ms)=>{if(!head)return;let b=head.querySelector('.fxBub');if(!b){b=document.createElement('div');b.className='fxBub';head.appendChild(b)}b.textContent=txt;b.classList.add('on');clearTimeout(bubTm);bubTm=setTimeout(()=>b.classList.remove('on'),ms||4500)};
+  /* souffle */
+  let sSrc=null,sT0=0,sB=0,coughing=false,cool=0,barRaf=0,lastMs=Date.now(),nextTalk=Date.now()+8000,nextMove=0,mode='';
+  const qf=p=>p<.22?0:p<.62?.2+(p-.22)/.4*.5:p<.85?.7+(p-.62)/.23*.3:p<.95?1-(p-.85)/.1*.5:0;
+  const E_ms=()=>ST?ST.endurance_ms:2000;
+  const tintOf=()=>{const e=EF();return e>=.98?['#e5242b','#ffd0d0']:e>=.8?['#ff8a00','#fff0d6']:e>=.6?['#ffd400','#fffbd0']:null};
+  let lastTint='';
+  const headDraw=m=>{if(!head||!ST)return;if(m!==undefined)mode=m;const tt=tintOf();lastTint=tt?tt[0]:'';head.querySelector('.fxHb').innerHTML=headSvg(tt?{...ST,_t:tt}:ST,mode,60,curItem().kind)};
+  const barLoop=()=>{if(!smoking)return;const pos=(performance.now()-sT0)/E_ms(),u=head&&head.querySelector('.fxHs u');if(u)u.style.left=Math.min(100,pos*100)+'%';if(pos>=.95)return endSmoke(true);barRaf=requestAnimationFrame(barLoop)};
+  const startSmoke=src=>{if(smoking||coughing||!ST||!head||performance.now()<cool)return;smoking=true;sSrc=src;sT0=performance.now();sB=B();headDraw('smoke');sndIn(curItem().kind,E_ms());clearInterval(hTick);hTick=setInterval(()=>puff(1),Math.max(120,420-curItem().power*2.5));cancelAnimationFrame(barRaf);barLoop()};
+  const endSmoke=cgh=>{if(!smoking)return;smoking=false;sSrc=null;clearInterval(hTick);cancelAnimationFrame(barRaf);sndInStop();const held=performance.now()-sT0,pos=held/E_ms(),it=curItem(),pw=it.power/100;let q=cgh?0:qf(pos);cool=performance.now()+500;
+    const u=head&&head.querySelector('.fxHs u');if(u)setTimeout(()=>{u.style.left='0%'},300);
+    if(cgh){coughing=true;headDraw('cough');sndCough();puff(3);say('*tousse*',1600);setTimeout(()=>{coughing=false;headDraw('')},1300)}
+    else{headDraw('');if(q>=.2){const g=(5+95*pw)*.7*q/(1+2*ST.dep/100);dose=Math.min(100,dose+g);boost=Math.max(boost,sB);craving=0;lastMs=Date.now();nextTalk=Date.now()+(sB>.2?1500:30000);sndOut(pw);puff(Math.round(3+pw*12),true);if(sB>.3)say('Ahhh… enfin.',2500)}else if(pos<.22){say('Pas assez aspiré…',1800)}}
+    const loc=pw*(q>=.2?6*(.4+.6*q):1.2);ST.dep=Math.min(100,ST.dep+loc);ST.endurance_ms=2000+Math.round(ST.dep*60);
+    rpcd('smoke_puff',{p_code:it.code,p_q:Math.round(q*100)/100,p_ms:Math.round(held)}).then(r=>{if(r&&ST){ST.dep=+r.dep;ST.endurance_ms=+r.endurance_ms}}).catch(()=>{});saveDose();doseTick(true)};
   const headMake=()=>{if(head)return;smk=document.createElement('div');smk.id='fxSmoke';smk.setAttribute('data-fxkeep','');smk.style.cssText='position:fixed;inset:0;pointer-events:none;z-index:2147482998';document.body.appendChild(smk);
-    head=document.createElement('div');head.id='fxHead';head.setAttribute('data-fxkeep','');head.title='Maintenir pour fumer';head.innerHTML='<div class="fxHb"></div><div class="fxHm"><i></i></div><button class="fxHc" type="button" aria-label="Personnaliser">Perso</button>';document.body.appendChild(head);headDraw();
-    const down=e=>{if(e.button>0||e.target.closest('.fxHc'))return;e.preventDefault();try{head.setPointerCapture(e.pointerId)}catch(_){}smoking=true;headDraw();clearInterval(hTick);hTick=setInterval(()=>puff(RI(1,2)),230);puff(2)};
-    const up=e=>{if(!smoking)return;smoking=false;clearInterval(hTick);headDraw();if(dose>8){puff(7,true);clearTimeout(exTm);exTm=setTimeout(()=>puff(5,true),380)}};
-    head.addEventListener('pointerdown',down);head.addEventListener('pointerup',up);head.addEventListener('pointercancel',up);head.addEventListener('lostpointercapture',up);head.addEventListener('contextmenu',e=>e.preventDefault());
+    fog=document.createElement('div');fog.id='fxFog';fog.setAttribute('data-fxkeep','');fog.innerHTML='<i></i><i></i><i></i>';document.body.appendChild(fog);
+    head=document.createElement('div');head.id='fxHead';head.setAttribute('data-fxkeep','');head.title='Maintenir la tête (ou la touche Tab) pour fumer';
+    head.innerHTML='<div class="fxHb"></div><div class="fxHm" title="Facteur d’effet"><i></i></div><div class="fxHs" title="Facteur de fumée : relâcher dans la zone dorée"><b style="width:22%;background:#6b7280"></b><b style="width:40%;background:#d6c36a"></b><b style="width:23%;background:#e8b923"></b><b style="width:10%;background:#e9862a"></b><b style="width:5%;background:#d6342f"></b><u></u></div><button class="fxHc" type="button" aria-label="Mon personnage">Perso</button>';document.body.appendChild(head);headDraw('');
+    head.addEventListener('pointerdown',e=>{if(e.button>0||e.target.closest('.fxHc'))return;e.preventDefault();try{head.setPointerCapture(e.pointerId)}catch(_){}startSmoke('ptr')});
+    const up=()=>{if(sSrc==='ptr')endSmoke(false)};head.addEventListener('pointerup',up);head.addEventListener('pointercancel',up);head.addEventListener('lostpointercapture',up);head.addEventListener('contextmenu',e=>e.preventDefault());
     head.querySelector('.fxHc').onclick=e=>{e.stopPropagation();charPanel()}};
-  const headDraw=()=>{if(!head)return;head.querySelector('.fxHb').innerHTML=headSvg(ch,smoking,56);head.classList.toggle('sm',smoking)};
-  const headKill=()=>{smoking=false;clearInterval(hTick);if(head)head.remove();head=null;const s=document.getElementById('fxSmoke');if(s)s.remove();smk=null};
-  const meter=()=>{if(!head)return;head.querySelector('.fxHm i').style.width=Math.round(lvl()*100)+'%'};
-  const charPanel=()=>{const m=modal(`<div id="fxChar"><h3>Mon personnage</h3><div class="row" style="justify-content:center"><div id="fxPrev"></div></div>
-    <label>Cheveux</label><div class="row" style="flex-wrap:wrap">${Object.entries(HAIR).map(([k,n])=>`<button class="ghost lite" data-h="${k}">${n}</button>`).join('')}</div>
-    <label>Couleur des cheveux</label><div class="row" style="flex-wrap:wrap">${['#3b2a1d','#1b1b1d','#8b5a2b','#d9b25a','#b5361f','#e8e8ea','#2f6fed','#9b59d6','#e9569e','#2fbf71'].map(c=>`<button class="fxSw" data-hc="${c}" style="background:${c}" aria-label="couleur"></button>`).join('')}<input type="color" id="fxHcI" value="${ch.hc}"></div>
-    <label>Teint</label><div class="row" style="flex-wrap:wrap">${['#fbe3cf','#f1c9a5','#d9a47c','#b57a52','#8a5a3a','#5a3a26'].map(c=>`<button class="fxSw" data-sk="${c}" style="background:${c}" aria-label="teint"></button>`).join('')}</div>
-    <label>Ce qu’il fume (maintenir la tête en bas à droite)</label><div class="row">${Object.entries(ITEMS).map(([k,n])=>`<button class="ghost lite" data-it="${k}">${n}</button>`).join('')}</div>
-    <div class="row end" style="margin-top:10px"><button data-x>Fermer</button></div></div>`,true);m.setAttribute('data-fxkeep','');
-    const draw=()=>{m.querySelector('#fxPrev').innerHTML=headSvg(ch,false,120);m.querySelectorAll('[data-h]').forEach(b=>b.classList.toggle('on',b.dataset.h===ch.hair));m.querySelectorAll('[data-it]').forEach(b=>b.classList.toggle('on',b.dataset.it===ch.item));headDraw()};
-    m.addEventListener('click',e=>{const d=e.target.dataset||{};if(d.h)ch.hair=d.h;else if(d.hc)ch.hc=d.hc;else if(d.sk)ch.skin=d.sk;else if(d.it)ch.item=d.it;else return;saveCh();draw()});
-    m.querySelector('#fxHcI').oninput=e=>{ch.hc=e.target.value;saveCh();draw()};draw()};
+  const headKill=()=>{smoking=false;clearInterval(hTick);sndInStop();if(head)head.remove();head=null;if(smk)smk.remove();smk=null;if(fog)fog.remove();fog=null};
+  document.addEventListener('keydown',e=>{if(e.key==='Tab'&&e.repeat&&head){e.preventDefault();startSmoke('tab')}},true);
+  document.addEventListener('keyup',e=>{if(e.key==='Tab'&&sSrc==='tab')endSmoke(false)},true);
+  addEventListener('blur',()=>{if(smoking)endSmoke(false)});
+  /* tick principal du personnage */
   let lastSig='',lastScr=-1;
-  const doseTick=()=>{const n=performance.now(),dt=Math.min(2,(n-lastDt)/1000);lastDt=n;
-    if(cfg.on){if(smoking)dose=Math.min(100,dose+RATE[ch.item]*dt);else dose=Math.max(0,dose-0.8*dt)}else dose=0;
-    meter();const sig=KEYS.map(k=>sc(k[0])>0?1:0).join('')+(cfg.on?'1':'0'),sS=Math.round(sc('scr')*10);
-    if(sig!==lastSig||(run.scr&&sS!==lastScr)){lastSig=sig;lastScr=sS;sync()}else if(!cfg.on&&head)sync();
-    if(cfg.on&&!head)headMake();if(!cfg.on&&head)headKill();
-    const pm=document.getElementById('fxDoseV');if(pm)pm.textContent=Math.round(lvl()*100)+' %'};
-  let dsIv=0,svIv=0;
-  /* ---------- panneau de réglage ---------- */
-  const panel=()=>{
-    const m=modal(`<div id="fxPanel"><h3>Effets sensoriels</h3>
-      <p class="muted">Active un petit personnage en bas à droite. Les effets n’apparaissent que s’il fume : maintenez la tête pour le faire fumer (cigarette, vapoteuse ou cigare) ; plus il fume, plus il y a d’effets, et la dose redescend toute seule. Les forces ci-dessous sont les maximums. Ils peuvent provoquer vertiges, malaise ou fatigue : ne les utilisez pas en cas d’épilepsie photosensible ou de sensibilité au mouvement. Un bouton « Arrêter les effets » reste affiché ; appuyer trois fois sur Maj arrête aussi tout.</p>
-      <div class="row"><label class="row" style="margin:0;color:var(--text)"><input type="checkbox" id="fxOn" ${cfg.on?'checked':''}> Personnage et effets activés</label><span class="grow"></span><span class="muted">Dose : <b id="fxDoseV">0 %</b></span><button class="ghost" id="fxChB">Personnage</button><button class="ghost" id="fxOff">Tout arrêter</button><button class="ghost" id="fxRst">Réinitialiser</button></div>
-      <div class="fxr"><b>Paranoïa</b><small>Plus elle monte, plus les apparitions sont fréquentes et les illusions rapides.</small><div class="row"><input type="range" id="fxPara" min="0" max="100" value="${cfg.para}"><span class="fxv" id="fxParaV">${cfg.para}</span></div></div>
-      ${KEYS.map(([k,n,d])=>`<div class="fxr"><label class="row" style="margin:0;color:var(--text)"><input type="checkbox" data-k="${k}" ${cfg.fx[k].on?'checked':''}> <b>${n}</b></label><small>${d}</small><div class="row"><input type="range" data-s="${k}" min="0" max="100" value="${cfg.fx[k].s}"><span class="fxv" id="fxV_${k}">${cfg.fx[k].s}</span></div></div>`).join('')}
-      <div class="row end" style="margin-top:10px"><button data-x>Fermer</button></div></div>`,true);
-    m.setAttribute('data-fxkeep','');
-    const ack=()=>{try{if(localStorage.getItem('cm_fx_ack'))return true;if(confirm('Ces effets peuvent causer des vertiges ou un inconfort visuel. Continuer ?')){localStorage.setItem('cm_fx_ack','1');return true}}catch(e){return true}return false};
-    m.addEventListener('change',e=>{const t=e.target;if(t.id==='fxOn'){if(t.checked&&!ack()){t.checked=false;return}cfg.on=t.checked;if(!cfg.on)dose=0;doseTick()}else if(t.dataset.k){if(t.checked&&!ack()){t.checked=false;return}cfg.fx[t.dataset.k].on=t.checked;if(t.checked&&cfg.fx[t.dataset.k].s===0){cfg.fx[t.dataset.k].s=50;const r=m.querySelector(`[data-s="${t.dataset.k}"]`);r.value=50;m.querySelector('#fxV_'+t.dataset.k).textContent='50'}}else return;save();sync()});
-    m.addEventListener('input',e=>{const t=e.target;if(t.id==='fxPara'){cfg.para=+t.value;m.querySelector('#fxParaV').textContent=t.value;save()}else if(t.dataset.s){const k=t.dataset.s;cfg.fx[k].s=+t.value;m.querySelector('#fxV_'+k).textContent=t.value;if(+t.value>0&&!cfg.fx[k].on&&!document.hidden){}save();clearTimeout(t._t);t._t=setTimeout(()=>{if(cfg.fx[k].on)sync()},k==='scr'?250:30);if(k==='ill'||k==='obj'||k==='hal'||k==='fau'||k==='warp'||k==='mouse'||k==='psy'||k==='anim'||k==='delay'){}}});
-    m.querySelector('#fxChB').onclick=()=>charPanel();
-    m.querySelector('#fxOff').onclick=()=>{FX.stopAll();m.close()};
-    m.querySelector('#fxRst').onclick=()=>{FX.stopAll();cfg=DEF();save();m.close();panel()};
-  };
-  const FX=window.FX={cfg:()=>cfg,sync,panel,calm(){dose=0;saveDose();sync();meter()},stopAll(){cfg.on=false;dose=0;saveDose();save();sync();headKill()},init(){load();loadCh();loadDose();addEventListener('resize',illSize);sync();dsIv=setInterval(doseTick,250);svIv=setInterval(saveDose,2000);doseTick()}};
+  const logged=()=>{try{return !!(S&&S.me&&S.profile)}catch(e){return false}};
+  let loading=false,stFail=0;
+  const loadState=async()=>{if(loading||Date.now()<stFail)return;loading=true;try{const s=await rpcd('smoke_state');ST=s;lastMs=s.since_s==null?Date.now():Date.now()-s.since_s*1000;cfg.on=true;loadDose();headMake();headDraw('')}catch(e){stFail=Date.now()+60000}loading=false};
+  const rnd=a=>PK(a).replace(/\{n\}/g,ST?ST.name:'Moi');
+  const doseTick=force=>{const n=performance.now(),dt=Math.min(2,(n-lastDt)/1000);lastDt=n;
+    if(!logged()){if(ST||head){ST=null;cfg.on=false;dose=0;boost=0;craving=0;for(const k in sm)sm[k]=0;headKill();sync()}return}
+    if(!ST){loadState();return}
+    if(!smoking)dose=Math.max(0,dose-0.8*dt);boost=Math.max(0,boost-0.012*dt);
+    if(ST.dep>=1){const ls=(Date.now()-lastMs)/1000,G=60+(1-ST.dep/100)*240;craving=Math.max(0,Math.min(1,(ls-G)/120))}else craving=0;
+    const par=B();
+    if(head){head.querySelector('.fxHm i').style.width=Math.round(EF()*100)+'%';if((tintOf()||[''])[0]!==lastTint&&!smoking&&!coughing)headDraw();
+      const md=smoking?'smoke':coughing?'cough':craving>.25?'angry':'';if(md!==mode&&!(smoking&&mode==='smoke')&&!coughing)headDraw(md);
+      const sc2=smoking||coughing?1:1+craving*(.4+.6*ST.dep/100)*1.3,now=Date.now();
+      if(craving>.15&&!smoking&&!coughing&&!head.matches(':hover')){if(now>=nextMove){nextMove=now+(3600-2600*craving)*R(.7,1.3);const dx=R(0,Math.max(0,innerWidth-140)),dy=-R(0,Math.max(0,innerHeight-160));head.style.transform=`translate(${dx}px,${dy}px) scale(${sc2.toFixed(2)})`;head.style.transitionDuration=(1.4-.9*craving).toFixed(2)+'s'}}
+      else if(craving<=.15||smoking){head.style.transform=`scale(${sc2.toFixed(2)})`;head.style.transitionDuration='.8s'}
+      head.classList.toggle('shk',craving>.4&&!smoking);
+      if(now>=nextTalk&&!smoking){if(craving>0&&ST.dep>=1){const l=rnd(NAG),t=craving>.7?l.toUpperCase():l;say(t,3800);if(craving>.3)shout(t);nextTalk=now+(45*(1-ST.dep/100)+6)*(1-.4*par)*R(.85,1.15)*1000}else{say(rnd(NORMAL),3800);nextTalk=now+R(70000,110000)}}
+      else if(craving>0&&craving<.05&&ST.dep>=1&&now+3000<nextTalk)nextTalk=now+3000}
+    if(fog){const it=curItem();fog.style.opacity=Math.min(.5,lvl()*it.power/100*.6).toFixed(3);fog.className=it.kind}
+    KEYS.forEach(([k])=>{const tg=rawS(k);sm[k]=(sm[k]||0)+(tg-(sm[k]||0))*(1-Math.exp(-dt/2.2));if(tg===0&&sm[k]<.012)sm[k]=0});
+    const sig=KEYS.map(k=>S_(k)>.02?1:0).join(''),sS=Math.round(S_('scr')*20);
+    if(force||sig!==lastSig||(run.scr&&sS!==lastScr)){lastSig=sig;lastScr=sS;sync()}};
+  setInterval(doseTick,250);setInterval(saveDose,3000);setInterval(()=>{if(ST&&logged()&&!smoking)rpcd('smoke_state').then(s=>{if(s&&ST){ST.dep=s.dep;ST.endurance_ms=s.endurance_ms;ST.owned=s.owned;ST.item=s.item;ST.name=s.name}}).catch(()=>{})},300000);
+  /* panneau personnage / boutique / création / stats */
+  const SW_H=['#3b2a1d','#1b1b1d','#8b5a2b','#d9b25a','#b5361f','#e8e8ea','#2f6fed','#9b59d6','#e9569e','#2fbf71'],SW_E=['#2a1d12','#2f6fed','#2fbf71','#7a4b1e','#8a8f98','#9b59d6','#00aaff','#c0392b'],SW_S=['#fbe3cf','#f1c9a5','#d9a47c','#b57a52','#8a5a3a','#5a3a26'];
+  const pbar=(v,c)=>`<span class="fxPb"><span style="width:${Math.max(0,Math.min(100,v))}%;background:${c||'#e8b923'}"></span></span>`;
+  const itemRow=(i,own)=>`<div class="fxIt"><div class="grow"><b>${esc(i.name)}</b> <span class="tag">${KIND[i.kind]}</span>${i.by?` <span class="muted">par @${esc(i.by)}</span>`:''}${i.active===false?' <span class="tag">retiré</span>':''}<div class="muted" style="font-size:12px">Puissance ${i.power} ${pbar(i.power)} · ${Object.entries(i.fx).filter(e=>e[1]>=.7).map(e=>FXN[e[0]]).join(', ')||'effets doux'}</div></div>${own?(ST.item===i.code?'<span class="tag">équipé</span>':`<button class="ghost lite" data-eq="${esc(i.code)}">Utiliser</button>`):`<button class="lite" data-buy="${esc(i.code)}">${nfmt(i.price)}</button>`}</div>`;
+  const charPanel=(tab0)=>{if(!ST)return toast('Personnage indisponible : appliquez patch_fume.sql');let tab=tab0||'c',shop=null,edit=null,draft={...ST};
+    const m=modal(`<div id="fxChar"><h3>Mon personnage</h3><div class="row" style="flex-wrap:wrap"><button class="ghost lite" data-t="c">Personnage</button><button class="ghost lite" data-t="o">Objets</button><button class="ghost lite" data-t="n">Créer (VAZE+)</button><button class="ghost lite" data-t="s">Statistiques</button></div><div id="fxBody"></div><div class="row end" style="margin-top:10px"><button data-x>Fermer</button></div></div>`,true);m.setAttribute('data-fxkeep','');
+    const body=m.querySelector('#fxBody');
+    const sw=(arr,a)=>arr.map(c=>`<button class="fxSw" data-${a}="${c}" style="background:${c}" aria-label="couleur"></button>`).join('');
+    const tC=()=>{body.innerHTML=`<div class="row" style="justify-content:center"><div id="fxPrev"></div></div>
+      <label>Nom</label><div class="row"><input id="fxNm" maxlength="24" value="${esc(draft.name)}" class="grow"></div>
+      <label>Cheveux</label><div class="row" style="flex-wrap:wrap">${Object.entries(HAIR).map(([k,n])=>`<button class="ghost lite ${draft.hair===k?'on':''}" data-h="${k}">${n}</button>`).join('')}</div>
+      <label>Couleur des cheveux</label><div class="row" style="flex-wrap:wrap">${sw(SW_H,'hc')}<input type="color" id="fxHcI" value="${draft.hc}"></div>
+      <label>Yeux</label><div class="row" style="flex-wrap:wrap">${Object.entries(EYES).map(([k,n])=>`<button class="ghost lite ${draft.eyes===k?'on':''}" data-ey="${k}">${n}</button>`).join('')}</div>
+      <label>Couleur des yeux</label><div class="row" style="flex-wrap:wrap">${sw(SW_E,'ec')}<input type="color" id="fxEcI" value="${draft.ec}"></div>
+      <label>Teint</label><div class="row" style="flex-wrap:wrap">${sw(SW_S,'sk')}</div>
+      <label class="row" style="color:var(--text)"><input type="checkbox" id="fxShow" ${draft.show?'checked':''}> Afficher mon personnage, sa puissance et sa dépendance sur mon profil</label>
+      <label class="row" style="color:var(--text)"><input type="checkbox" id="fxSnd" ${sndOn()?'checked':''}> Sons et voix du personnage</label>
+      <div class="row end" style="margin-top:8px"><button id="fxSave">Enregistrer</button></div>`;pv()};
+    const pv=()=>{const p=body.querySelector('#fxPrev');if(p)p.innerHTML=headSvg(draft,'',110,'vape')};
+    const tO=async()=>{body.innerHTML='<p class="muted">Chargement…</p>';try{shop=await rpcd('smoke_shop')}catch(e){body.innerHTML='<p class="muted">'+esc(errMsg(e))+'</p>';return}
+      const own=shop.items.filter(i=>i.owned),sale=shop.items.filter(i=>!i.owned&&i.active);
+      body.innerHTML=`<p class="muted">Jetons : <b>${nfmt(shop.balance)}</b>. Plus l’objet est puissant, plus il donne d’effets et plus la dépendance monte vite. Les joints sont des joints au thé (tisane, légaux) : très forts dans le jeu.</p><label>Mes objets</label>${own.map(i=>itemRow(i,true)).join('')}<label>Boutique</label>${sale.map(i=>itemRow(i,false)).join('')||'<div class="muted">Rien à acheter.</div>'}`};
+    const FS=Object.keys(FXN);
+    const tN=async()=>{try{shop=shop||await rpcd('smoke_shop')}catch(e){}
+      if(!shop||!shop.vaze){body.innerHTML='<p class="muted">Le pass <b>VAZE+</b> (27 799 jetons, dans la boutique des Outils) permet de créer et vendre vos propres vapes, cigares, cigarettes et joints au thé, avec la puissance et les effets de votre choix. Vous touchez 90 % du prix à chaque vente.</p>';return}
+      const e=edit?shop.items.find(i=>i.code===edit):null,fx=e?e.fx:{};const mine=shop.items.filter(i=>i.mine);
+      body.innerHTML=`<label>${e?'Modifier « '+esc(e.name)+' »':'Nouvel objet'}</label><div class="row" style="flex-wrap:wrap"><input id="fnN" placeholder="Nom (3 à 30)" maxlength="30" class="grow" value="${e?esc(e.name):''}" ${e?'disabled':''}><select id="fnK" ${e?'disabled':''}>${Object.entries(KIND).map(([k,n])=>`<option value="${k}" ${e&&e.kind===k?'selected':''}>${n}</option>`).join('')}</select><input id="fnP" type="number" min="10" max="100000" step="0.1" placeholder="Prix" style="width:110px" value="${e?e.price:''}"></div>
+        <div class="row"><span style="min-width:90px">Puissance</span><input type="range" id="fnW" min="1" max="100" value="${e?e.power:30}" class="grow"><b id="fnWv" style="min-width:30px;text-align:right">${e?e.power:30}</b></div>
+        ${FS.map(k=>`<div class="row"><span style="min-width:130px">${FXN[k]}</span><input type="range" data-f="${k}" min="0" max="100" value="${Math.round((fx[k]||0)*100)}" class="grow"></div>`).join('')}
+        ${e?`<label class="row" style="color:var(--text)"><input type="checkbox" id="fnA" ${e.active?'checked':''}> En vente</label>`:''}
+        <div class="row end" style="margin-top:8px">${e?'<button class="ghost" id="fnC">Annuler</button>':''}<button id="fnS">${e?'Enregistrer':'Mettre en vente'}</button></div>
+        <label>Mes créations</label>${mine.map(i=>`<div class="fxIt"><div class="grow"><b>${esc(i.name)}</b> <span class="tag">${KIND[i.kind]}</span><div class="muted" style="font-size:12px">${nfmt(i.price)} jetons · puissance ${i.power} · ${i.sold} vendu(s)${i.active?'':' · retiré'}</div></div><button class="ghost lite" data-ed="${esc(i.code)}">Modifier</button></div>`).join('')||'<div class="muted">Aucune création.</div>'}`};
+    const tS=()=>{const it=curItem(),L=Math.round(ST.dep);body.innerHTML=`<div class="row" style="justify-content:center"><div>${headSvg(ST,'',90,it.kind)}</div></div><div class="fxSt"><span>Nom</span><b>${esc(ST.name)}</b><span>Objet équipé</span><b>${esc(it.name)}</b><span>Puissance</span><b>${it.power} / 100 ${pbar(it.power)}</b><span>Dépendance</span><b>${L} / 100 ${pbar(L,'#e5484d')}</b><span>Endurance</span><b>${(ST.endurance_ms/1000).toFixed(1)} s</b><span>Bouffées</span><b>${ST.puffs||0}</b><span>Niveau d’effets</span><b>${Math.round(lvl()*100)} %</b><span>Manque</span><b>${Math.round(craving*100)} %</b></div><p class="muted">Plus la dépendance monte, plus il faut fumer pour sentir les effets et moins ils sont forts. Elle redescend lentement quand il ne fume pas.</p>`};
+    const draw=()=>{m.querySelectorAll('[data-t]').forEach(b=>b.classList.toggle('on',b.dataset.t===tab));({c:tC,o:tO,n:tN,s:tS})[tab]()};
+    m.addEventListener('click',async e=>{const d=e.target.dataset||{};try{
+      if(d.t){tab=d.t;edit=null;return draw()}
+      if(d.h){draft.hair=d.h;return tC()}if(d.hc){draft.hc=d.hc;return pv()}if(d.ey){draft.eyes=d.ey;return tC()}if(d.ec){draft.ec=d.ec;return pv()}if(d.sk){draft.skin=d.sk;return pv()}
+      if(e.target.id==='fxSave'){draft.name=m.querySelector('#fxNm').value.trim();draft.show=m.querySelector('#fxShow').checked;await rpcd('smoke_char_set',{p_name:draft.name,p_hair:draft.hair,p_hc:draft.hc,p_eyes:draft.eyes,p_ec:draft.ec,p_skin:draft.skin,p_show:draft.show});Object.assign(ST,{name:draft.name,hair:draft.hair,hc:draft.hc,eyes:draft.eyes,ec:draft.ec,skin:draft.skin,show:draft.show});headDraw('');toast('Personnage enregistré');return}
+      if(d.eq){await rpcd('smoke_equip',{p_code:d.eq});ST.item=d.eq;headDraw('');toast('Objet équipé');return tO()}
+      if(d.buy){const it=shop.items.find(i=>i.code===d.buy);if(!confirm('Acheter « '+it.name+' » pour '+nfmt(it.price)+' jetons ?'))return;const r=await rpcd('smoke_buy',{p_code:d.buy});ST.owned.push(r);try{balRefresh()}catch(_){}toast('Objet acheté');return tO()}
+      if(d.ed){edit=d.ed;return tN()}
+      if(e.target.id==='fnC'){edit=null;return tN()}
+      if(e.target.id==='fnS'){const fx={};m.querySelectorAll('[data-f]').forEach(r=>fx[r.dataset.f]=+r.value/100);const pr=Number(m.querySelector('#fnP').value),pw=+m.querySelector('#fnW').value;
+        if(edit){await rpcd('smoke_item_update',{p_code:edit,p_price:pr,p_power:pw,p_fx:fx,p_active:m.querySelector('#fnA').checked});toast('Objet modifié')}
+        else{await rpcd('smoke_item_create',{p_name:m.querySelector('#fnN').value,p_kind:m.querySelector('#fnK').value,p_price:pr,p_power:pw,p_fx:fx});toast('Objet mis en vente')}
+        shop=null;edit=null;try{const s=await rpcd('smoke_state');ST.owned=s.owned}catch(_){}return tN()}
+    }catch(x){toast(errMsg(x))}});
+    m.addEventListener('input',e=>{const t=e.target;if(t.id==='fxHcI'){draft.hc=t.value;pv()}else if(t.id==='fxEcI'){draft.ec=t.value;pv()}else if(t.id==='fnW')m.querySelector('#fnWv').textContent=t.value});
+    m.addEventListener('change',e=>{if(e.target.id==='fxSnd'){try{localStorage.setItem('cm_fx_snd',e.target.checked?'1':'0')}catch(_){}}});
+    draw()};
+  const FX=window.FX={sync,panel:charPanel,calm(){dose=0;boost=0;saveDose();doseTick(true)},init(){addEventListener('resize',illSize);loadDose();sync();doseTick()}};
+  window.smokeProfileInto=async(m,p)=>{try{const r=await rpcd('smoke_profile',{p_username:p.username});if(!r||!m.isConnected)return;const row=m.querySelector('.pf-modal > .row.end');if(!row)return;const d=document.createElement('div');d.innerHTML=`<label>Personnage</label><div class="fxPf"><div>${headSvg(r,'',64,r.kind)}</div><div class="grow"><b>${esc(r.name)}</b><div class="fxSt"><span>Objet</span><b>${esc(r.item)}</b><span>Puissance</span><b>${r.power} / 100 ${pbar(r.power)}</b><span>Dépendance</span><b>${Math.round(r.dep)} / 100 ${pbar(r.dep,'#e5484d')}</b><span>Endurance</span><b>${(r.endurance_ms/1000).toFixed(1)} s</b><span>Bouffées</span><b>${r.puffs}</b></div></div></div>`;row.before(...d.childNodes)}catch(e){}};
   const _ds2=devSettings;
-  devSettings=function(m){const r=_ds2.apply(this,arguments);try{const cr=m.querySelector('.credits');if(cr&&!m.querySelector('#fxOpen')){const d=document.createElement('div');d.innerHTML='<label>Effets sensoriels</label><div class="row"><span class="grow muted">Mélange de lettres, souris ralentie, anamorphose, objets, animaux, illusions d’optique… avec réglage de la force de chaque effet.</span><button class="ghost" id="fxOpen">Régler</button></div>';cr.before(...d.childNodes);m.querySelector('#fxOpen').onclick=()=>panel()}}catch(e){}return r};
+  devSettings=function(m){const r=_ds2.apply(this,arguments);try{const cr=m.querySelector('.credits');if(cr&&!m.querySelector('#fxOpen')){const d=document.createElement('div');d.innerHTML='<label>Mon personnage</label><div class="row"><span class="grow muted">Nom, cheveux, yeux, objets à fumer, dépendance et profil.</span><button class="ghost" id="fxOpen">Ouvrir</button></div>';cr.before(...d.childNodes);m.querySelector('#fxOpen').onclick=()=>charPanel()}}catch(e){}return r};
   if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',()=>FX.init());else FX.init();
 })();
 
