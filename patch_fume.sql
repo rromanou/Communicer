@@ -513,7 +513,7 @@ begin
 end $$;
 
 create or replace function public.smoke_item_create(p_name text, p_kind text, p_price numeric, p_power int, p_fx jsonb) returns jsonb language plpgsql security definer set search_path = public as $$
-declare n text := btrim(coalesce(p_name,'')); c text; fx jsonb;
+declare n text := btrim(coalesce(p_name,'')); c text; vfx jsonb;
 begin
   perform public._sm_row();
   if not public._has_vaze(auth.uid()) then raise exception 'Il faut le pass VAZE+'; end if;
@@ -522,9 +522,9 @@ begin
   if p_kind not in ('vape','cigar','cigarette','joint') then raise exception 'Type inconnu'; end if;
   if p_price is null or p_price < 10 or p_price > 100000 or p_price <> round(p_price, 1) then raise exception 'Prix entre 10 et 100 000 jetons'; end if;
   if (select count(*) from public.smoke_items where creator = auth.uid()) >= 20 then raise exception '20 objets au maximum'; end if;
-  fx := public._sm_fx(p_fx);
+  vfx := public._sm_fx(p_fx);
   c := 'u' || substr(md5(random()::text || clock_timestamp()::text || auth.uid()::text), 1, 10);
-  insert into public.smoke_items(code, kind, name, price, power, fx, smoke, creator) values (c, p_kind, n, p_price, public._sm_power(fx), fx, public._sm_smoke(p_fx->'smoke'), auth.uid());
+  insert into public.smoke_items(code, kind, name, price, power, fx, smoke, creator) values (c, p_kind, n, p_price, public._sm_power(vfx), vfx, public._sm_smoke(p_fx->'smoke'), auth.uid());
   insert into public.smoke_inv(user_id, code) values (auth.uid(), c);
   return public._sm_def(c);
 end $$;
@@ -532,13 +532,13 @@ revoke all on function public.smoke_item_create(text, text, numeric, int, jsonb)
 grant execute on function public.smoke_item_create(text, text, numeric, int, jsonb) to authenticated;
 
 create or replace function public.smoke_item_update(p_code text, p_price numeric, p_power int, p_fx jsonb, p_active boolean) returns void language plpgsql security definer set search_path = public as $$
-declare fx jsonb;
+declare vfx jsonb;
 begin
   perform public._sm_row();
   if not exists(select 1 from public.smoke_items where code = p_code and creator = auth.uid() and not system) then raise exception 'Objet introuvable'; end if;
   if p_price is null or p_price < 10 or p_price > 100000 or p_price <> round(p_price, 1) then raise exception 'Prix entre 10 et 100 000 jetons'; end if;
-  fx := public._sm_fx(p_fx);
-  update public.smoke_items set price = p_price, power = public._sm_power(fx), fx = fx, smoke = public._sm_smoke(p_fx->'smoke'), active = coalesce(p_active, true) where code = p_code;
+  vfx := public._sm_fx(p_fx);
+  update public.smoke_items set price = p_price, power = public._sm_power(vfx), fx = vfx, smoke = public._sm_smoke(p_fx->'smoke'), active = coalesce(p_active, true) where code = p_code;
 end $$;
 revoke all on function public.smoke_item_update(text, numeric, int, jsonb, boolean) from public, anon;
 grant execute on function public.smoke_item_update(text, numeric, int, jsonb, boolean) to authenticated;
@@ -604,6 +604,7 @@ begin
     'dep', round(c.dep, 3), 'endu', c.endu, 'endurance_ms', public._sm_end(c.dep, c.endu), 'puffs', c.puffs, 'level', n, 'lvl_claimed', c.lvl_claimed,
     'since_s', case when c.last_smoke is null then null else round(extract(epoch from now() - c.last_smoke)) end,
     'od_left', case when c.od_start is null then null else greatest(0, round(120 - extract(epoch from now() - c.od_start))) end,
+    'vaze', public._has_vaze(auth.uid()),
     'rescued_s', case when c.rescued_at is null then null else round(extract(epoch from now() - c.rescued_at)) end,
     'died_s', case when c.died_at is null then null else round(extract(epoch from now() - c.died_at)) end,
     'owned', coalesce((select jsonb_agg(public._sm_def(i.code) order by s.price) from public.smoke_inv i join public.smoke_items s on s.code = i.code where i.user_id = auth.uid()), '[]'::jsonb),
