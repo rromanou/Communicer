@@ -5122,7 +5122,7 @@ function connectRoom(){
   ss.ch=sb.channel('room-'+ss.id,{config:{broadcast:{self:false},presence:{key:S.me.id}}});ss.away={};ss.seen=new Set();
   const on=(ev,fn)=>ss.ch.on('broadcast',{event:ev},async({payload})=>{try{const o=await unpack(c,payload);if(S.sess===ss)fn(o)}catch(e){}});
   on('hello',roomHello);on('host',o=>roomHostEv(o));on('act',roomAct);on('state',roomState);on('bye',roomBye);on('end',()=>{toast("La partie a été fermée par l'hôte");leaveSession(false)});
-  on('say',o=>{ss.say[o.u]=o.t||'';updateSay(o.u)});
+  on('say',o=>{ss.say[o.u]=o.t||'';updateSay(o.u)});on('smkc',o=>{if(window.FXCALL)FXCALL.paint(o)});
   on('away',o=>markAway(o.u));on('back',o=>clearAway(o.u));
   if(ss.ch.on)try{ss.ch.on('presence',{event:'sync'},()=>presSync(ss))}catch(e){}
   ss.awayT=setInterval(awayTick,1000);
@@ -5285,6 +5285,7 @@ function ensureTiles(){
     box.appendChild(t);updateSay(u);updateTileMedia(u);
   }
   want.forEach(u=>updateTileMedia(u));
+  if(window.FXCALL&&ss.smk)want.forEach(u=>ss.smk[u]&&FXCALL.paint(ss.smk[u]));
   refreshTiles();
 }
 function refreshTiles(){
@@ -11732,7 +11733,7 @@ window.SMK=(function(){
   const tintFor=(e,x)=>x>.25?['#e5242b','#ffd0d0']:e>=.98?['#e5242b','#ffd0d0']:e>=.8?['#ff8a00','#fff0d6']:e>=.6?['#ffd400','#fffbd0']:null;
   const tintOf=()=>tintFor(EF(),ixS());
   let lastTint='';
-  const headDraw=m=>{if(!head||!ST)return;if(m!==undefined)mode=m;const tt=tintOf();lastTint=tt?tt[0]:'';head.querySelector('.fxHb').innerHTML=headSvg({...ST,...(tt?{_t:tt}:{}),_code:curItem().code,_look:curItem().look,_g:ixS()},mode,60,curItem().kind)};
+  const headDraw=m=>{if(!head||!ST)return;if(m!==undefined)mode=m;try{callSend()}catch(_){}const tt=tintOf();lastTint=tt?tt[0]:'';head.querySelector('.fxHb').innerHTML=headSvg({...ST,...(tt?{_t:tt}:{}),_code:curItem().code,_look:curItem().look,_g:ixS()},mode,60,curItem().kind)};
   const mouth=()=>{const s=head&&head.querySelector('.fxHb svg');if(!s)return{x:60,y:innerHeight-40};const r=s.getBoundingClientRect(),M=((curItem().look||{}).model);if(M&&M.tip){const W=56,H=28,px=53-M.mouth[0]*W+M.tip[0]*W,py=72-M.mouth[1]*H+M.tip[1]*H;return{x:r.left+r.width*((px+6)/112),y:r.top+r.height*((py+6)/112)}}return{x:r.left+r.width*.535,y:r.top+r.height*.70}};
   const trkSize=()=>{if(!trkCv)return;trkCv.width=innerWidth;trkCv.height=innerHeight;if(eng)eng.floor=innerHeight-8};
   const whiteOf=z=>({warm:.5,inh:.95,sweet:.8,choke:.3})[z]||.7;
@@ -11812,7 +11813,7 @@ window.SMK=(function(){
       dose=Math.min(100,dose+(5+95*pw)*.7*(.5+1.1*f)/(1+2*ST.dep/100));craving=0;lastMs=Date.now();ST.dep=Math.min(100,ST.dep+pw*4*f);ST.endurance_ms=endOf(ST.dep);say(rnd(SWALLOW),2400);
       toxAdd(.55);
       rpcd('smoke_puff',{p_code:curItem().code,p_q:.55,p_ms:1500}).then(x=>{if(x&&ST){ST.dep=+x.dep;ST.endurance_ms=+x.endurance_ms}}).catch(()=>{});saveDose();doseTick(true)}});
-  const startSmoke=src=>{if(!ST||!head||coughing||rehab||od)return;{const ci=curItem();if(ci.life&&ci.left!=null&&ci.left<=0){toast('Plus de bouffées sur cet objet : rachetez-le dans l’onglet Objets');return}}if(sSrc&&sSrc!==src)return;sSrc=src;if(!sk)sk=mkSmoker();sk.down();kick()};
+  const startSmoke=src=>{if(!ST||!head||coughing||rehab||od||fmOn)return;{const ci=curItem();if(ci.life&&ci.left!=null&&ci.left<=0){toast('Plus de bouffées sur cet objet : rachetez-le dans l’onglet Objets');return}}if(sSrc&&sSrc!==src)return;sSrc=src;if(!sk)sk=mkSmoker();sk.down();kick()};
   const endSmoke=()=>{if(sk)sk.up();sSrc=null;kick()};
   const abortSmoke=()=>{if(sk)sk.abort();sSrc=null;kick()};
   const doSwallow=()=>{if(!sk)return;const r=sk.swallow();if(!r.ok){if(r.why==='endurance')say('Pas assez d’endurance pour avaler tant de fumée',2600);else say('Rien à avaler',1400)}else kick()};
@@ -11890,7 +11891,7 @@ window.SMK=(function(){
   let menuHid=false;
   const inhKey=()=>{try{return localStorage.getItem('cm_fx_inh')||'both'}catch(e){return 'both'}};
   const keysReset=()=>{ctrlOn=altOn=tabOn=false;clearTimeout(altTm);if(altDr&&sk)sk.exStop();altDr=false;if(sk&&sk.held)endSmoke()};
-  document.addEventListener('keydown',e=>{if(!head||rehab||typing())return;const k=e.key,c=e.code||'';
+  document.addEventListener('keydown',e=>{if(!head||rehab||fmOn||typing())return;const k=e.key,c=e.code||'';
     if(k==='Control'){if(!e.repeat){ctrlOn=true;if(inhKey()!=='tab')startSmoke('ctrl')}return}
     if(k==='Alt'){e.preventDefault();if(!e.repeat&&!altOn){altOn=true;altUsed=false;altT0=performance.now();menuOpen(0);clearTimeout(altTm);altTm=setTimeout(()=>{if(altOn&&!altUsed&&sk&&sk.exStart()){altDr=true;kick()}},260)}return}
     if(k==='Tab'){if(inhKey()!=='ctrl')e.preventDefault();if(!e.repeat){tabOn=true;if(inhKey()!=='ctrl')startSmoke('tab')}return}
@@ -12154,6 +12155,94 @@ window.SMK=(function(){
   const lockedNow=()=>!!(ST&&(dose>1||EF()>.03||ix||od));
   const wrapRpc=()=>{try{if(sb.__fxw)return;const o=sb.rpc.bind(sb);sb.rpc=(fn,a,...r)=>{if(lockedNow()&&(['remove_friend','delete_conversation','leave_conversation'].includes(fn)||(fn==='block_set'&&a&&a.p_on))){try{toast('Impossible sous l’effet de la fumée : attendez la fin des effets')}catch(_){}return Promise.resolve({data:null,error:{message:'Impossible sous l’effet de la fumée'}})}return o(fn,a,...r)};sb.__fxw=1}catch(e){}};
   const FX=window.FX={locked:lockedNow,sync,panel:charPanel,calm(){dose=0;boost=0;saveDose();doseTick(true)},init(){wrapRpc();addEventListener('resize',illSize);loadDose();ixLoad();sync();doseTick()}};
+
+  /* ================= FUMATOIR : jeu à 8 joueurs, 3 manches ================= */
+  let fmOn=false;
+  const FM_R=[{k:'inh',t:'Plus de fumée inhalée',u:'unités de fumée'},{k:'trk',t:'Meilleurs tricks',u:'points de beauté'},{k:'dep',t:'Plus forte hausse de dépendance',u:'points de dépendance'}];
+  const FM_LEN=45000,FM_PAUSE=6000;
+  function mountFum(root,api){
+    if(!document.getElementById('fmCss')){const st=document.createElement('style');st.id='fmCss';st.textContent=`.fmW{display:flex;flex-direction:column;height:100%;min-height:0;color:#e8ebf5;background:#0f1218}.fmTop{display:flex;gap:12px;align-items:center;flex-wrap:wrap;padding:8px 10px;border-bottom:1px solid #fff2}.fmTop b{font-size:15px}.fmT{margin-left:auto;font-variant-numeric:tabular-nums;font-size:20px;font-weight:700}.fmRow{flex:1;min-height:0;overflow:auto;display:flex;flex-wrap:wrap;gap:6px;justify-content:center;align-content:flex-start;padding:6px}.fmSeat{position:relative;width:164px;height:300px;border-radius:12px;background:linear-gradient(#1b1f2a,#12151c);overflow:hidden;flex:none}.fmSeat.me{outline:2px solid #4aa3ff}.fmSeat canvas{position:absolute;inset:0;width:100%;height:100%;pointer-events:none}.fmH{position:absolute;left:50%;bottom:62px;transform:translateX(-50%);width:96px;cursor:pointer;touch-action:none;user-select:none}.fmN{position:absolute;left:0;right:0;bottom:30px;text-align:center;font-size:13px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;padding:0 6px}.fmSc{position:absolute;left:0;right:0;bottom:8px;text-align:center;font-size:12px;color:#aab}.fmBar{position:absolute;left:10px;right:10px;bottom:52px;height:6px;background:#0008;border-radius:4px;overflow:hidden}.fmBar i{display:block;height:100%;width:0;background:#2fbf71}.fmBot{padding:8px 10px;border-top:1px solid #fff2;display:flex;gap:6px;flex-wrap:wrap;align-items:center}.fmOv{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;background:#000a;z-index:5;text-align:center;padding:20px;gap:10px}.fmOv h2{margin:0}`;document.head.appendChild(st)}
+    const me=api.me,P0=()=>api.players();
+    root.innerHTML=`<div class="fmW" style="position:relative"><div class="fmTop"><b id="fmRd">Fumatoir</b><span id="fmDs" class="muted"></span><span class="fmT" id="fmTm"></span></div><div class="fmRow" id="fmRow"></div><div class="fmBot" id="fmBot"></div><div class="fmOv" id="fmOv"></div></div>`;
+    const $$=s=>root.querySelector(s);
+    fmOn=true;try{const h=document.getElementById('fxHead');if(h)h.style.display='none'}catch(_){}
+    const seats={},info={},wins={},hasHi={};let ph='wait',rd=-1,tEnd=0,mode='',inhaled=0,beautyS=0,depG=0,emit=0,sentSc=false,scs={},tmEnd=0,pendRes=null,over=false,lastSt=0;
+    const myItem=()=>curItem(),myLook=()=>{const it=myItem();return{c:{name:ST.name,hair:ST.hair,hc:ST.hc,eyes:ST.eyes,ec:ST.ec,skin:ST.skin},ik:it.kind,sm:it.smoke||{},lk:{body:(it.look||{}).body,tip:(it.look||{}).tip},pw:it.power}};
+    const sendHi=()=>{if(!ST)return;const o={k:'hi',u:me,...myLook()};info[me]=o;api.send('sev',o);drawSeat(me)};
+    const nm=u=>api.name(u);
+    const mkSeat=u=>{const d=document.createElement('div');d.className='fmSeat'+(u===me?' me':'');d.dataset.u=u;d.innerHTML=`<canvas width="164" height="300"></canvas><div class="fmH"></div><div class="fmBar"><i></i></div><div class="fmN">${esc(nm(u))}</div><div class="fmSc"></div>`;const cv=d.querySelector('canvas'),E=SMK.Engine(cv);E.floor=290;seats[u]={el:d,cv,E,mode:''};$$('#fmRow').appendChild(d);
+      if(u===me){const h=d.querySelector('.fmH');h.addEventListener('pointerdown',e=>{e.preventDefault();try{h.setPointerCapture(e.pointerId)}catch(_){}inhDown()});h.addEventListener('pointerup',inhUp);h.addEventListener('pointercancel',inhUp)}return seats[u]};
+    const mouthXY=()=>({x:164*.535+.5,y:300-62-96*.30});
+    function drawSeat(u){const s=seats[u]||mkSeat(u),i=info[u];if(!i){s.el.querySelector('.fmH').innerHTML='';return}const m=s.mode;s.el.querySelector('.fmH').innerHTML=headSvg({...i.c,_look:null,_code:'',_g:0},m,96,i.ik);s.E.look(i.sm)}
+    const scoreTx=u=>{const w=wins[u]||0;return w?'Manches : '+w:''};
+    const paintAll=()=>{const pl=P0();Object.keys(seats).forEach(u=>{if(!pl.includes(u)){seats[u].el.remove();delete seats[u]}});pl.forEach(u=>{if(!seats[u])mkSeat(u);drawSeat(u);seats[u].el.querySelector('.fmN').textContent=nm(u);seats[u].el.querySelector('.fmSc').textContent=scoreTx(u)})};
+    const setMode=(u,m)=>{const s=seats[u];if(!s||s.mode===m)return;s.mode=m;drawSeat(u)};
+    /* fumeur local */
+    const itemSm=()=>myItem().smoke||{};
+    const dsmL=()=>Math.min(1.5,myItem().power/100);
+    let sk=null,raf=0,last=0,modeT=0;
+    const mkSk=()=>SMK.Smoker({E:()=>Math.max(1000,ST.endurance_ms||8000),K:.25,pw:()=>Math.min(2,myItem().power/100)||.1,capMul:()=>1,cone:()=>false,sm:()=>1,
+      onInh(){setMode(me,'smoke');kick()},onAbort(){setMode(me,'')},
+      onRelease(res){const s=seats[me];if(res.q>=.2){inhaled+=res.V*res.q;depG+=dsmL()*6*(.4+.6*res.q)*(res.carry?1.35:1)*100/(100+2*(ST.dep||0))*10}else depG+=dsmL()*1.2;
+        if(res.zone==='sweet')setMode(me,'hold');else setMode(me,'exh');kick()},
+      onCough(){setMode(me,'cough');emit+=.3;if(seats[me]){const m=mouthXY();SMK.plume(seats[me].E,m.x,m.y,.25,.6,.3,.2)}clearTimeout(modeT);modeT=setTimeout(()=>setMode(me,''),1300);depG+=dsmL()*1.2},
+      onLeak(a){const s=seats[me];if(s){const m=mouthXY();SMK.plume(s.E,m.x,m.y,a,.4,.7,.2)}emit+=a},onDrain(on){setMode(me,on?'exh':sk&&sk.has()?'hold':'')},
+      onDrainAmt(a,z){const s=seats[me];if(!s)return;s.E.look(itemSm());const m=mouthXY(),n=a*55;let c=Math.floor(n)+(Math.random()<n%1?1:0);for(let i=0;i<c;i++)s.E.add({x:m.x+SMK.rnd(-2,2),y:m.y,vx:SMK.rnd(-14,14),vy:SMK.rnd(-70,-30),s:SMK.rnd(8,13),ds:SMK.rnd(8,14),a:.42,life:SMK.rnd(2,3.4),drag:.55,by:-10,tx:1.2,w:whiteOf(z)});emit+=a},
+      onBar(pos,zone){const b=seats[me]&&seats[me].el.querySelector('.fmBar i');if(b){b.style.width=Math.min(100,pos*105)+'%';b.style.background=zone==='sweet'?'#e8b923':zone==='choke'?'#e5484d':'#2fbf71'}}});
+    const kick=()=>{if(!raf){last=performance.now();raf=requestAnimationFrame(loop)}};
+    const loop=n=>{const dt=Math.min(.05,(n-last)/1000);last=n;if(sk)sk.tick(dt);const b=seats[me]&&seats[me].el.querySelector('.fmBar i');if(b&&sk&&sk.stage!=='inh')b.style.width='0';
+      if(sk&&sk.stage==='idle'&&!sk.held){if(seats[me]&&seats[me].mode&&seats[me].mode!=='cough')setMode(me,'');raf=0;return}raf=requestAnimationFrame(loop)};
+    const live=()=>ph==='round'&&Date.now()<tEnd;
+    const inhDown=()=>{if(!ST||!live()&&ph!=='wait'&&ph!=='between')return;if(!sk)sk=mkSk();seats[me]&&seats[me].E.look(itemSm());sk.down();kick()};
+    const inhUp=()=>{if(sk){sk.up();kick()}};
+    const trickFire=id=>{if(!sk||!sk.has()){toast('Plus de fumée en bouche');return}const t=SMK.TBY[id],m=mast(id),r=sk.take(t.need*(1-.5*m)*1.5);if(!r){toast('Pas assez de fumée pour '+t.name);return}
+      const s=seats[me],mo=mouthXY(),b=SMK.beauty(id,r.V,r.zone,m);s.E.look(itemSm());SMK.trick(s.E,id,mo.x,mo.y,r.V,b.white,1,m);if(live())beautyS+=b.score;noteUse(id);api.send('sev',{k:'tr',u:me,id,V:r.V,w:b.white,m});
+      const bt=seats[me].el.querySelector('.fmSc');bt.textContent=SMK.TBY[id].name+' · beauté '+b.score;setTimeout(()=>{bt.textContent=scoreTx(me)},2200);if(sk.stage==='idle')setMode(me,'')};
+    const kd=e=>{if(!fmOn||typing())return;const k=e.key;
+      if(k==='Control'||k==='Tab'){const iv=inhKey();if(k==='Control'&&iv==='tab'||k==='Tab'&&iv==='ctrl')return;if(k==='Tab')e.preventDefault();if(!e.repeat)inhDown();return}
+      if(k==='Alt'){e.preventDefault();if(sk&&!e.repeat)sk.exStart();return}
+      const dg=/^[0-9]$/.test(k)?k:(SLL.includes(k.toUpperCase())&&ST&&ST.vaze?k.toUpperCase():null);if(dg&&(e.altKey||tkMode()==='alt'&&e.altKey)){const id=slotMap()[dg];if(id){e.preventDefault();trickFire(id)}}};
+    const ku=e=>{if(!fmOn)return;const k=e.key;if(k==='Control'||k==='Tab')inhUp();else if(k==='Alt'){e.preventDefault();if(sk)sk.exStop()}};
+    document.addEventListener('keydown',kd,true);document.addEventListener('keyup',ku,true);
+    /* messages */
+    const upd=()=>{const pl=P0();return pl};
+    const roundTx=()=>ph==='wait'?'Fumatoir':ph==='done'?'Partie terminée':`Manche ${rd+1} / 3 : ${FM_R[rd]?FM_R[rd].t:''}`;
+    const bot=()=>{const B=$$('#fmBot');if(!B)return;const own=(ST&&ST.tricks||[]).map(t=>t.code),sm=slotMap(),inv={};for(const k in sm)inv[sm[k]]=k;
+      B.innerHTML=`<span class="muted">Maintenez votre tête, CTRL ou TAB pour inhaler ; relâchez dans la zone dorée, ALT pour expirer.</span>${own.map(id=>`<button class="ghost lite" data-ft="${esc(id)}">${esc((SMK.TBY[id]||{}).name||id)}${inv[id]?' ('+inv[id]+')':''}</button>`).join('')}`};
+    $$('#fmBot').addEventListener('click',e=>{const id=e.target.dataset&&e.target.dataset.ft;if(id)trickFire(id)});
+    const ov=(h)=>{const o=$$('#fmOv');if(!o)return;o.style.display=h?'flex':'none';o.innerHTML=h||''};
+    const showWait=()=>{ov(`<h2>Fumatoir</h2><p class="muted" style="max-width:420px">Jusqu’à 8 fumeurs, 3 manches : plus de fumée inhalée, meilleurs tricks, plus forte hausse de dépendance. Le premier à gagner 2 manches l’emporte. Votre personnage et votre objet équipé sont utilisés.</p>${api.isHost?'<button id="fmGo">Lancer la partie</button>':'<p class="muted">En attente du lancement par l’hôte…</p>'}`);const g=$$('#fmGo');if(g)g.onclick=()=>hostGo(0,true)};
+    const hostGo=(r,reset)=>{if(!api.isHost)return;if(reset){for(const u in wins)delete wins[u]}const o={k:'go',r,wins:{...wins}};api.send('sev',o);onGo(o)};
+    const onGo=o=>{rd=o.r;ph='round';over=false;Object.keys(wins).forEach(u=>delete wins[u]);Object.assign(wins,o.wins||{});inhaled=0;beautyS=0;depG=0;sentSc=false;scs={};pendRes=null;tEnd=Date.now()+FM_LEN+3000;ov(`<h2>Manche ${rd+1}</h2><p>${esc(FM_R[rd].t)}</p><p class="muted">Départ dans 3 s</p>`);paintAll();bot();
+      setTimeout(()=>{if(ph==='round')ov('')},3000);if(api.isHost){clearTimeout(tmEnd);tmEnd=setTimeout(hostEnd,FM_LEN+3000)}};
+    const myScore=()=>{const k=FM_R[rd].k;return Math.round((k==='inh'?inhaled*10:k==='trk'?beautyS:depG)*10)/10};
+    const hostEnd=()=>{if(!api.isHost||ph!=='round')return;api.send('sev',{k:'end',r:rd});onEnd();setTimeout(hostRes,2800)};
+    const onEnd=()=>{if(ph!=='round')return;ph='between';if(sk){sk.abort();sk.up()}const v=myScore();scs[me]=v;if(!api.isHost)api.send('sev',{k:'sc',u:me,r:rd,v});ov(`<h2>Fin de la manche</h2><p class="muted">Calcul des résultats…</p>`)};
+    const hostRes=()=>{if(!api.isHost||ph==='done')return;const pl=P0();let best=null,bv=-1;pl.forEach(u=>{const v=scs[u]||0;if(v>bv){bv=v;best=u}});const w=best&&bv>0?best:null;if(w)wins[w]=(wins[w]||0)+1;const fin=Object.values(wins).some(x=>x>=2)||rd>=2;const o={k:'res',r:rd,w,sc:{...scs},wins:{...wins},fin};api.send('sev',o);onRes(o);if(!fin)setTimeout(()=>hostGo(rd+1,false),FM_PAUSE)};
+    const onRes=o=>{wins2(o);const lst=Object.entries(o.sc||{}).sort((a,b)=>b[1]-a[1]).map(([u,v])=>`<div>${esc(nm(u))} : ${v} ${esc(FM_R[o.r].u)}</div>`).join('');
+      if(o.fin){ph='done';const top=Object.entries(o.wins).sort((a,b)=>b[1]-a[1])[0];ov(`<h2>${top?esc(nm(top[0]))+' remporte la partie':'Match nul'}</h2>${lst}${api.isHost?'<button id="fmAg">Rejouer</button> <button class="ghost" id="fmEnd">Fermer</button>':'<p class="muted">L’hôte peut relancer une partie.</p>'}`);const a=$$('#fmAg'),b=$$('#fmEnd');if(a)a.onclick=()=>hostGo(0,true);if(b)b.onclick=()=>api.end();try{api.confetti()}catch(_){}}
+      else ov(`<h2>${o.w?esc(nm(o.w))+' gagne la manche '+(o.r+1):'Manche '+(o.r+1)+' sans gagnant'}</h2>${lst}<p class="muted">Manche suivante dans quelques secondes…</p>`);paintAll()};
+    const wins2=o=>{Object.keys(wins).forEach(u=>delete wins[u]);Object.assign(wins,o.wins||{})};
+    api.on('sev',o=>{if(!o)return;
+      if(o.k==='hi'){info[o.u]=o;drawSeat(o.u);if(!hasHi[o.u]){hasHi[o.u]=1;sendHi()}}
+      else if(o.k==='st'){const s=seats[o.u];if(!s)return;setMode(o.u,o.m||'');const i=info[o.u];if(o.e>0){s.E.look((i&&i.sm)||{});const m=mouthXY(),n=o.e*55;let c=Math.floor(n)+(Math.random()<n%1?1:0);for(let q=0;q<c;q++)s.E.add({x:m.x+SMK.rnd(-2,2),y:m.y,vx:SMK.rnd(-14,14),vy:SMK.rnd(-70,-30),s:SMK.rnd(8,13),ds:SMK.rnd(8,14),a:.42,life:SMK.rnd(2,3.4),drag:.55,by:-10,tx:1.2,w:.9})}}
+      else if(o.k==='tr'){const s=seats[o.u];if(!s)return;const i=info[o.u];s.E.look((i&&i.sm)||{});const m=mouthXY();SMK.trick(s.E,o.id,m.x,m.y,o.V,o.w,1,o.m)}
+      else if(o.k==='go')onGo(o);else if(o.k==='end')onEnd();else if(o.k==='sc'){scs[o.u]=o.v}else if(o.k==='res')onRes(o)});
+    api.on('join',()=>{sendHi();if(api.isHost&&ph!=='wait')api.send('sev',{k:'go',r:Math.max(0,rd),wins:{...wins},late:1})});
+    const iv=setInterval(()=>{if(!ST)return;const n=Date.now();api.send('sev',{k:'st',u:me,m:seats[me]?seats[me].mode:'',e:Math.round(emit*100)/100});emit=0;
+      const T=$$('#fmTm');if(T){if(ph==='round'){const ms=tEnd-n;T.textContent=ms>FM_LEN?'':Math.max(0,Math.ceil(ms/1000))+' s';const d=$$('#fmDs');if(d)d.textContent=ms>FM_LEN?'':'Vous : '+myScore()+' '+FM_R[rd].u}else T.textContent=''}
+      const R=$$('#fmRd');if(R)R.textContent=roundTx();if(ph==='round'&&n>=tEnd&&!api.isHost&&!sentSc)onEnd()},200);
+    const iv2=setInterval(()=>{sendHi();paintAll()},4000);
+    setTimeout(()=>{sendHi();paintAll();bot();showWait()},150);
+    return{update(){paintAll()},destroy(){fmOn=false;clearInterval(iv);clearInterval(iv2);clearTimeout(tmEnd);document.removeEventListener('keydown',kd,true);document.removeEventListener('keyup',ku,true);try{const h=document.getElementById('fxHead');if(h)h.style.display=''}catch(_){}}};
+  }
+  GAMES.fumatoir={name:'Fumatoir',desc:'Jusqu’à 8 fumeurs, 3 manches : plus de fumée inhalée, meilleurs tricks, plus forte hausse de dépendance. Premier à 2 manches.',icon:'flame',conv:['direct','group'],min:1,max:8,p2p:true,mount:mountFum};
+  /* ----- fumeurs dans les appels : le personnage et sa vape à côté de la caméra ----- */
+  window.FXCALL={paint(o){const ss=S.sess;if(!ss||!o)return;ss.smk=ss.smk||{};ss.smk[o.u]=o;const t=document.querySelector(`#rmTiles .tile[data-u="${o.u}"] .t-media`);if(!t)return;let b=t.querySelector('.t-smk');if(!b){b=document.createElement('div');b.className='t-smk';b.style.cssText='position:absolute;right:2px;bottom:2px;width:46px;height:46px;pointer-events:none;z-index:3;filter:drop-shadow(0 1px 3px #0008)';t.appendChild(b)}
+    b.innerHTML=headSvg({...o.c,_look:o.lk,_code:o.cd,_g:0},o.m||'',46,o.k||'vape')}};
+  let cbLast=0;
+  const callSend=force=>{const ss=S.sess;if(!ss||!ss.ch||!ss.ready||!ST||!ST.show||fmOn)return;const n=Date.now();if(!force&&n-cbLast<300)return;cbLast=n;const it=curItem();const pay={u:S.me.id,c:{name:ST.name,hair:ST.hair,hc:ST.hc,eyes:ST.eyes,ec:ST.ec,skin:ST.skin},k:it.kind,m:mode,cd:it.code,lk:{body:(it.look||{}).body,tip:(it.look||{}).tip}};try{rsend('smkc',pay,ss)}catch(_){}FXCALL.paint(pay)};
+  setInterval(()=>callSend(true),5000);
   window.SMKX={headSvg,ST:()=>ST,curItem:()=>curItem(),pwNow:()=>pwNow(),sndIn:(k,d)=>sndIn(k,d),sndInStop:()=>sndInStop(),sndOut:p=>sndOut(p),sndCough:()=>sndCough(),mkPuff:()=>null,onPuff:(res)=>{ST.dep=Math.min(100,ST.dep+curItem().power/100*(res.q>=.2?6*(.4+.6*res.q):1.2));ST.endurance_ms=2000+Math.round(ST.dep*40);rpcd('smoke_puff',{p_code:curItem().code,p_q:Math.round(res.q*100)/100,p_ms:Math.round(res.held||0)}).then(r=>{if(r&&ST){ST.dep=+r.dep;ST.endurance_ms=+r.endurance_ms}}).catch(()=>{})},depGain:res=>curItem().power/100*(res.q>=.2?6*(.4+.6*res.q):1.2)};
   const pfLive=(r)=>{const L=r.live||{},ef=+L.ef||0,ix2=+L.ix||0,tt=tintFor(ef,ix2),on=r.online,md=r.od_left>0?'od':(on?L.mode||'':'');return headSvg({...r,...(on&&tt?{_t:tt}:{}),_g:on?ix2:0,_code:r.code},md,72,r.kind||'vape')};
   const pfTip=(r)=>{const L=r.live||{},on=r.online,pc=v=>Math.round((+v||0)*100)+' %';const fx=Object.entries(L.fx||{}).filter(e=>e[1]>.05).map(e=>(FXN[e[0]]||e[0])+' '+pc(e[1]));
