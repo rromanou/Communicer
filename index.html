@@ -11329,7 +11329,7 @@ window.SMK=(function(){
   const zoneOf=p=>p<.22?'warm':p<.62?'inh':p<.85?'sweet':'choke';
   const qf=p=>p<.22?0:p<.62?.2+(p-.22)/.4*.5:p<.85?.7+(p-.62)/.23*.3:p<.95?1-(p-.85)/.1*.5:0;
   function Smoker(o){const s={o,stage:'idle',pos:0,zone:'warm',V:0,I:0,pool:0,ztype:'warm',t0:0,exDur:1,exRate:0,cough:0,cd:0,held:false,carry:false,sw:0};
-    const E=()=>Math.max(1000,o.E())*(s.carry?.72:1),pw=()=>o.pw()*(s.carry?1.3:1),cap=()=>(1+o.E()/1000*.9)*(s.carry?1.35:1),now=()=>performance.now();
+    const E=()=>Math.max(1000,o.E())*(s.carry?.72:1),pw=()=>o.pw()*(s.carry?1.3:1),cap=()=>(1+o.E()/1000*.9)*(s.carry?1.35:1)*(o.capMul?o.capMul():1),now=()=>performance.now();
     const cn=()=>!!(o.cone&&o.cone()),zf=p=>cn()?(p<.2?'warm':p<.6?'inh':p<.7?'sweet':'choke'):zoneOf(p),qc=p=>cn()?(p<.2?0:p<.6?.2+(p-.2)/.4*.5:1):qf(p),smm=()=>o.sm?o.sm():1;
     const mouthFull=()=>s.pool>.05&&(s.stage==='exh'||s.stage==='keep'||s.stage==='drain');
     s.has=()=>mouthFull();
@@ -11364,8 +11364,8 @@ window.SMK=(function(){
 
 /* ================= PERSONNAGE ET EFFETS (la fumée commande les effets) ================= */
 (function(){
-  const KEYS=['scr','mouse','warp','delay','anim','psy','obj','hal','fau','ill','scrl','blur','keys','coord','att'].map(k=>[k]);
-  const THR={scr:.05,mouse:.12,delay:.18,anim:.24,warp:.32,psy:.38,obj:.45,hal:.52,fau:.6,ill:.68,scrl:.07,blur:.14,keys:.22,coord:.3,att:.36};
+  const KEYS=['scr','mouse','warp','delay','anim','psy','obj','hal','fau','ill','scrl','blur','keys','coord','att','chro','acou','echo','dist','hyper','lent','pers','bav','mut','imp','irr','eup','apa','mef','trem','susc'].map(k=>[k]);
+  const THR={scr:.05,mouse:.12,delay:.18,anim:.24,warp:.32,psy:.38,obj:.45,hal:.52,fau:.6,ill:.68,scrl:.07,blur:.14,keys:.22,coord:.3,att:.36,chro:.08,acou:.1,echo:.15,dist:.2,hyper:.25,lent:.3,pers:.34,bav:.1,mut:.12,imp:.2,irr:.28,eup:.16,apa:.22,mef:.3,trem:.26,susc:.18};
   const RM=(window.matchMedia&&matchMedia('(prefers-reduced-motion: reduce)').matches)?new Set(['warp','psy','ill']):new Set();
   let od=null,ix=null,tox=0,pd=[],ixOn=false,ixSt=null,ixDk=null;
   const ixP=()=>ix?Math.min(1,(Date.now()-ix.t0)/ix.dur):0;
@@ -11376,9 +11376,9 @@ window.SMK=(function(){
   const lvl=()=>Math.max(0,Math.min(1,dose/100)),pwNow=()=>{const it=ST&&ST.owned.find(i=>i.code===ST.item);return it?Math.min(2,it.power/100):.1},EF=()=>lvl()*(.1+.9*pwNow()),sc=k=>cfg.on?Math.max(0,Math.min(1,(EF()-THR[k])/.25)):0;
   const sm={};
   const itemNow=()=>ST&&ST.owned.find(i=>i.code===ST.item)||null;
-  const B=()=>Math.max(craving*(.5+.5*(ST?ST.dep:0)/100),boost,ixPar());
+  const B=()=>{const cr=craving*(.5+.5*(ST?ST.dep:0)/100),pm=ST?PM():null;return Math.max(0,Math.max(cr,pm&&pm.c.av?0:boost,ixPar())-(pm?pm.par:0))};
   const rawS=k=>{if(!ST||RM.has(k))return 0;const it=itemNow(),pw=it?Math.min(2,it.power/100):.1,w=it?(it.fx[k]||0):0;return ixv(k,sc(k)*w*(.45+.55*pw)*(1-.55*ST.dep/100)*(1+.6*B()))};
-  const ixv=(k,v)=>{const f=ixS();if(!f)return Math.max(0,Math.min(1,v));const bad=ix.bad;if(bad&&k==='warp')return 0;const H=['hal','fau','ill','obj','psy'],fl=(k==='scr'||k==='keys')?1:bad?(H.includes(k)?.9:.5):(k==='anim'||k==='blur'?.4:0);return Math.max(0,Math.min(bad?1.2:1.1,Math.max(v*(1+(bad?.2:.1)*f),fl*f)))};
+  const ixv=(k,v)=>{const pm=PM(),n=Date.now();v*=pm.fx;if(chaos.k===k&&n<chaos.until)v=Math.max(v,.9);if(pm.c.az){if(k==='mef')v=0;if(k==='susc')v=Math.max(v,.5+.5*Math.sin(n/5000))}if(pm.c.av&&k==='eup')v=Math.max(v,.7);const f=ixS();if(!f)return Math.max(0,Math.min(pm.fx>1?1.4:1,v));const bad=ix.bad;if(bad&&k==='warp')return 0;const H=['hal','fau','ill','obj','psy'],fl=(k==='scr'||k==='keys')?1:bad?(H.includes(k)?.9:.5):(k==='anim'||k==='blur'?.4:0);return Math.max(0,Math.min(bad?1.2:1.1,Math.max(v*(1+(bad?.2:.1)*f),fl*f)))};
   const S_=k=>sm[k]||0;
   const PA=()=>B();
   let run={},mx=innerWidth/2,my=innerHeight/2,fx0=mx,fy0=my,T0=performance.now();
@@ -11401,6 +11401,10 @@ window.SMK=(function(){
   #fxDark{position:fixed;inset:0;background:#000;pointer-events:none;opacity:0;z-index:2147482970;transition:opacity .3s}
   html.fxIxN img,html.fxIxN video,html.fxIxN .bubble,html.fxIxN .av{animation:fxBr 3.4s ease-in-out infinite;transform-origin:50% 100%}html.fxIxB img,html.fxIxB video,html.fxIxB .bubble,html.fxIxB .av{animation:fxBr 2s ease-in-out infinite;transform-origin:50% 100%}
   @keyframes fxBr{0%,100%{transform:scale(1,1) skewX(0)}30%{transform:scale(1.05,1.13) skewX(1.6deg)}65%{transform:scale(.97,1.08) skewX(-1.6deg)}}
+  html.fxTrem body>*:not([data-fxkeep]):not(script):not(style){animation:fxTr .14s steps(1) infinite}
+  @keyframes fxTr{0%{transform:translate(var(--tr,1px),0)}25%{transform:translate(0,var(--tr,1px))}50%{transform:translate(calc(var(--tr,1px)*-1),0)}75%{transform:translate(0,calc(var(--tr,1px)*-1))}}
+  html.fxDist img,html.fxDist .av,html.fxDist .bubble,html.fxDist video{animation:fxDs 5.5s ease-in-out infinite}@keyframes fxDs{0%,100%{transform:scale(1)}35%{transform:scale(.88)}70%{transform:scale(1.14)}}
+  html.fxLent button,html.fxLent a,html.fxLent input,html.fxLent .modal{transition-duration:.55s!important}
   #fxOd{position:fixed;left:0;right:0;top:12vh;z-index:2147483003;pointer-events:none;text-align:center;color:#ff4d4d;font-family:system-ui,sans-serif}
   #fxOd .odH{font-weight:800;letter-spacing:.3em;font-size:22px}#fxOd .odB{display:flex;align-items:center;justify-content:center;gap:10px;font-size:54px;font-weight:800;margin-top:6px}#fxOd .odB span{font-size:16px;opacity:.7}
   #fxOd .odB i{width:26px;height:26px;border-radius:50%;background:#ff4d4d;animation:fxPls 1s ease-in-out infinite}@keyframes fxPls{0%,100%{transform:scale(1)}50%{transform:scale(1.5)}}
@@ -11454,7 +11458,18 @@ window.SMK=(function(){
 
   /* ---------- filtre racine (anamorphose + hallucinogène) ---------- */
   const inCall=()=>!!(document.getElementById('callScreen')||document.querySelector('.room.call'));let lastIC=false;
-  const compose=()=>{const f=[],ic=inCall();if(run.warp&&!ic)f.push('url(#fxWarpF)');if(run.blur&&!ic){const s=S_('blur'),t=(performance.now()-T0)/1000;f.push(`blur(${(s*4.5*(.65+.35*Math.sin(t*.7))).toFixed(2)}px)`)}if(run.psy){const s=S_('psy'),t=(performance.now()-T0)/1000;f.push(`hue-rotate(${(Math.sin(t*.35)*40*s+t*6*s)%360}deg)`,`saturate(${1+s*.9+Math.sin(t*.6)*.15*s})`)}document.documentElement.style.filter=f.join(' ')};
+  /* acouphène : sons fictifs */
+  let acTm=0;
+  const acouOn=()=>{clearInterval(acTm);acTm=setInterval(()=>{const s=S_('acou');if(s<.05||!sndOn()||document.hidden)return;if(Math.random()>.25+.6*s)return;const a=aud();if(!a)return;const o=a.createOscillator(),g=a.createGain(),t=a.currentTime,r=Math.random();
+      if(r<.5){o.type='sine';o.frequency.value=5200+Math.random()*3800;g.gain.setValueAtTime(0,t);g.gain.linearRampToValueAtTime(.012+.03*s,t+.4);g.gain.linearRampToValueAtTime(0,t+1.8+3*s);o.connect(g);g.connect(a.destination);o.start(t);o.stop(t+5)}
+      else if(r<.8){o.type='triangle';o.frequency.setValueAtTime(300+Math.random()*500,t);o.frequency.exponentialRampToValueAtTime(80+Math.random()*100,t+.6);g.gain.setValueAtTime(.03+.05*s,t);g.gain.exponentialRampToValueAtTime(.001,t+.7);o.connect(g);g.connect(a.destination);o.start(t);o.stop(t+.8)}
+      else{o.type='square';o.frequency.value=900+Math.random()*700;for(let i=0;i<3;i++){g.gain.setValueAtTime(.02*(1+s),t+i*.18);g.gain.setValueAtTime(0,t+i*.18+.08)}o.connect(g);g.connect(a.destination);o.start(t);o.stop(t+.7)}},2200)};
+  const acouOff=()=>{clearInterval(acTm);acTm=0};
+  let mvx=0,mvy=0,pmx=0,pmy=0;
+  const compose=()=>{const f=[],ic=inCall();if(run.warp&&!ic)f.push('url(#fxWarpF)');if(run.blur&&!ic){const s=S_('blur'),t=(performance.now()-T0)/1000;f.push(`blur(${(s*4.5*(.65+.35*Math.sin(t*.7))).toFixed(2)}px)`)}if(run.chro){const s=S_('chro'),t=(performance.now()-T0)/1000;f.push(`hue-rotate(${(Math.sin(t*.5)*70*s+t*14*s)%360}deg)`,`sepia(${(s*.55*(.6+.4*Math.sin(t*.8))).toFixed(2)})`,`saturate(${(1+s*1.6).toFixed(2)})`,`invert(${(Math.max(0,Math.sin(t*.37))*.28*s).toFixed(2)})`)}
+    if(run.hyper){const s=S_('hyper'),t=(performance.now()-T0)/1000;f.push(`brightness(${(1+s*.28*(.6+.4*Math.sin(t*2.3))).toFixed(3)})`,`contrast(${(1+s*.5).toFixed(2)})`)}
+    if(run.echo){const s=S_('echo');const dx=Math.max(-26,Math.min(26,mvx*1.4))*s+Math.sin(performance.now()/700)*5*s,dy=Math.max(-26,Math.min(26,mvy*1.4))*s;f.push(`drop-shadow(${dx.toFixed(1)}px ${dy.toFixed(1)}px ${(2+4*s).toFixed(1)}px rgba(90,120,255,${(.45*s).toFixed(2)}))`,`drop-shadow(${(-dx*.6).toFixed(1)}px ${(-dy*.6).toFixed(1)}px 0 rgba(255,90,140,${(.25*s).toFixed(2)}))`)}
+    if(run.psy){const s=S_('psy'),t=(performance.now()-T0)/1000;f.push(`hue-rotate(${(Math.sin(t*.35)*40*s+t*6*s)%360}deg)`,`saturate(${1+s*.9+Math.sin(t*.6)*.15*s})`)}document.documentElement.style.filter=f.join(' ')};
 
   /* ---------- 1. lettres mélangées ---------- */
   const SC={obs:null,store:new WeakMap(),nodes:new Set(),q:new Set(),tm:0};
@@ -11604,6 +11619,8 @@ window.SMK=(function(){
     if(run.att)attTick(t);
     if(run.warp||run.blur){const ic=inCall();if(ic!==lastIC){lastIC=ic;compose();if(ic){const a=document.getElementById('app');if(a)a.style.transform=''}}else if(run.blur&&!run.psy&&(t|0)%3===0)compose()}
     if(run.warp)warpTick(t);if(run.ill)illTick(t);
+    if(run.echo){mvx=mvx*.8+(mx-pmx)*.2;mvy=mvy*.8+(my-pmy)*.2;pmx=mx;pmy=my}
+    if((run.chro||run.echo||run.hyper)&&(t|0)%2===0)compose();
     if(run.psy){document.documentElement.style.setProperty('--fxp',(1+S_('psy')*4+Math.sin(t/900)*S_('psy')*2).toFixed(2)+'px');if((t|0)%3===0)compose()}
     for(let i=raf.length-1;i>=0;i--){const o=raf[i];if(!o.on){raf.splice(i,1);continue}o.f(t)}
     if(crit.length&&(t|0)%2===0)nearKill();
@@ -11627,7 +11644,8 @@ window.SMK=(function(){
   const attStop=()=>{if(attEl)attEl.remove();attEl=null};
   const attTick=t=>{if(!attEl)return;const s=S_('att'),r=Math.max(110,Math.min(innerWidth,innerHeight)*(.62-.38*s)),z=.5+.5*Math.sin(t/2600+Math.sin(t/7000)*2),a=Math.min(.92,s*(.45+.4*z)),x=mc()?fx0:mx,y=mc()?fy0:my;
     attEl.style.background=`radial-gradient(circle at ${x.toFixed(0)}px ${y.toFixed(0)}px,rgba(0,0,0,0) ${(r*.55).toFixed(0)}px,rgba(8,8,12,${a.toFixed(3)}) ${(r*1.25).toFixed(0)}px)`};
-  const M={scr:[scrStart,scrStop,()=>{scrStop();scrStart()}],mouse:[curOn,curOff],coord:[curOn,curOff],scrl:[()=>{},()=>{}],blur:[()=>{},()=>compose()],keys:[keysStart,keysStop],att:[attStart,attStop],warp:[warpStart,warpStop],delay:[()=>{},()=>{}],anim:[animStart,animStop],psy:[psyStart,psyStop],obj:[()=>spawnLoop('obj'),()=>clearTimeout(timers.obj)],hal:[()=>spawnLoop('hal'),()=>clearTimeout(timers.hal)],fau:[()=>spawnLoop('fau'),()=>clearTimeout(timers.fau)],ill:[illStart,illStop]};
+  const HC=document.documentElement,cls=(c,on)=>HC.classList.toggle(c,on);
+  const M={chro:[()=>{},()=>compose()],echo:[()=>{},()=>compose()],hyper:[()=>{},()=>compose()],trem:[()=>cls('fxTrem',true),()=>{cls('fxTrem',false);HC.style.removeProperty('--tr')},()=>HC.style.setProperty('--tr',(S_('trem')*3.2).toFixed(2)+'px')],dist:[()=>cls('fxDist',true),()=>cls('fxDist',false)],lent:[()=>cls('fxLent',true),()=>cls('fxLent',false)],acou:[acouOn,acouOff],pers:[()=>{},()=>{}],bav:[()=>{},()=>{}],mut:[()=>{},()=>{}],imp:[()=>{},()=>{}],irr:[()=>{},()=>{}],eup:[()=>{},()=>{}],apa:[()=>{},()=>{}],mef:[()=>{},()=>{}],susc:[()=>{},()=>{}],scr:[scrStart,scrStop,()=>{scrStop();scrStart()}],mouse:[curOn,curOff],coord:[curOn,curOff],scrl:[()=>{},()=>{}],blur:[()=>{},()=>compose()],keys:[keysStart,keysStop],att:[attStart,attStop],warp:[warpStart,warpStop],delay:[()=>{},()=>{}],anim:[animStart,animStop],psy:[psyStart,psyStop],obj:[()=>spawnLoop('obj'),()=>clearTimeout(timers.obj)],hal:[()=>spawnLoop('hal'),()=>clearTimeout(timers.hal)],fau:[()=>spawnLoop('fau'),()=>clearTimeout(timers.fau)],ill:[illStart,illStop]};
   const clearLayer=k=>{const l=document.getElementById('fxLayer');if(l&&!Object.keys(run).some(x=>run[x]&&/^(obj|hal|fau)$/.test(x))){l.remove();crit.length=0;raf.length=0}};
   const sync=()=>{KEYS.forEach(([k])=>{const want=cfg.on&&S_(k)>.02;if(want&&!run[k]){run[k]=true;try{M[k][0]()}catch(e){console.warn('fx',k,e)}}else if(!want&&run[k]){run[k]=false;try{M[k][1]()}catch(e){}}else if(want&&M[k][2]){try{M[k][2]()}catch(e){}}});
     gateSync();compose();if(!Object.values(run).some(Boolean)){loopOn=false;document.documentElement.style.filter='';clearLayer()}else if(!loopOn){loopOn=true;requestAnimationFrame(mainLoop)}};
@@ -11637,7 +11655,7 @@ window.SMK=(function(){
   const HAIR={court:'Courts',longs:'Longs',frange:'Frange',chignon:'Chignon',tresses:'Tresses',cret:'Crête',afro:'Afro',chauve:'Chauve'};
   const EYES={ronds:'Ronds',fins:'Fins',grands:'Grands',endormis:'Endormis',joyeux:'Joyeux'};
   const KIND={cone:'Cône',vape:'Vape',cigar:'Cigare',cigarette:'Cigarette',joint:'Joint au thé'};
-  const FXN={scr:'Lettres',mouse:'Souris',delay:'Clics',anim:'Animations lentes',warp:'Anamorphose',psy:'Couleurs',obj:'Objets',hal:'Hallucinations',fau:'Animaux',ill:'Illusions',scrl:'Défilement lent',blur:'Écran flou',keys:'Trompage de touches',coord:'Coordination du curseur',att:'Attention réduite'};
+  const FXN={scr:'Lettres',mouse:'Souris',delay:'Clics',anim:'Animations lentes',warp:'Anamorphose',psy:'Couleurs',obj:'Objets',hal:'Hallucinations',fau:'Animaux',ill:'Illusions',scrl:'Défilement lent',blur:'Écran flou',keys:'Trompage de touches',coord:'Coordination du curseur',att:'Attention réduite',chro:'Chromatisme',acou:'Acouphénie',echo:'Écho visuel',dist:'Distorsion',hyper:'Hypersensibilité',lent:'Lenteur mentale',pers:'Persévération',bav:'Bavardage',mut:'Mutisme',imp:'Impulsivité',irr:'Irritabilité',eup:'Euphorie',apa:'Apathie',mef:'Méfiance',trem:'Tremblements',susc:'Susceptibilité'};
   const NORMAL=['Salut !','Comment ça va ?','Belle journée, non ?','Tu fais quoi ?','Content de te voir.','T’as bien dormi ?','Tout est calme par ici.','Bonjour, {n} à ton service.','On discute un peu ?','Tu as de beaux messages.','Je regarde les conversations défiler.','Ça va bien de ton côté ?','Quoi de neuf aujourd’hui ?'];
   const NAG=['Ma vape… où est ma vape ?','Donne-moi une bouffée. Une seule.','JE VEUX MA VAPE !!','Tu m’écoutes ? Ma vape !','Juste une petite bouffée, promis.','Je tremble… maintiens-moi.','Maintiens ma tête, s’il te plaît !','J’ai besoin de ma dose maintenant.','Les murs bougent, donne-moi ma vape.','Tout le monde me regarde, j’ai besoin de fumer.','Créateur, tu m’abandonnes ?','Je vais faire une bêtise.','J’ai vu un poisson dans le clavier.','Les lettres me parlent. Fume-moi.','Mes doigts sont devenus des saucisses.','Ma vape a dit mon nom… non ?','Pourquoi le plafond est mouillé ?','Je compte les pixels : trois, sept, banane.','Si tu me fumes pas, je mange ton clavier.','AAAAH ! MA DOSE !!!','Un petit nuage, un tout petit.','Tu m’entends ? TU M’ENTENDS ?','Je suis le roi des nuages… donne-moi des nuages.','Le Wi-Fi sent le tabac.','C’est urgent, c’est très urgent, c’est le plus urgent.','{n} a faim de fumée !','Je vais crier jusqu’à ce que tu me fumes !','Mon cerveau fait des cabrioles, aide-moi.'];
   NORMAL.push('Tout va bien ici.','Je range mes pensées.','Les nuages sont plus blancs quand on est discret.','J’ai envie d’une conversation intéressante.','Quelle ambiance sur Communicer !','Je veille à ce que personne ne s’endorme.','Je révise mes tricks dans ma tête.','Une journée tranquille, j’adore.','Je me demande qui va écrire en premier.','Ça te dirait un petit défi au Fumatoir ?','J’ai fait un beau rond de fumée hier. Enfin, je crois.','Dis-moi si je te dérange.','J’observe, c’est mon passe-temps.','Mon endurance s’améliore doucement.','Prends ton temps, moi aussi.','Il fait bon dans cette fenêtre.','Je suis calme, très calme.','Salut, c’est encore moi.','Si tu cherches un trick : Alt et un chiffre.','Je te garde un peu de place ici.','Bonne énergie aujourd’hui.','Je suis fier de mes progrès.','Ne t’inquiète pas, je suis sage.','Tu sais, X permet d’avaler la fumée gardée en bouche.','Chaque trick finit par se maîtriser, avec de la patience.');
@@ -11650,6 +11668,8 @@ window.SMK=(function(){
   const saveDose=()=>{try{localStorage.setItem('cm_fx_dose',JSON.stringify({d:dose,t:Date.now()}))}catch(e){}};
   const sndOn=()=>{try{return localStorage.getItem('cm_fx_snd')!=='0'}catch(e){return true}};
   const eyeSvg=(c,mode)=>{const e=c.eyes,k=c._t?c._t[0]:c.ec,scl=c._t?c._t[1]:'#fff',sm=mode==='smoke',cg=mode==='cough',an=mode==='angry',sd=mode==='sad';let rx=6,ry=6,ir=3;if(e==='fins'){ry=3.6}if(e==='grands'){rx=7.5;ry=7.5;ir=4}if(e==='endormis'){ry=2.6}
+    if(mode==='happy'&&!c._t)return `<path d="M29 54q7-9 14 0M57 54q7-9 14 0" stroke="${k}" stroke-width="3.2" fill="none" stroke-linecap="round"/>`;
+    if(mode==='apa')ry=Math.min(ry,2.2);if(mode==='mef')ry=Math.min(ry,3);
     if(mode==='od')return `<ellipse cx="36" cy="52" rx="6" ry="6" fill="#f4f0ea"/><ellipse cx="64" cy="52" rx="6" ry="6" fill="#f4f0ea"/><ellipse cx="36" cy="47.5" rx="2.4" ry="1.8" fill="#222"/><ellipse cx="64" cy="47.5" rx="2.4" ry="1.8" fill="#222"/><path d="M28 51q8-8 16 0M56 51q8-8 16 0" stroke="#c33" stroke-width=".8" fill="none"/>`;
     if(cg)return `<path d="M30 48l12 7M42 48l-12 7M58 48l12 7M70 48l-12 7" stroke="#222" stroke-width="2.6" stroke-linecap="round"/>`;
     if(e==='joyeux'&&!an&&!sd&&!c._t)return `<path d="M29 54q7-9 14 0M57 54q7-9 14 0" stroke="${k}" stroke-width="3.2" fill="none" stroke-linecap="round"/>`;
@@ -11665,9 +11685,9 @@ window.SMK=(function(){
     return `<g transform="translate(56 68) rotate(-12)"><rect x="0" y="-2.2" width="34" height="4.4" rx="1.5" fill="#f6f3ec"/><rect x="0" y="-2.2" width="9" height="4.4" rx="1.5" fill="#d98a3a"/><g transform="translate(35 0)"><circle r="2.7" fill="#555"/>${em}</g></g>`};
   const mixC=(a,b,t)=>{const h=x=>[1,3,5].map(i=>parseInt(x.substr(i,2),16)),A=h(a),B_=h(b);return '#'+A.map((v,i)=>Math.round(v+(B_[i]-v)*t).toString(16).padStart(2,'0')).join('')};
   const skinC=c=>{const g=c._g||0;if(!g||!/^#[0-9a-f]{6}$/i.test(c.skin))return c.skin;return g<.45?mixC(c.skin,'#e9e4dc',g/.45*.8):mixC(mixC(c.skin,'#e9e4dc',.8),'#8fc06f',(g-.45)/.55)};
-  const headSvg=(c,mode,size,kind)=>{const sm=mode==='smoke',an=mode==='angry',cg=mode==='cough',sd=mode==='sad',ex=mode==='exh',hd=mode==='hold',oo=mode==='od';return `<svg viewBox="-6 -6 112 112" width="${size||56}" height="${size||56}" style="overflow:visible">${hairBack(c.hair,c.hc)}<ellipse cx="14" cy="56" rx="5" ry="8" fill="${skinC(c)}"/><ellipse cx="86" cy="56" rx="5" ry="8" fill="${skinC(c)}"/><ellipse cx="50" cy="54" rx="36" ry="40" fill="${skinC(c)}"/><ellipse cx="50" cy="54" rx="36" ry="40" fill="url(#fxsh)" opacity=".18"/>
-    ${hairFront(c.hair,c.hc)}${eyeSvg(c,mode)}${sd?`<path d="M25 47l17-8M75 47l-17-8" stroke="#00000088" stroke-width="2.8" fill="none" stroke-linecap="round"/><path d="M31 62q-4 7 0 11q4-4 0-11z" fill="#7fc4ff" opacity=".85"/>`:an?`<path d="M26 40l16 6M74 40l-16 6" stroke="#3a1a10" stroke-width="3.4" stroke-linecap="round"/>`:`<path d="M28 43q8-5 15-1M57 42q8-4 15 1" stroke="#00000066" stroke-width="2.4" fill="none" stroke-linecap="round"/>`}<path d="M50 54q-3 8 0 11" stroke="#00000033" stroke-width="2.2" fill="none" stroke-linecap="round"/>
-    ${sd?`<path d="M40 78q10-8 20 0" stroke="#a24f48" stroke-width="2.8" fill="none" stroke-linecap="round"/>`:an?`<path d="M36 70q14-6 28 0q-2 14-14 14t-14-14z" fill="#7a2420"/><path d="M38 71h24" stroke="#fff" stroke-width="3"/>`:oo?`<ellipse cx="50" cy="75" rx="9" ry="9" fill="#7a2420"/><path d="M45 83q-3 10 0 18" stroke="#bfe3ff" stroke-width="3" fill="none" stroke-linecap="round"><animate attributeName="d" dur="1.6s" repeatCount="indefinite" values="M45 83q-3 10 0 18;M45 83q-3 17 1 30;M45 83q-3 10 0 18"/></path><path d="M56 82q2 8 0 14" stroke="#bfe3ff" stroke-width="2.4" fill="none" stroke-linecap="round"/>`:cg?`<ellipse cx="50" cy="74" rx="8" ry="6" fill="#7a2420"/>`:ex?`<ellipse cx="50" cy="74" rx="7" ry="8" fill="#7a2420"/><ellipse cx="50" cy="78" rx="4" ry="3" fill="#b4574f"/>`:hd?`<path d="M43 72h14" stroke="#a24f48" stroke-width="3.2" stroke-linecap="round"/>`:sm?`<ellipse cx="53" cy="72" rx="4.6" ry="3.6" fill="#b4574f"/>`:`<path d="M42 72q8 6 16 0" stroke="#a24f48" stroke-width="2.8" fill="none" stroke-linecap="round"/>`}<circle cx="27" cy="66" r="${hd?10:6}" fill="${an?'#ff3b3b':'#ff8a8a'}" opacity="${an?.5:sm||hd?.4:.2}"/><circle cx="73" cy="66" r="${hd?10:6}" fill="${an?'#ff3b3b':'#ff8a8a'}" opacity="${an?.5:sm?.35:.2}"/>${itemSvg(kind||'vape',sm,c._code)}<defs><radialGradient id="fxsh" cx=".35" cy=".3" r=".9"><stop offset="0" stop-color="#fff"/><stop offset="1" stop-color="#000"/></radialGradient></defs></svg>`};
+  const headSvg=(c,mode,size,kind)=>{const sm=mode==='smoke',an=mode==='angry',cg=mode==='cough',sd=mode==='sad',ex=mode==='exh',hd=mode==='hold',oo=mode==='od',hp=mode==='happy',ap=mode==='apa',mf=mode==='mef';return `<svg viewBox="-6 -6 112 112" width="${size||56}" height="${size||56}" style="overflow:visible">${hairBack(c.hair,c.hc)}<ellipse cx="14" cy="56" rx="5" ry="8" fill="${skinC(c)}"/><ellipse cx="86" cy="56" rx="5" ry="8" fill="${skinC(c)}"/><ellipse cx="50" cy="54" rx="36" ry="40" fill="${skinC(c)}"/><ellipse cx="50" cy="54" rx="36" ry="40" fill="url(#fxsh)" opacity=".18"/>
+    ${hairFront(c.hair,c.hc)}${eyeSvg(c,mode)}${mf?`<path d="M26 42l16 5M58 44q8-5 15-2" stroke="#00000077" stroke-width="2.6" fill="none" stroke-linecap="round"/>`:ap?`<path d="M28 46h15M57 46h15" stroke="#00000055" stroke-width="2.4" stroke-linecap="round"/>`:sd?`<path d="M25 47l17-8M75 47l-17-8" stroke="#00000088" stroke-width="2.8" fill="none" stroke-linecap="round"/><path d="M31 62q-4 7 0 11q4-4 0-11z" fill="#7fc4ff" opacity=".85"/>`:an?`<path d="M26 40l16 6M74 40l-16 6" stroke="#3a1a10" stroke-width="3.4" stroke-linecap="round"/>`:`<path d="M28 43q8-5 15-1M57 42q8-4 15 1" stroke="#00000066" stroke-width="2.4" fill="none" stroke-linecap="round"/>`}<path d="M50 54q-3 8 0 11" stroke="#00000033" stroke-width="2.2" fill="none" stroke-linecap="round"/>
+    ${sd?`<path d="M40 78q10-8 20 0" stroke="#a24f48" stroke-width="2.8" fill="none" stroke-linecap="round"/>`:an?`<path d="M36 70q14-6 28 0q-2 14-14 14t-14-14z" fill="#7a2420"/><path d="M38 71h24" stroke="#fff" stroke-width="3"/>`:oo?`<ellipse cx="50" cy="75" rx="9" ry="9" fill="#7a2420"/><path d="M45 83q-3 10 0 18" stroke="#bfe3ff" stroke-width="3" fill="none" stroke-linecap="round"><animate attributeName="d" dur="1.6s" repeatCount="indefinite" values="M45 83q-3 10 0 18;M45 83q-3 17 1 30;M45 83q-3 10 0 18"/></path><path d="M56 82q2 8 0 14" stroke="#bfe3ff" stroke-width="2.4" fill="none" stroke-linecap="round"/>`:hp?`<path d="M37 69q13 17 26 0z" fill="#fff" stroke="#a24f48" stroke-width="2.6" stroke-linejoin="round"/>`:ap?`<path d="M43 74h14" stroke="#a24f48" stroke-width="2.6" stroke-linecap="round"/>`:mf?`<path d="M42 75q8-3 16 1" stroke="#a24f48" stroke-width="2.8" fill="none" stroke-linecap="round"/>`:cg?`<ellipse cx="50" cy="74" rx="8" ry="6" fill="#7a2420"/>`:ex?`<ellipse cx="50" cy="74" rx="7" ry="8" fill="#7a2420"/><ellipse cx="50" cy="78" rx="4" ry="3" fill="#b4574f"/>`:hd?`<path d="M43 72h14" stroke="#a24f48" stroke-width="3.2" stroke-linecap="round"/>`:sm?`<ellipse cx="53" cy="72" rx="4.6" ry="3.6" fill="#b4574f"/>`:`<path d="M42 72q8 6 16 0" stroke="#a24f48" stroke-width="2.8" fill="none" stroke-linecap="round"/>`}<circle cx="27" cy="66" r="${hd?10:6}" fill="${an?'#ff3b3b':'#ff8a8a'}" opacity="${an?.5:sm||hd?.4:.2}"/><circle cx="73" cy="66" r="${hd?10:6}" fill="${an?'#ff3b3b':'#ff8a8a'}" opacity="${an?.5:sm?.35:.2}"/>${itemSvg(kind||'vape',sm,c._code)}<defs><radialGradient id="fxsh" cx=".35" cy=".3" r=".9"><stop offset="0" stop-color="#fff"/><stop offset="1" stop-color="#000"/></radialGradient></defs></svg>`};
   /* sons */
   let AC=null,NB=null;
   const aud=()=>{if(!sndOn())return null;try{if(!AC){AC=new (window.AudioContext||window.webkitAudioContext)();const l=AC.sampleRate*2,b=AC.createBuffer(1,l,AC.sampleRate),d=b.getChannelData(0);for(let i=0;i<l;i++)d[i]=Math.random()*2-1;NB=b}if(AC.state==='suspended')AC.resume();return AC}catch(e){return null}};
@@ -11686,7 +11706,16 @@ window.SMK=(function(){
   const say=(txt,ms)=>{if(!head||rehab)return;let b=head.querySelector('.fxBub');if(!b){b=document.createElement('div');b.className='fxBub';head.appendChild(b)}b.textContent=txt;b.classList.add('on');clearTimeout(bubTm);bubTm=setTimeout(()=>b.classList.remove('on'),ms||4500)};
   let sSrc=null,sB=0,coughing=false,lastMs=Date.now(),nextTalk=Date.now()+8000,nextMove=0,mode='',sk=null,smkRaf=0,smkLast=0,hintN=0;
   const endOf=d=>2000+Math.round(d*40);
-  const E_ms=()=>ST?ST.endurance_ms*(1-.6*ixS()):2000;
+  /* pilules : modificateurs et combos */
+  let pmMemo=null,pmAt=0,chaos={k:'',until:0,next:0};
+  const pillsA=()=>{const n=Date.now();return(ST&&ST.pills||[]).filter(p=>p.until>n)};
+  const PM=()=>{const n=performance.now();if(pmMemo&&n-pmAt<300)return pmMemo;pmAt=n;const a=pillsA(),o={end:1,mouth:1,res:1,fx:1,par:0,nocrisis:false,dep:1,toxMul:1,noGate:false,fam:{},c:{}};
+    a.forEach(p=>{const e=p.eff||{};if(e.end)o.end*=e.end;if(e.mouth)o.mouth*=e.mouth;if(e.res)o.res*=e.res;if(e.fx)o.fx*=e.fx;if(e.par)o.par=Math.max(o.par,e.par);if(e.nocrisis)o.nocrisis=true;if(e.dep)o.dep*=e.dep;o.fam[p.family]=true});
+    const f=o.fam,A=f.altos,E=f.endormissants,Z=f.endozacalins,V=f.activants,t=n/1000;o.c={ve:V&&E,ze:Z&&E,ae:A&&E,vz:V&&Z,avz:A&&Z&&V,az:A&&Z,av:A&&V};
+    if(o.c.ve)o.dep*=1.35;if(o.c.ze){o.fx*=.15;o.toxMul=3;o.noGate=true}if(o.c.ae){o.par=1;o.res*=3}if(o.c.avz)o.fx*=1.5;
+    if(o.c.vz)o.fx*=Math.max(.4,Math.min(1.6,1+.5*Math.sin(t/9)+.3*Math.sin(t/3.7)));
+    pmMemo=o;return o};
+  const E_ms=()=>ST?ST.endurance_ms*(1-.6*ixS())*PM().end:2000;
   const tintFor=(e,x)=>x>.25?['#e5242b','#ffd0d0']:e>=.98?['#e5242b','#ffd0d0']:e>=.8?['#ff8a00','#fff0d6']:e>=.6?['#ffd400','#fffbd0']:null;
   const tintOf=()=>tintFor(EF(),ixS());
   let lastTint='';
@@ -11750,14 +11779,14 @@ window.SMK=(function(){
     if(sk.stage!=='idle'||sk.held||pend)smkRaf=requestAnimationFrame(smkLoop);else{smkRaf=0;if(hp)hp.style.width='0%';}};
   const kick=()=>{if(sk&&!smkRaf){smkLast=performance.now();smkRaf=requestAnimationFrame(smkLoop)}};
   const dsm=()=>Math.min(1.5,curItem().power/100);
-  const mkSmoker=()=>SMK.Smoker({E:E_ms,pw:()=>pwNow()||.1,cone:()=>curItem().kind==='cone',sm:()=>{const it=curItem();return it.kind==='cone'?(it.code==='cone_tricks'?2.2:.35):1},
+  const mkSmoker=()=>SMK.Smoker({E:E_ms,pw:()=>pwNow()||.1,capMul:()=>PM().mouth,cone:()=>curItem().kind==='cone',sm:()=>{const it=curItem();return it.kind==='cone'?(it.code==='cone_tricks'?2.2:.35):1},
     onInh(carry){sB=B();applySm();headDraw('smoke');sndInStop();sndIn(curItem().kind,E_ms()*(carry?.72:1));if(carry)say('Je recharge sans tout expirer…',1800);kick()},
     onAbort(){sndInStop()},
     onRelease(res){sndInStop();const pw=dsm();
       if(res.q>=.2){const g=(5+95*pw)*.7*res.q*(res.carry?1.35:1)/(1+2*ST.dep/100);if(curItem().kind==='cone'){pdAdd(g,sB);say('Ça va monter dans une minute ou deux…',2800)}else{dose=Math.min(100,dose+g);boost=Math.max(boost,sB)}craving=0;lastMs=Date.now();nextTalk=Date.now()+(sB>.2?1500:30000);
         if(sB>.3)say('Ahhh… enfin.',2500);else if(Math.random()<.45)say(rnd(PUFF),2600)}else if(res.zone==='warm')say('Pas assez aspiré…',1800);
       toxAdd(res.q*(res.carry?1.3:1));
-      const loc=pw*(res.q>=.2?6*(.4+.6*res.q):1.2);ST.dep=Math.min(100,ST.dep+loc);ST.endurance_ms=endOf(ST.dep);
+      const loc=pw*(res.q>=.2?6*(.4+.6*res.q):1.2);ST.dep=Math.min(100,ST.dep+loc*PM().dep);ST.endurance_ms=endOf(ST.dep);
       if(res.zone==='sweet')say('Fumée gardée : Alt pour expirer ou faire un trick, X pour l’avaler',3600);
       else if(hintN++<3&&SLK.some(k=>slotMap()[k]))say((tkMode()==='altshift'?'Alt + Maj + n°':'Alt + n°')+' du trick pendant que la fumée sort',3000);
       rpcd('smoke_puff',{p_code:curItem().code,p_q:Math.round(res.q*100)/100,p_ms:Math.round(res.held)}).then(r=>{if(r&&ST){ST.dep=+r.dep;ST.endurance_ms=+r.endurance_ms;if(r.endu!=null)ST.endu=+r.endu;if(r.level)ST.level=r.level}}).catch(()=>{});saveDose();doseTick(true)},
@@ -11780,6 +11809,7 @@ window.SMK=(function(){
     head=document.createElement('div');head.id='fxHead';head.setAttribute('data-fxkeep','');head.title='Maintenir la tête (ou CTRL) pour inhaler · ALT pour expirer · clic droit maintenu : déplacer';
     head.innerHTML='<div class="fxHb"></div><div class="fxHi" title="Intoxication"><i></i></div><div class="fxHm" title="Facteur d’effet"><i></i></div><div class="fxHx" title="Paranoïa"><i></i></div><div class="fxHs" title="Facteur de fumée : relâcher dans la zone dorée (sweet spot)"><b style="width:22%;background:#6b7280"></b><b style="width:40%;background:#d6c36a"></b><b style="width:23%;background:#e8b923"></b><b style="width:10%;background:#e9862a"></b><b style="width:5%;background:#d6342f"></b><u></u></div><div class="fxHp" title="Fumée en bouche"><i></i></div>';document.body.appendChild(head);posApply();headDraw('');
     head.addEventListener('pointerdown',e=>{if(e.button===2){e.preventDefault();headDragStart(e);return}if(e.button>0)return;e.preventDefault();try{head.setPointerCapture(e.pointerId)}catch(_){}pDown={x:e.clientX,y:e.clientY,t:performance.now()};startSmoke('ptr')});
+    head.addEventListener('pointerenter',()=>{if(S_('susc')>.2&&Math.random()<.3+S_('susc')*.5&&!smoking){say(rnd(SUSC),2400);head.classList.add('shk');setTimeout(()=>head.classList.remove('shk'),900)}});
     head.addEventListener('pointermove',e=>{if(drag){headDragMove(e);return}if(pDown&&sSrc==='ptr'&&dragOn()&&Math.hypot(e.clientX-pDown.x,e.clientY-pDown.y)>14&&performance.now()-pDown.t<450&&sk&&sk.stage==='inh'){abortSmoke();pDown=null;headDragStart({clientX:e.clientX,clientY:e.clientY,pointerId:e.pointerId})}});
     head.addEventListener('pointerup',()=>{pDown=null;headDragEnd()});head.addEventListener('pointercancel',headDragEnd);
     const up=()=>{if(sSrc==='ptr')endSmoke()};head.addEventListener('pointerup',up);head.addEventListener('pointercancel',up);head.addEventListener('lostpointercapture',up);head.addEventListener('contextmenu',e=>e.preventDefault());};
@@ -11797,9 +11827,9 @@ window.SMK=(function(){
   const pdSave=()=>{try{localStorage.setItem('cm_fx_pd',JSON.stringify(pd))}catch(e){}};
   const pdAdd=(g,b)=>{pd.push({t:Date.now()+(60+Math.random()*60)*1000,g,b});pdSave()};
   const pdRun=()=>{if(!pd.length)return;const n=Date.now(),du=pd.filter(x=>x.t<=n);if(!du.length)return;pd=pd.filter(x=>x.t>n);du.forEach(x=>{if(x.x){toxApply(x.x);return}dose=Math.min(100,dose+x.g);boost=Math.max(boost,x.b);lastMs=Date.now()});pdSave();saveDose()};
-  const toxLim=()=>(6+(ST?(ST.endu||0)/100:0))*(ST&&ST.resUntil>Date.now()?2.5:1);
+  const toxLim=()=>(6+(ST?(ST.endu||0)/100:0))*PM().res;
   const toxVal=q=>{const it=curItem(),pw=Math.min(2,it.power/100);return (.6+1.8*pw)*q*(it.kind==='cone'?3:1)};
-  const toxApply=a=>{if(EF()<.98&&!ix)return;tox+=a;if(ix)ix.dur=Math.min(600000,ix.dur+25000);ixSave()};
+  const toxApply=a=>{const pm=PM();if(EF()<.98&&!ix&&!pm.noGate)return;tox+=a*pm.toxMul;if(ix)ix.dur=Math.min(600000,ix.dur+25000);ixSave()};
   const toxAdd=q=>{if(curItem().kind==='cone'){pd.push({t:Date.now()+(90+Math.random()*60)*1000,g:0,b:0,x:toxVal(q)});pdSave();return}toxApply(toxVal(q))};
   const ixSave=()=>{try{localStorage.setItem('cm_fx_ix',JSON.stringify({ix,tox,t:Date.now()}))}catch(e){}};
   const ixLoad=()=>{try{const j=JSON.parse(localStorage.getItem('cm_fx_ix')||'null');if(j){tox=Math.max(0,(j.tox||0)-.04*(Date.now()-j.t)/1000);ix=j.ix&&Date.now()-j.ix.t0<j.ix.dur?j.ix:null}const q=JSON.parse(localStorage.getItem('cm_fx_pd')||'null');if(Array.isArray(q))pd=q}catch(e){}};
@@ -11816,7 +11846,8 @@ window.SMK=(function(){
       ixSt.textContent=`${SEL}{transform:translate(${ox.toFixed(1)}px,${oy.toFixed(1)}px) rotate(${rot.toFixed(1)}deg) scale(${sc.toFixed(3)});transform-origin:50% 50%;transition:transform .3s linear;filter:blur(${(p*f*2.4).toFixed(2)}px) saturate(${(1+f*.8).toFixed(2)})}`}
     else{const sx=1+.16*f*(.5+.5*Math.sin(t*.9)),hole=Math.round(10*f);
       ixSt.textContent=`${SEL}{transform:scaleX(${sx.toFixed(3)});transform-origin:50% 50%;transition:transform .3s linear;-webkit-mask-image:repeating-linear-gradient(90deg,#000 0 ${110-hole}px,transparent ${110-hole}px 110px);mask-image:repeating-linear-gradient(90deg,#000 0 ${110-hole}px,transparent ${110-hole}px 110px)}`}};
-  const ixTick=dt=>{tox=Math.max(0,tox-.04*dt);if(od){dose=Math.max(0,dose-15*dt);boost=0}if(!od&&ix&&ixS()>.5&&tox>=15*toxLim()&&Math.min(1,tox/toxLim())>=1)odStart();if(!ix&&!od&&tox>=toxLim()&&!rehab)ixStart();liveSend();if(ix&&ixP()>=1)ixEnd();ixFx();pdRun();
+  const NEWK=['chro','acou','echo','dist','hyper','lent','pers','bav','mut','imp','irr','eup','apa','mef','trem','susc'];
+  const ixTick=dt=>{if(PM().c.avz){const n=Date.now();if(n>chaos.next){chaos={k:PK(NEWK),until:n+R(15000,30000),next:n+R(20000,45000)}}}else if(chaos.k)chaos={k:'',until:0,next:0};tox=Math.max(0,tox-.04*dt);if(od){dose=Math.max(0,dose-15*dt);boost=0}if(!od&&ix&&ixS()>.5&&tox>=15*toxLim()&&Math.min(1,tox/toxLim())>=1)odStart();if(!ix&&!od&&tox>=toxLim()&&!rehab)ixStart();liveSend();if(ix&&ixP()>=1)ixEnd();ixFx();pdRun();
     const b=head&&head.querySelector('.fxHi i');if(b){const v=Math.min(1,tox/toxLim());b.style.width=Math.round(v*100)+'%';b.style.background=v>=1?'#7fbf4a':'#9aa4b2'}};
   /* envoi de l'état visible (profil en direct) */
   let liveT=0,liveSig='',liveMode='';
@@ -11917,20 +11948,41 @@ window.SMK=(function(){
   let loading=false,stFail=0;
   const loadState=async()=>{if(loading||Date.now()<stFail)return;loading=true;try{const s=await rpcd('smoke_state');ST=s;lastMs=s.since_s==null?Date.now():Date.now()-s.since_s*1000;cfg.on=true;loadDose();ixLoad();headMake();headDraw('');if(s.od_left>0)odBegin(s.od_left);else if(s.died_s!=null&&s.died_s<120&&!window.__fxDied){window.__fxDied=1;odDie(s)}}catch(e){stFail=Date.now()+60000}loading=false};
   const rnd=a=>PK(a).replace(/\{n\}/g,ST?ST.name:'Moi');
+  /* phrases supplémentaires par paliers (dépendance, niveau d'effet, intoxication) et par humeur */
+  const PH_LOW=['Aujourd’hui, je me sens bien.','Pas besoin de me presser, je suis tranquille.','Le calme avant la tempête ? Non, juste le calme.','J’ai l’esprit clair.','On pourrait ranger un peu par ici.','Tu savais que j’ai déjà arrêté une fois ?','Rien à signaler, {n} est en forme.','Un petit verre d’eau et ça va.','Je me demande ce qui se passe dehors.','Je pourrais fumer, mais je ne suis pas obligé.'];
+  const PH_MID=['Je pense à ma vape de temps en temps…','Elle est où, ma dernière bouffée ?','Je ne suis pas accro, je suis… attaché.','Encore une et j’arrête. Peut-être.','Tu entends ce petit bruit ? Non ? Moi si.','Ça fait un moment, non ?','Je commence à avoir l’esprit ailleurs.','Dis-moi que c’est bientôt l’heure.','Mes doigts cherchent quelque chose.','Je sens que ça va me manquer.'];
+  const PH_HIGH=['Je ne pense qu’à ça, vraiment qu’à ça.','Sans ma vape, tout est gris.','Chaque minute dure une heure.','Ne me juge pas, je t’en prie.','J’ai une dépendance, mais elle m’aime bien.','Mon cœur bat pour la prochaine bouffée.','Il m’en faut plus, toujours plus.','Je compte les secondes depuis la dernière.','Tout me rappelle la fumée.','J’aurais dû t’écouter… mais donne-moi ça.'];
+  const PH_FX=['Tout est plus lent et plus beau.','Les couleurs me parlent.','Je flotte au-dessus de mes pensées.','Tu vois ce que je vois ?','Le temps a l’air de ralentir.','Ça tourne doucement, c’est agréable.','Chaque son a une couleur.','Mon corps est tout léger.','Je suis le roi des nuages.','Tout devient très drôle d’un coup.'];
+  const PH_TOX=['Je… je ne sens plus mes mains.','Tout est vert, pourquoi tout est vert ?','Le sol respire sous moi.','Aide-moi, je suis trop haut.','Mon visage fond, non ?','J’entends mes pensées qui s’échappent.','Est-ce que quelqu’un m’entend ?','Ça ne devrait pas tourner comme ça.','J’ai la tête dans un tunnel.','Je crois que j’en ai trop pris…'];
+  const EUP=['Quelle belle journée !','Je suis tellement content !','Tout va bien, tout va très bien !','Je pourrais danser !','Tu es la meilleure personne du monde !','Haha, c’est merveilleux !','La vie est belle, non ?','Je me sens invincible !'];
+  const IRR=['Qu’est-ce que tu veux encore ?','Arrête de me regarder comme ça.','Tout m’énerve aujourd’hui.','Laisse-moi tranquille !','C’est toujours la même chose.','Tu fais exprès ?','Ne me parle pas sur ce ton.','J’en ai assez, vraiment assez.'];
+  const MEF=['Tu me caches quelque chose, hein ?','Pourquoi tu me fixes ?','Je ne te crois pas.','Qui t’a envoyé ?','Je sens qu’on me surveille.','Tu as dit ça pourquoi, au juste ?','Je garde un œil sur toi.','Chut. Ils écoutent peut-être.'];
+  const APA=['Bof.','Pas envie.','Ça ne me dit rien.','Peu importe.','Je suis fatigué de tout ça.','Mmh. Si tu veux.','Je reste là, ça ira.','À quoi bon ?'];
+  const IMP=['Oh ! J’ai une idée !','Attends, attends, regarde !','Hé ! Hé ho !','Tiens, je vais faire ça tout de suite !','Pourquoi pas, après tout ?','Je le fais, je le fais !','Ah, j’ai failli oublier !','Et si on changeait tout ?'];
+  const SUSC=['Pardon ?! Qu’est-ce que tu viens de dire ?','Ça m’a blessé, tu sais.','Ne me touche pas !','Ouch, c’est méchant.','Tu me juges, c’est ça ?','Je n’ai rien demandé à personne !','Répète un peu pour voir.','Je prends ça très mal.'];
+  const phTier=()=>{const d=ST?ST.dep:0,e=EF();let l=d>=70?PH_HIGH:d>=30?PH_MID:PH_LOW;if(e>.55)l=l.concat(PH_FX);if(ixS()>.3)l=PH_TOX;return l};
+  const amb=()=>{const r=Math.random();let l=null;if(r<S_('irr')*.7)l=IRR;else if(r<S_('eup')*.7)l=EUP;else if(Math.random()<S_('mef')*.6)l=MEF;else if(Math.random()<S_('apa')*.6)l=APA;return rnd(l||NORMAL.concat(phTier()))};
+  const sayA=txt=>{if(Math.random()<S_('mut')*.65)return;say(txt,3800*(1+S_('lent')));const ps=S_('pers');if(Math.random()<ps*.9){const n=1+(Math.random()<ps?1:0);for(let i=0;i<n;i++)setTimeout(()=>say(txt,2500),1700*(i+1))}};
+  const talkMul=()=>(1-.7*S_('bav'))*(1+3*S_('mut'))*(1+1.2*S_('lent'))*(1+1.5*S_('apa'))*(1-.5*S_('irr'));
+  const moodMode=()=>S_('eup')>.4?'happy':S_('apa')>.4?'apa':S_('mef')>.4?'mef':S_('irr')>.5?'angry':'';
+  let impAt=0,ntSeen=0;
+
   const doseTick=force=>{const n=performance.now(),dt=Math.min(2,(n-lastDt)/1000);lastDt=n;
     if(!logged()){if(ST||head){ST=null;cfg.on=false;dose=0;boost=0;craving=0;for(const k in sm)sm[k]=0;headKill();sync()}return}
     if(!ST){loadState();return}
     if(!smoking)dose=Math.max(0,dose-0.8*dt);boost=Math.max(0,boost-0.012*dt);
-    if(ST.dep>=1){const ls=(Date.now()-lastMs)/1000,G=60+(1-ST.dep/100)*240;craving=Math.max(0,Math.min(1,(ls-G)/120))*Math.max(0,Math.min(1,1-EF()/.04))}else craving=0;
+    if(ST.dep>=1){const ls=(Date.now()-lastMs)/1000,G=60+(1-ST.dep/100)*240;craving=Math.max(0,Math.min(1,(ls-G)/120))*Math.max(0,Math.min(1,1-EF()/.04))}else craving=0;if(PM().nocrisis)craving=0;
     const par=B();
-    const crz=ST.dep>=30?craving*(.35+.65*Math.min(1,(ST.dep-30)/70)):0,mv=Math.max(crz,ixS()>.2?Math.max(.9,ixS()):0);ixTick(dt);
+    const crz=ST.dep>=30?craving*(.35+.65*Math.min(1,(ST.dep-30)/70)):0,mv=Math.max(crz,ixS()>.2?Math.max(.9,ixS()):0)*(S_('apa')>.4?0:1);ixTick(dt);
     if(head&&!rehab){head.querySelector('.fxHm i').style.width=Math.round(EF()*100)+'%';{const hx=head.querySelector('.fxHx i');if(hx)hx.style.width=Math.round(Math.min(1,B())*100)+'%'}if((tintOf()||[''])[0]!==lastTint)headDraw();
-      const skA=sk&&sk.stage!=='idle',md=od?'od':smoking?'smoke':coughing?'cough':crz>.25?'angry':'';if((!skA||od)&&md!==mode&&!coughing)headDraw(md);
+      const skA=sk&&sk.stage!=='idle',md=od?'od':smoking?'smoke':coughing?'cough':crz>.25?'angry':moodMode();if((!skA||od)&&md!==mode&&!coughing)headDraw(md);
       const sc2=smoking||coughing?1:1+crz*(.4+.6*ST.dep/100)*1.3,now=Date.now();
       if(mv>.15&&!smoking&&!coughing&&!zoomEl&&!head.matches(':hover')){if(now>=nextMove){nextMove=now+(3600-2600*mv)*R(.7,1.3);const pb=posBase(),dx=R(-pb.l+4,Math.max(-pb.l+5,innerWidth-pb.l-100)),dy=R(-Math.max(0,innerHeight-pb.b-120),Math.max(0,pb.b-8));head.style.transform=`translate(${dx}px,${dy}px) scale(${sc2.toFixed(2)})`;head.style.transitionDuration=(1.4-.9*mv).toFixed(2)+'s'}}
       else if(!zoomEl&&(mv<=.15||smoking)){head.style.transform=`scale(${sc2.toFixed(2)})`;head.style.transitionDuration='.8s'}
-      head.classList.toggle('shk',crz>.4&&!smoking);
-      if(now>=nextTalk&&!smoking){if(ixS()>.2){say(rnd(IXP),1300);nextTalk=now+1250}else if(crz>0&&ST.dep>=1){const l=rnd(NAG),t=crz>.7?l.toUpperCase():l;say(t,3800);if(crz>.3)shout(t);nextTalk=now+(45*(1-ST.dep/100)+6)*(1-.4*par)*R(.85,1.15)*1000}else if(craving>0&&ST.dep>=1){say(rnd(NORMAL),3800);nextTalk=now+R(22000,40000)}else{say(rnd(NORMAL),3800);nextTalk=now+R(70000,110000)}}
+      head.classList.toggle('shk',(crz>.4||S_('trem')>.3)&&!smoking);
+      if(now>=nextTalk&&!smoking){if(ixS()>.2){say(rnd(ix&&ix.bad?IXP.concat(PH_TOX):IXP),1300);nextTalk=now+1250}else if(crz>0&&ST.dep>=1){const l=rnd(NAG),t=crz>.7?l.toUpperCase():l;sayA(t);if(crz>.3)shout(t);nextTalk=now+(45*(1-ST.dep/100)+6)*(1-.4*par)*R(.85,1.15)*1000}else if(craving>0&&ST.dep>=1){sayA(amb());nextTalk=now+R(22000,40000)}else{sayA(amb());nextTalk=now+R(70000,110000)}}
+      if(nextTalk!==ntSeen){nextTalk=now+(nextTalk-now)*talkMul();ntSeen=nextTalk}
+      if(S_('imp')>.05&&now>=impAt&&!smoking){if(impAt)say(rnd(IMP),2600);impAt=now+R(5000,18000)*(1.4-S_('imp'))}
       else if(craving>0&&craving<.05&&ST.dep>=1&&now+3000<nextTalk)nextTalk=now+3000}
     if(fog){const it=curItem();fog.style.opacity=Math.min(.5,lvl()*it.power/100*.6).toFixed(3);fog.className=it.kind}
     KEYS.forEach(([k])=>{const tg=rawS(k);sm[k]=(sm[k]||0)+(tg-(sm[k]||0))*(1-Math.exp(-dt/2.2));if(tg===0&&sm[k]<.012)sm[k]=0});
@@ -11942,7 +11994,7 @@ window.SMK=(function(){
   const pbar=(v,c)=>`<span class="fxPb"><span style="width:${Math.max(0,Math.min(100,v))}%;background:${c||'#e8b923'}"></span></span>`;
   const itemRow=(i,own)=>`<div class="fxIt"><div class="grow"><b>${esc(i.name)}</b> <span class="tag">${KIND[i.kind]}</span>${i.by?` <span class="muted">par @${esc(i.by)}</span>`:''}${i.active===false?' <span class="tag">retiré</span>':''}<div class="muted" style="font-size:12px">Puissance ${i.power} ${pbar(i.power)} · ${Object.entries(i.fx).filter(e=>e[1]>=.7).map(e=>FXN[e[0]]).join(', ')||'effets doux'}</div></div>${own?(ST.item===i.code?'<span class="tag">équipé</span>':`<button class="ghost lite" data-eq="${esc(i.code)}">Utiliser</button>`):`<button class="lite" data-buy="${esc(i.code)}">${nfmt(i.price)}</button>`}</div>`;
   const charPanel=(tab0)=>{if(!ST)return toast('Personnage indisponible : appliquez patch_fume.sql');let tab=tab0||'c',shop=null,edit=null,draft={...ST};
-    const m=modal(`<div id="fxChar"><h3>Mon personnage</h3><div class="row" style="flex-wrap:wrap"><button class="ghost lite" data-t="c">Personnage</button><button class="ghost lite" data-t="o">Objets</button><button class="ghost lite" data-t="k">Tricks</button><button class="ghost lite" data-t="r">Réhab</button><button class="ghost lite" data-t="h">Touches</button><button class="ghost lite" data-t="n">Créer (VAZE+)</button><button class="ghost lite" data-t="l">Niveaux</button><button class="ghost lite" data-t="s">Statistiques</button></div><div id="fxBody"></div><div class="row end" style="margin-top:10px"><button data-x>Fermer</button></div></div>`,true);m.setAttribute('data-fxkeep','');
+    const m=modal(`<div id="fxChar"><h3>Mon personnage</h3><div class="row" style="flex-wrap:wrap"><button class="ghost lite" data-t="c">Personnage</button><button class="ghost lite" data-t="o">Objets</button><button class="ghost lite" data-t="k">Tricks</button><button class="ghost lite" data-t="r">Réhab</button><button class="ghost lite" data-t="h">Touches</button><button class="ghost lite" data-t="n">Créer (VAZE+)</button><button class="ghost lite" data-t="p">Pilules</button><button class="ghost lite" data-t="l">Niveaux</button><button class="ghost lite" data-t="s">Statistiques</button></div><div id="fxBody"></div><div class="row end" style="margin-top:10px"><button data-x>Fermer</button></div></div>`,true);m.setAttribute('data-fxkeep','');
     const body=m.querySelector('#fxBody');
     const sw=(arr,a)=>arr.map(c=>`<button class="fxSw" data-${a}="${c}" style="background:${c}" aria-label="couleur"></button>`).join('');
     const tC=()=>{body.innerHTML=`<div class="row" style="justify-content:center"><div id="fxPrev"></div></div>
@@ -11984,12 +12036,18 @@ window.SMK=(function(){
         <label>Mes créations</label>${mine.map(i=>`<div class="fxIt"><div class="grow"><b>${esc(i.name)}</b> <span class="tag">${KIND[i.kind]}</span><div class="muted" style="font-size:12px">${nfmt(i.price)} jetons · puissance ${i.power} · ${i.sold} vendu(s)${i.active?'':' · retiré'}</div></div><button class="ghost lite" data-ed="${esc(i.code)}">Modifier</button></div>`).join('')||'<div class="muted">Aucune création.</div>'}`};
     const endTier=()=>{const T=[2000,3000,4000,5000,6500,8000,10000,12000,14500,17000,20000,22000],e=ST.endurance_ms||2000;let n=1;T.forEach((v,i)=>{if(e>=v)n=i+1});return n};
     const tS=()=>{const it=curItem(),L=Math.round(ST.dep);body.innerHTML=`<div class="row" style="justify-content:center"><div>${headSvg(ST,'',90,it.kind)}</div></div><div class="fxSt"><span>Nom</span><b>${esc(ST.name)}</b><span>Objet équipé</span><b>${esc(it.name)}</b><span>Puissance</span><b>${it.power} / 100 ${pbar(it.power)}</b><span>Dépendance</span><b>${L} / 100 ${pbar(L,'#e5484d')}</b><span>Endurance</span><b>${(ST.endurance_ms/1000).toFixed(1)} s · palier ${endTier()} / 12</b><span>Niveau</span><b>${ST.level||1}</b><span>Intoxication</span><b>${Math.round(Math.min(1,tox/toxLim())*100)} % ${pbar(Math.min(1,tox/toxLim())*100,'#7fbf4a')}</b><span>Bouffées</span><b>${ST.puffs||0}</b><span>Niveau d’effets</span><b>${Math.round(lvl()*100)} %</b><span>Manque</span><b>${Math.round(craving*100)} %</b></div><p class="muted">Plus la dépendance monte, plus il faut fumer pour sentir les effets et moins ils sont forts. Elle redescend lentement quand il ne fume pas.</p>`};
+    const FAM={altos:'Famille des Altos',endormissants:'Famille des Endormissants',endozacalins:'Famille des Endo-Zacalins',activants:'Famille des Activants'};
+    const tP=async()=>{body.innerHTML='<p class="muted">Chargement…</p>';let l;try{l=await rpcd('smoke_pills_list')}catch(e){body.innerHTML='<p class="muted">'+esc(errMsg(e))+'</p>';return}
+      ST.pills=l.active;const act=pillsA(),fams=['altos','endormissants','endozacalins','activants'];
+      body.innerHTML=`<p class="muted">Jetons : <b>${nfmt(l.balance)}</b>. Les effets d’une pilule se découvrent en l’essayant ; ils sont ensuite notés sous son nom. Plusieurs pilules se cumulent, et certaines familles se combinent.</p>
+        ${act.length?`<label>Actives</label>${act.map(p=>`<div class="fxIt"><div class="grow"><b>${esc((l.pills.find(x=>x.code===p.code)||{}).name||p.code)}</b> <span class="muted">encore ${Math.max(0,Math.ceil((p.until-Date.now())/1000))} s</span></div></div>`).join('')}`:''}
+        ${fams.map(f=>`<label>${FAM[f]}</label>${l.pills.filter(x=>x.family===f).map(x=>`<div class="fxIt"><div class="grow"><b>${esc(x.name)}</b> <span class="muted">${x.qty} en stock · ${Math.round(x.dur/60*10)/10} min</span><div class="muted" style="font-size:12px">${x.known?esc(x.descr):'Effets inconnus : à essayer'}</div></div><button class="ghost lite" data-pb="${esc(x.code)}">${nfmt(x.price)}</button><button class="lite" data-pt="${esc(x.code)}" ${x.qty?'':'disabled'}>Prendre</button></div>`).join('')}`).join('')}`};
     const tL=async()=>{body.innerHTML='<p class="muted">Chargement…</p>';let l;try{l=await rpcd('smoke_levels_list')}catch(e){body.innerHTML='<p class="muted">'+esc(errMsg(e))+'</p>';return}
       const nx=l.levels.find(v=>v.xp>l.xp),cur=l.levels.filter(v=>v.xp<=l.xp).pop();
       body.innerHTML=`<p>Niveau <b>${l.top}</b>${cur?' · '+esc(cur.name):''} · ${nfmt(l.xp)} points${nx?' · prochain niveau à '+nfmt(nx.xp)+' points':''}</p>${nx&&cur?pbar(Math.round((l.xp-cur.xp)/(nx.xp-cur.xp)*100),'#4aa3ff'):''}<p class="muted">Les points viennent des bouffées, de l’endurance et de la puissance de votre meilleure vape. Chaque niveau atteint donne des jetons.</p>
         <div class="row end">${l.claimable>0?`<button id="lvClaim">Récupérer ${nfmt(l.claimable)} jetons</button>`:'<span class="muted">Aucune récompense à récupérer</span>'}</div>
         <div class="fxHelp">${l.levels.map(v=>`<div style="${v.n===l.top?'font-weight:700':''}"><b>${v.n}. ${esc(v.name)}</b><span>${nfmt(v.xp)} points · ${nfmt(v.reward)} jetons${v.n<=l.claimed?' · récupéré':''}</span></div>`).join('')}</div>`};
-    const draw=()=>{m.querySelectorAll('[data-t]').forEach(b=>b.classList.toggle('on',b.dataset.t===tab));({c:tC,o:tO,n:tN,s:tS,k:tK,r:tR,h:tH,l:tL})[tab]()};
+    const draw=()=>{m.querySelectorAll('[data-t]').forEach(b=>b.classList.toggle('on',b.dataset.t===tab));({c:tC,o:tO,n:tN,s:tS,k:tK,r:tR,h:tH,l:tL,p:tP})[tab]()};
     m.addEventListener('click',async e=>{const d=e.target.dataset||{};try{
       if(d.t){tab=d.t;edit=null;return draw()}
       if(d.h){draft.hair=d.h;return tC()}if(d.hc){draft.hc=d.hc;return pv()}if(d.ey){draft.eyes=d.ey;return tC()}if(d.ec){draft.ec=d.ec;return pv()}if(d.sk){draft.skin=d.sk;return pv()}
@@ -12001,6 +12059,8 @@ window.SMK=(function(){
       if(d.tk){lsS('cm_fx_tk',d.tk);return tH()}
       if(d.ik){try{localStorage.setItem('cm_fx_inh',d.ik)}catch(_){}return tH()}
       if(e.target.id==='rhGo'){m.close();return rehabOpen()}
+      if(d.pb){await rpcd('smoke_pill_buy',{p_code:d.pb,p_qty:1});toast('Pilule achetée');try{balRefresh()}catch(_){}return tP()}
+      if(d.pt){const r=await rpcd('smoke_pill_take',{p_code:d.pt});ST.pills=r.active;pmAt=0;toast(r.name+' : '+r.descr);return tP()}
       if(e.target.id==='lvClaim'){const r=await rpcd('smoke_level_claim');toast(nfmt(r.tokens)+' jetons récupérés');try{balRefresh()}catch(_){}return tL()}
       if(e.target.id==='zmGo'){m.close();return zoomToggle(true)}
       if(d.ed){edit=d.ed;return tN()}
