@@ -385,7 +385,9 @@ on conflict (code) do update set name = excluded.name, price = excluded.price, p
 alter table public.smoke_items drop constraint if exists smoke_items_kind_check;
 alter table public.smoke_items add constraint smoke_items_kind_check check (kind in ('vape','cigar','cigarette','joint','cone'));
 alter table public.smoke_items drop constraint if exists smoke_items_power_check;
-alter table public.smoke_items add constraint smoke_items_power_check check (power between 1 and 2050);
+alter table public.smoke_items
+add constraint smoke_items_power_check
+check (power between 1 and 5000);
 
 insert into public.smoke_items(code, kind, name, price, power, fx, system) values
  ('cone_reds','cone','Cône REDS',1500,300,'{"scr":1,"mouse":1,"delay":1,"anim":1,"warp":1,"psy":1,"obj":1,"hal":1,"fau":1,"ill":1,"scrl":1,"blur":1,"keys":1,"coord":1,"att":1}',true),
