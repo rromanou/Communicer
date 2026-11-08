@@ -568,6 +568,7 @@ begin
   if lost > 0 then perform public.tok_add(p_user, -lost, 'overdose : mauvais traitement', null); end if;
   delete from public.smoke_inv where user_id = p_user;
   delete from public.smoke_trick_inv where user_id = p_user;
+  delete from public.smoke_pill_inv where user_id = p_user;
   delete from public.inventory where user_id = p_user and code = 'vaze_plus';
   insert into public.smoke_deaths(user_id, name, lost) values (p_user, c.name, lost);
   delete from public.smoke_rescue where target = p_user;
@@ -604,7 +605,7 @@ begin
     'dep', round(c.dep, 3), 'endu', c.endu, 'endurance_ms', public._sm_end(c.dep, c.endu), 'puffs', c.puffs, 'level', n, 'lvl_claimed', c.lvl_claimed,
     'since_s', case when c.last_smoke is null then null else round(extract(epoch from now() - c.last_smoke)) end,
     'od_left', case when c.od_start is null then null else greatest(0, round(120 - extract(epoch from now() - c.od_start))) end,
-    'vaze', public._has_vaze(auth.uid()),
+    'vaze', public._has_vaze(auth.uid()), 'pills', public._sm_pills_active(c.pills),
     'rescued_s', case when c.rescued_at is null then null else round(extract(epoch from now() - c.rescued_at)) end,
     'died_s', case when c.died_at is null then null else round(extract(epoch from now() - c.died_at)) end,
     'owned', coalesce((select jsonb_agg(public._sm_def(i.code) order by s.price) from public.smoke_inv i join public.smoke_items s on s.code = i.code where i.user_id = auth.uid()), '[]'::jsonb),
@@ -709,4 +710,157 @@ begin
 end $$;
 revoke all on function public.smoke_rescue_done(text, boolean) from public, anon;
 grant execute on function public.smoke_rescue_done(text, boolean) to authenticated;
+notify pgrst, 'reload schema';
+
+
+-- ============================================================================
+-- Lot 18f : pilules (familles Altos, Endormissants, Endo-Zacalins, Activants)
+-- ============================================================================
+create table if not exists public.smoke_pills (code text primary key, family text not null check (family in ('altos','endormissants','endozacalins','activants')), name text not null, price numeric not null check (price > 0),
+  descr text not null, eff jsonb not null default '{}'::jsonb, dur int not null default 300 check (dur between 30 and 3600));
+create table if not exists public.smoke_pill_inv (user_id uuid not null references public.profiles(id) on delete cascade, code text not null references public.smoke_pills(code) on update cascade,
+  qty int not null default 0 check (qty >= 0), known boolean not null default false, primary key (user_id, code));
+alter table public.smoke_chars add column if not exists pills jsonb not null default '[]'::jsonb;
+alter table public.smoke_pills enable row level security; alter table public.smoke_pill_inv enable row level security;
+revoke all on public.smoke_pills, public.smoke_pill_inv from anon, authenticated;
+insert into public.smoke_pills(code, family, name, price, descr, eff, dur) values
+ ('altodemine','altos','Altodémine',300,'Réduit considérablement la paranoïa (-80).','{"par":0.8}',300),
+ ('altodemine_x2','altos','Altodémine X2',700,'Réduit considérablement la paranoïa (-95).','{"par":0.95}',300),
+ ('xanenomine','endormissants','Xanénomine',400,'Anesthésie temporairement le manque : aucune crise pendant 5 minutes.','{"nocrisis":1}',300),
+ ('zicodaine','endormissants','Zicodaïne',500,'Augmente l’endurance (x1,3).','{"end":1.3}',300),
+ ('utemadeine','endormissants','Utémadéïne',450,'Augmente la résistance aux intoxications pendant 3 minutes.','{"res":2.5}',180),
+ ('garjonine','endormissants','Garjonine',450,'Augmente la limite de fumée en bouche (x1,6).','{"mouth":1.6}',300),
+ ('bydrogene','endormissants','Bydrogène',350,'Atténue les effets de 40 %.','{"fx":0.6}',300),
+ ('dibydrogene_alcalin','endormissants','Dibydrogène-Alcalin',600,'Ralentit l’augmentation de la dépendance.','{"dep":0.5}',300),
+ ('garjo_dizicodaine','endozacalins','Garjo-Dizicodaïne',1200,'Endurance x1,45 et limite de fumée en bouche x1,45.','{"end":1.45,"mouth":1.45}',300),
+ ('trizicodaine','endozacalins','Trizicodaïne',1500,'Augmente l’endurance (x1,6).','{"end":1.6}',300),
+ ('tanzanine','activants','Tanzanine',900,'Augmente considérablement les effets de 40 %, même au-delà de la limite.','{"fx":1.4}',300)
+on conflict (code) do update set family = excluded.family, name = excluded.name, price = excluded.price, descr = excluded.descr, eff = excluded.eff, dur = excluded.dur;
+
+create or replace function public._sm_pills_active(p jsonb) returns jsonb language sql stable set search_path = public as $$
+  select coalesce(jsonb_agg(jsonb_build_object('code', a->>'code', 'until', (a->>'until')::bigint, 'family', s.family, 'eff', s.eff) order by (a->>'until')::bigint), '[]'::jsonb)
+  from jsonb_array_elements(coalesce(p, '[]'::jsonb)) a join public.smoke_pills s on s.code = a->>'code'
+  where (a->>'until')::bigint > (extract(epoch from now()) * 1000)::bigint $$;
+
+create or replace function public._sm_depmul(p jsonb) returns numeric language sql stable set search_path = public as $$
+  with a as (select * from jsonb_to_recordset(public._sm_pills_active(p)) as x(code text, until bigint, family text, eff jsonb))
+  select coalesce(exp(sum(ln(coalesce((eff->>'dep')::numeric, 1)))), 1) * (case when exists(select 1 from a where family = 'activants') and exists(select 1 from a where family = 'endormissants') then 1.35 else 1 end) from a $$;
+
+create or replace function public.smoke_pills_list() returns jsonb language plpgsql security definer set search_path = public as $$
+declare c public.smoke_chars := public._sm_row();
+begin
+  return jsonb_build_object('balance', coalesce((select balance from public.wallets where user_id = auth.uid()), 0), 'active', public._sm_pills_active(c.pills),
+    'pills', coalesce((select jsonb_agg(jsonb_build_object('code', s.code, 'family', s.family, 'name', s.name, 'price', s.price, 'dur', s.dur, 'qty', coalesce(i.qty, 0), 'known', coalesce(i.known, false),
+      'descr', case when coalesce(i.known, false) then s.descr else null end) order by case s.family when 'altos' then 1 when 'endormissants' then 2 when 'endozacalins' then 3 else 4 end, s.price)
+      from public.smoke_pills s left join public.smoke_pill_inv i on i.code = s.code and i.user_id = auth.uid()), '[]'::jsonb));
+end $$;
+revoke all on function public.smoke_pills_list() from public, anon;
+grant execute on function public.smoke_pills_list() to authenticated;
+
+create or replace function public.smoke_pill_buy(p_code text, p_qty int) returns jsonb language plpgsql security definer set search_path = public as $$
+declare c public.smoke_chars := public._sm_row(); s public.smoke_pills; b numeric; tot numeric; q int := coalesce(p_qty, 1);
+begin
+  perform public.rate_ok('smpill', 60, 3600);
+  if q < 1 or q > 10 then raise exception 'Quantité de 1 à 10'; end if;
+  select * into s from public.smoke_pills where code = p_code;
+  if not found then raise exception 'Pilule inconnue'; end if;
+  tot := s.price * q;
+  insert into public.wallets(user_id) values (auth.uid()) on conflict do nothing;
+  select balance into b from public.wallets where user_id = auth.uid() for update;
+  if b < tot then raise exception 'Jetons insuffisants'; end if;
+  perform public.tok_add(auth.uid(), -tot, 'achat pilule ' || s.name, null);
+  perform public.tok_add('aaaaaaaa-0000-4000-8000-000000000001'::uuid, tot, 'achat pilule ' || s.name, null);
+  insert into public.smoke_pill_inv(user_id, code, qty) values (auth.uid(), p_code, q) on conflict (user_id, code) do update set qty = public.smoke_pill_inv.qty + q;
+  return jsonb_build_object('qty', (select qty from public.smoke_pill_inv where user_id = auth.uid() and code = p_code));
+end $$;
+revoke all on function public.smoke_pill_buy(text, int) from public, anon;
+grant execute on function public.smoke_pill_buy(text, int) to authenticated;
+
+create or replace function public.smoke_pill_take(p_code text) returns jsonb language plpgsql security definer set search_path = public as $$
+declare c public.smoke_chars := public._sm_row(); s public.smoke_pills; act jsonb;
+begin
+  perform public.rate_ok('smtake', 40, 600);
+  select * into s from public.smoke_pills where code = p_code;
+  if not found then raise exception 'Pilule inconnue'; end if;
+  update public.smoke_pill_inv set qty = qty - 1, known = true where user_id = auth.uid() and code = p_code and qty > 0;
+  if not found then raise exception 'Vous n’avez plus cette pilule'; end if;
+  act := (select coalesce(jsonb_agg(jsonb_build_object('code', x->>'code', 'until', (x->>'until')::bigint)), '[]'::jsonb) from jsonb_array_elements(public._sm_pills_active(c.pills)) x);
+  if jsonb_array_length(act) >= 12 then raise exception 'Trop de pilules actives (12 au maximum)'; end if;
+  act := act || jsonb_build_object('code', p_code, 'until', (extract(epoch from now()) * 1000)::bigint + s.dur * 1000);
+  update public.smoke_chars set pills = act where user_id = auth.uid();
+  return jsonb_build_object('name', s.name, 'descr', s.descr, 'active', public._sm_pills_active(act));
+end $$;
+revoke all on function public.smoke_pill_take(text) from public, anon;
+grant execute on function public.smoke_pill_take(text) to authenticated;
+
+-- bouffée : la dépendance tient compte des pilules actives
+create or replace function public.smoke_puff(p_code text, p_q numeric, p_ms int) returns jsonb language plpgsql security definer set search_path = public as $$
+declare c public.smoke_chars := public._sm_row(); s public.smoke_items; q numeric := greatest(0, least(1, coalesce(p_q, 0))); gain numeric; nd numeric; ne numeric; pf numeric; lv int;
+begin
+  perform public.rate_ok('smpuff', 120, 60);
+  if c.rehab_last is not null and c.rehab_last > now() - interval '60 seconds' then raise exception 'En réhabilitation : impossible de fumer'; end if;
+  select * into s from public.smoke_items where code = p_code;
+  if not found or not exists(select 1 from public.smoke_inv where user_id = auth.uid() and code = p_code) then raise exception 'Objet non possédé'; end if;
+  if coalesce(p_ms, 0) > public._sm_end(c.dep, c.endu) + 2500 then q := 0; end if;
+  pf := least(s.power, 100) / 100.0 * (case when s.kind = 'cone' then 2.5 else 1 end);
+  gain := pf * (case when q >= 0.2 then 6 * (0.4 + 0.6 * q) else 1.2 end);
+  gain := gain * public._sm_depmul(c.pills);
+  nd := least(100, c.dep + gain);
+  ne := case when s.kind = 'cone' and q >= 0.2 then least(2050, c.endu + s.power / 50.0 * q) else c.endu end;
+  update public.smoke_chars set dep = nd, endu = ne, dep_at = now(), item = p_code, puffs = puffs + 1, last_smoke = case when q >= 0.2 then now() else last_smoke end where user_id = auth.uid() returning * into c;
+  lv := public._sm_lvl_upd(c);
+  return jsonb_build_object('dep', round(nd, 3), 'endu', ne, 'endurance_ms', public._sm_end(nd, ne), 'level', lv,
+    'since_s', case when q >= 0.2 then 0 else round(extract(epoch from now() - coalesce(c.last_smoke, now()))) end);
+end $$;
+revoke all on function public.smoke_puff(text, numeric, int) from public, anon;
+grant execute on function public.smoke_puff(text, numeric, int) to authenticated;
+notify pgrst, 'reload schema';
+
+-- ============================================================================
+-- Lot 18f-2 : 16 nouveaux effets (hallucinations et comportements)
+-- ============================================================================
+create or replace function public._sm_fx(p jsonb) returns jsonb language plpgsql immutable as $$
+declare k text; o jsonb := '{}'; v numeric;
+begin
+  if p is null or jsonb_typeof(p) <> 'object' then raise exception 'Effets invalides'; end if;
+  foreach k in array array['scr','mouse','delay','anim','warp','psy','obj','hal','fau','ill','scrl','blur','keys','coord','att',
+      'chro','acou','echo','dist','hyper','lent','pers','bav','mut','imp','irr','eup','apa','mef','trem','susc'] loop
+    v := coalesce((p->>k)::numeric, 0);
+    if v < 0 or v > 1 then raise exception 'Chaque effet doit être entre 0 et 1'; end if;
+    o := o || jsonb_build_object(k, round(v, 2));
+  end loop;
+  return o;
+end $$;
+
+-- objets du système : profils de nouveaux effets selon le type, proportionnels à la puissance
+update public.smoke_items s set fx = s.fx || (
+  select jsonb_object_agg(e.key, round(least(1, (e.value)::numeric * least(1, s.power / 60.0)), 2))
+  from jsonb_each_text(case s.kind
+    when 'vape' then '{"chro":0.6,"echo":0.5,"hyper":0.4,"eup":0.3,"trem":0.2,"bav":0.3,"acou":0.2}'::jsonb
+    when 'cigarette' then '{"acou":0.5,"lent":0.5,"pers":0.4,"mef":0.5,"irr":0.4,"apa":0.2,"susc":0.3}'::jsonb
+    when 'cigar' then '{"lent":0.7,"apa":0.5,"mut":0.4,"dist":0.5,"pers":0.3,"mef":0.3}'::jsonb
+    when 'joint' then '{"eup":0.7,"chro":0.6,"echo":0.6,"dist":0.5,"bav":0.5,"imp":0.5,"acou":0.4,"hyper":0.5,"trem":0.3}'::jsonb
+    else '{"chro":0.7,"acou":0.7,"echo":0.7,"dist":0.7,"hyper":0.7,"lent":0.7,"pers":0.7,"bav":0.7,"mut":0.3,"imp":0.7,"irr":0.7,"eup":0.7,"apa":0.3,"mef":0.7,"trem":0.7,"susc":0.7}'::jsonb end) as e(key, value))
+where s.system and not (s.fx ? 'chro');
+
+-- mode visible : nouvelles humeurs
+create or replace function public.smoke_live_set(p_live jsonb) returns void language plpgsql security definer set search_path = public as $$
+declare c public.smoke_chars := public._sm_row(); l jsonb := '{}'::jsonb; m text;
+begin
+  perform public.rate_ok('smlive', 120, 60);
+  if p_live is null or jsonb_typeof(p_live) <> 'object' then raise exception 'État invalide'; end if;
+  m := coalesce(p_live->>'mode', '');
+  if m not in ('', 'smoke', 'exh', 'hold', 'cough', 'angry', 'sad', 'happy', 'apa', 'mef', 'od') then m := ''; end if;
+  l := jsonb_build_object('mode', m,
+    'ef', round(greatest(0, least(1.5, coalesce((p_live->>'ef')::numeric, 0))), 2),
+    'par', round(greatest(0, least(1, coalesce((p_live->>'par')::numeric, 0))), 2),
+    'crav', round(greatest(0, least(1, coalesce((p_live->>'crav')::numeric, 0))), 2),
+    'tox', round(greatest(0, least(1, coalesce((p_live->>'tox')::numeric, 0))), 2),
+    'ix', round(greatest(0, least(1, coalesce((p_live->>'ix')::numeric, 0))), 2),
+    'bad', coalesce((p_live->>'bad')::boolean, false),
+    'fx', coalesce((select jsonb_object_agg(k, round(least(1.5, greatest(0, v::numeric)), 2)) from jsonb_each_text(coalesce(p_live->'fx', '{}'::jsonb)) as e(k, v) where k ~ '^[a-z]{2,8}$' and v ~ '^[0-9.]+$'), '{}'::jsonb));
+  update public.smoke_chars set live = l, live_at = now() where user_id = auth.uid();
+end $$;
+revoke all on function public.smoke_live_set(jsonb) from public, anon;
+grant execute on function public.smoke_live_set(jsonb) to authenticated;
 notify pgrst, 'reload schema';
