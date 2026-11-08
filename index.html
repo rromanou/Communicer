@@ -12391,11 +12391,14 @@ window.SMK=(function(){
   /* ----- fumeurs dans les appels : le personnage et sa vape à côté de la caméra ----- */
   window.FXCALL={
     where(u){const ss=S.sess;if(ss){const t=document.querySelector(`#rmTiles .tile[data-u="${u}"] .t-media`);return t?{el:t,sz:46,m:2,st:ss}:null}const k=S.call;if(k&&u!==S.me.id){const v=document.querySelector('#callScreen .callVid');return v?{el:v,sz:96,m:10,st:k}:null}return null},
-    fx(o){if(!o||o.u===S.me.id)return;const w=this.where(o.u);if(!w)return;const t=w.el;let cv=t.querySelector('.t-smkcv');
-      if(!cv){const r=t.getBoundingClientRect();cv=document.createElement('canvas');cv.className='t-smkcv';cv.width=Math.max(60,Math.round(r.width));cv.height=Math.max(60,Math.round(r.height));cv.style.cssText='position:absolute;inset:0;width:100%;height:100%;pointer-events:none;z-index:4';t.appendChild(cv);cv._E=SMK.Engine(cv)}
-      const E=cv._E,mx=cv.width-w.m-w.sz*.49,my=cv.height-w.m-w.sz*.28,f=Math.max(.8,w.sz/60),sm=o.sm||{};
+    OV:{},
+    cv(u){let c=this.OV[u];if(!c||!c.isConnected){c=document.createElement('canvas');c.className='t-smkov';c.style.cssText='position:fixed;left:0;top:0;width:100vw;height:100vh;pointer-events:none;z-index:2147482900';c.width=innerWidth;c.height=innerHeight;document.body.appendChild(c);c._E=SMK.Engine(c);this.OV[u]=c}
+      else if(c.width!==innerWidth||c.height!==innerHeight){c.width=innerWidth;c.height=innerHeight;c._E.floor=c.height-6}return c},
+    clean(){if(S.sess||S.call)return;for(const u in this.OV){try{this.OV[u].remove()}catch(_){}delete this.OV[u]}},
+    fx(o){if(!o||o.u===S.me.id)return;const w=this.where(o.u);if(!w)return;const r=w.el.getBoundingClientRect();if(!r.width)return;const cv=this.cv(o.u),E=cv._E;
+      const mx=r.right-w.m-w.sz*.49,my=r.bottom-w.m-w.sz*.28,f=Math.max(.8,w.sz/60),sm=o.sm||{};
       if(o.t){E.look({...sm,size:Math.max(1,+sm.size||1)*f,speed:Math.max(1,+sm.speed||1)*f,density:Math.max(1,+sm.density||1)});SMK.trick(E,o.t,mx,my,o.V||1,o.w==null?.8:o.w,1,o.m||0);E.go()}
-      else if(o.e>0){E.look({...sm,size:(+sm.size||1)*f,speed:(+sm.speed||1)*f});const n=o.e*55;let c=Math.floor(n)+(Math.random()<n%1?1:0);for(let i=0;i<c;i++)E.add({x:mx+SMK.rnd(-2,2),y:my,vx:SMK.rnd(-14,14),vy:SMK.rnd(-70,-30),s:SMK.rnd(8,13),ds:SMK.rnd(8,14),a:.42,life:SMK.rnd(2,3.4),drag:.55,by:-10,tx:1.2,w:.9});E.go()}},
+      else if(o.e>0){E.look({...sm,size:Math.max(.9,+sm.size||1)*f,speed:Math.max(.9,+sm.speed||1)*f,density:Math.max(1,+sm.density||1)});const n=Math.max(2,o.e*70);let c=Math.floor(n)+(Math.random()<n%1?1:0);for(let i=0;i<c;i++)E.add({x:mx+SMK.rnd(-2,2),y:my,vx:SMK.rnd(-14,14),vy:SMK.rnd(-80,-35),s:SMK.rnd(9,15),ds:SMK.rnd(8,14),a:.5,life:SMK.rnd(2.2,3.6),drag:.5,by:-10,tx:1.2,w:.9});E.go()}},
     paint(o){if(!o)return;const w=this.where(o.u);const holder=S.sess||S.call;if(holder){holder.smk=holder.smk||{};holder.smk[o.u]=o}if(!w)return;const t=w.el;let b=t.querySelector('.t-smk');if(!b){b=document.createElement('div');b.className='t-smk';b.style.cssText=`position:absolute;right:${w.m}px;bottom:${w.m}px;width:${w.sz}px;height:${w.sz}px;pointer-events:none;z-index:3;filter:drop-shadow(0 1px 3px #0008)`;t.appendChild(b)}
       b.innerHTML=headSvg({...o.c,_look:o.lk,_code:o.cd,_g:0},o.m||'',w.sz,o.k||'vape')}};
   let cbLast=0,cEm=0;
@@ -12403,7 +12406,7 @@ window.SMK=(function(){
   const callFx=o=>{if(!ST||!ST.show||fmOn)return;cTx('smkt',{u:S.me.id,sm:curItem().smoke||{},...o})};
   setInterval(()=>{if(cEm>0){const e=Math.round(cEm*100)/100;cEm=0;callFx({e})}},250);
   const callSend=force=>{const ss=S.sess;if(!(ss&&ss.ch&&ss.ready)&&!(S.call&&S.call.state==='live')||!ST||!ST.show||fmOn)return;const n=Date.now();if(!force&&n-cbLast<300)return;cbLast=n;const it=curItem();const pay={u:S.me.id,c:{name:ST.name,hair:ST.hair,hc:ST.hc,eyes:ST.eyes,ec:ST.ec,skin:ST.skin},k:it.kind,m:mode,cd:it.code,lk:{body:(it.look||{}).body,tip:(it.look||{}).tip}};cTx('smkc',pay);FXCALL.paint(pay)};
-  setInterval(()=>callSend(true),5000);
+  setInterval(()=>callSend(true),5000);setInterval(()=>FXCALL.clean(),3000);
   window.SMKX={headSvg,ST:()=>ST,curItem:()=>curItem(),pwNow:()=>pwNow(),sndIn:(k,d)=>sndIn(k,d),sndInStop:()=>sndInStop(),sndOut:p=>sndOut(p),sndCough:()=>sndCough(),mkPuff:()=>null,onPuff:(res)=>{ST.dep=Math.min(100,ST.dep+curItem().power/100*(res.q>=.2?6*(.4+.6*res.q):1.2));ST.endurance_ms=2000+Math.round(ST.dep*40);rpcd('smoke_puff',{p_code:curItem().code,p_q:Math.round(res.q*100)/100,p_ms:Math.round(res.held||0)}).then(r=>{if(r&&ST){ST.dep=+r.dep;ST.endurance_ms=+r.endurance_ms}}).catch(()=>{})},depGain:res=>curItem().power/100*(res.q>=.2?6*(.4+.6*res.q):1.2)};
   const pfLive=(r)=>{const L=r.live||{},ef=+L.ef||0,ix2=+L.ix||0,tt=tintFor(ef,ix2),on=r.online,md=r.od_left>0?'od':(on?L.mode||'':'');return headSvg({...r,...(on&&tt?{_t:tt}:{}),_g:on?ix2:0,_code:r.code},md,72,r.kind||'vape')};
   const pfTip=(r)=>{const L=r.live||{},on=r.online,pc=v=>Math.round((+v||0)*100)+' %';const fx=Object.entries(L.fx||{}).filter(e=>e[1]>.05).map(e=>(FXN[e[0]]||e[0])+' '+pc(e[1]));
