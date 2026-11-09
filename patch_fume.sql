@@ -1349,7 +1349,7 @@ insert into public.smoke_cosm(code, slot, name, price, sort) values
 ('disco','glasses','Lunettes disco',950,21)
 on conflict (code) do update set slot = excluded.slot, name = excluded.name, price = excluded.price, sort = excluded.sort;
 
-create or replace function public.smoke_cosm_list() returns jsonb language plpgsql security definer stable set search_path = public as $$
+create or replace function public.smoke_cosm_list() returns jsonb language plpgsql security definer set search_path = public as $$
 declare c public.smoke_chars := public._sm_row(); b numeric;
 begin
   select balance into b from public.wallets where user_id = auth.uid();
