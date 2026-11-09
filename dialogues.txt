@@ -1,0 +1,1023 @@
+# COMMUNICER! — DIALOGUES DU PERSONNAGE FUMEUR (fichier de référence chargé par index.html et communicer-lite.html)
+# Placer ce fichier à côté de index.html (même dossier). Modifier ici, sans toucher au HTML. Rechargez la page pour voir les changements.
+# Format : une ligne = une phrase. [NOM] ouvre une liste. Les lignes commençant par # sont ignorées. {n} = nom du personnage. Ne pas utiliser le caractère | dans les phrases.
+# Dialogues interactifs : [DIALOGUES n|k|p|f] (contexte), puis ? Question, puis 4 lignes > Libellé | Réplique | effets
+#   effets = clé:valeur séparés par des virgules (ex. eup:.4,crav:-.15). Clés : eup euphorie, irr irritabilité, apa apathie, mef méfiance, imp impulsivité, susc susceptibilité, trem tremblements, par paranoïa, crav manque (négatif = baisse). Valeur de -1 à 1.
+# Anti-répétition : chaque liste est un sac sans remise (toutes les phrases sortent une fois avant qu’une revienne).
+# Si ce fichier est introuvable, le personnage utilise quelques phrases de secours intégrées.
+
+
+# Ambiance. Lucide (intoxication ≤ 20 %), ne fume pas. Toutes les 70 à 110 s (22 à 40 s avec envie de fumer). Modifiée par Bavardage, Mutisme, Lenteur, Apathie.
+[NORMAL]
+Salut !
+Comment ça va ?
+Belle journée, non ?
+Tu fais quoi ?
+Content de te voir.
+T’as bien dormi ?
+Tout est calme par ici.
+Bonjour, {n} à ton service.
+On discute un peu ?
+Tu as de beaux messages.
+Je regarde les conversations défiler.
+Ça va bien de ton côté ?
+Quoi de neuf aujourd’hui ?
+Il fait doux aujourd’hui, tu ne trouves pas ?
+J’ai l’impression que le temps passe plus vite le dimanche.
+Tu as déjà remarqué comme les nuages ont des visages ?
+J’ai faim, mais je ne sais pas de quoi.
+Je rêve d’une grande assiette de frites.
+Il y a un petit air de fête dans l’air.
+J’aime bien quand tout est calme comme ça.
+Je me demande ce qu’il y a derrière l’horizon.
+Les lundis sont faits pour être oubliés.
+J’ai entendu une chanson ce matin, elle me trotte encore dans la tête.
+Tu savais que les chats dorment presque tout le temps ?
+Je devrais peut-être ranger un peu par ici.
+Je me sens d’humeur à écrire une lettre.
+Il faudrait que j’apprenne à jongler.
+Un jour, j’irai voir la mer.
+J’ai rêvé de poissons volants cette nuit.
+Les escaliers, c’est un sport déguisé.
+Je me suis levé du pied gauche, mais ça va mieux.
+Il y a une araignée dans le coin, on est en bons termes.
+Je crois que j’ai oublié quelque chose, mais quoi ?
+Le silence a un goût de menthe.
+Je trouve que les lampadaires ont du charme.
+Quelqu’un m’a dit que la lune s’éloigne un peu chaque année.
+J’aime les matins où rien n’est urgent.
+Je ferais bien une sieste, mais je n’ai pas sommeil.
+Les pluies d’automne me rendent poète.
+Je compte les carreaux du plafond, il y en a beaucoup.
+C’est drôle, le temps n’a pas la même vitesse pour tout le monde.
+Je me demande si les poissons s’ennuient.
+Chaque jour, je découvre un nouveau pli sur ma manche.
+Parfois, je me parle tout seul, ça fait de la compagnie.
+Je n’ai jamais su siffler. Je m’y mets ?
+Les oiseaux dehors ont l’air de bien s’amuser.
+Si j’avais une cabane, je la peindrais en bleu.
+Je viens de penser à un mot : crépuscule. Beau, non ?
+Je pourrais vivre de pain, de fromage et de musique.
+Quelqu’un a laissé une fenêtre ouverte, j’ai senti le vent.
+Les mots croisés, c’est mon exercice du cerveau.
+Je me sens un peu comme un nuage aujourd’hui.
+Ça sent le café quelque part, j’adore.
+Je me demande combien de pas il y a d’ici à la lune.
+J’aime bien ton calme, tu sais.
+Tu as de la chance d’avoir de la patience.
+Si on faisait une liste de nos souhaits ?
+J’ai un doute : est-ce que les pierres ont une mémoire ?
+Le monde est plus doux avec une bonne chanson.
+Je n’ai pas de grandes ambitions, juste un bon fauteuil.
+J’ai l’impression d’être observé par une plante.
+Le matin est le meilleur moment pour les idées simples.
+Je rêve d’un jardin avec un banc et un chat.
+Tu crois qu’on peut apprendre une langue en dormant ?
+J’aimerais voir la neige tomber en silence.
+J’ai une chanson en tête, mais je n’ai pas les paroles.
+Aujourd’hui je pense à tous ceux qui chantent dans la douche.
+La poussière danse dans un rayon de soleil, tu as vu ?
+Le thé, c’est du temps qu’on se donne.
+Je me souviens d’un goût d’enfance, sans savoir lequel.
+Les vieux livres ont une odeur que j’adore.
+Ça fait longtemps que je n’ai pas ri aux éclats.
+Je voudrais dessiner, mais je n’ai pas de crayon.
+J’ai croisé un chien tout à l’heure, il m’a salué.
+La ville est calme quand on la regarde de haut.
+Je ne suis pas pressé aujourd’hui, c’est merveilleux.
+Un bon pull, c’est un câlin qu’on enfile.
+On devrait toujours avoir un chapeau, au cas où.
+Je viens de me rendre compte que j’ai deux mains. Quelle chance.
+Je suis fan des petites pauses sans raison.
+Ça te dirait de raconter ta journée ?
+Il y a toujours un moment où tout s’arrête et on respire.
+Les étoiles sont-elles aussi loin qu’on le dit ?
+Je crois que j’ai un petit creux sentimental.
+Qui a inventé le lundi, au juste ?
+Je m’habituerais bien à un climat plus chaud.
+Les moulins à vent, c’est de la poésie qui tourne.
+Le mot « flâner » est mon préféré.
+J’aimerais apprendre un instrument, peut-être la flûte.
+Rien de tel qu’une bonne soupe un jour de pluie.
+Tu sais ce qui me fait rire ? Les pigeons qui se prennent pour des rois.
+Je dormirais bien à la belle étoile, une fois.
+Je pense que les montagnes nous écoutent.
+Les ombres s’allongent comme si elles s’étiraient.
+J’ai trouvé une plume dans ma poche, mystère.
+Je me sens léger, c’est étrange comme sentiment.
+La nuit prépare quelque chose, j’en suis sûr.
+Quand je ferme les yeux, je vois des formes.
+J’aime les mots qui chantent : « bruissement », « pénombre ».
+Je pourrais regarder la pluie pendant des heures.
+On devrait faire une photo de ce moment.
+Je n’ai aucune idée de l’heure, et c’est très bien.
+Il faut parfois ralentir pour voir les détails.
+Tu as remarqué comme les horloges se trompent parfois ?
+Je suis curieux de voir ce que demain apporte.
+Les cafés de quartier sont des refuges.
+Je rêve d’un vélo et d’un sentier long.
+J’ai appris un truc : les pieuvres ont trois cœurs.
+Il y a des gens qui lisent à voix haute, c’est beau.
+Je trouve le bruit de la pluie sur le toit très rassurant.
+Un bon feu de bois, c’est une télévision qui sent bon.
+Je me suis surpris à sourire tout seul.
+Je ne sais pas pourquoi, mais je pense à des oranges.
+On croit toujours qu’il est tôt, puis il est tard.
+Je voudrais un jour traverser un pont très long.
+Les étoiles filantes, il faut vite faire un vœu.
+Ce que j’aime, c’est quand tout est à sa place.
+Je parie que les nuages ont un goût de coton.
+Il y a un petit bruit quelque part, peut-être le frigo.
+Une journée sans nouvelles est une bonne journée.
+Je suis content de te voir ici.
+Tu veux que je te raconte une blague ? Non ? Tant pis.
+Je pense que les montres sont des petites prisons pour le temps.
+J’ai un faible pour les gaufres.
+Les cloches de l’église me manquent un peu.
+Je suis en train de réfléchir à un nom pour mon futur chat.
+Les jours de brume, tout a l’air d’un rêve.
+Je me demande si les feuilles ont du plaisir à tomber.
+Les trains qui passent me donnent envie de partir.
+Quand je suis calme, j’entends ma propre respiration.
+Je pourrais t’écrire un poème, mais il rimerait mal.
+Je me sens plutôt bien, merci de demander.
+Les premiers flocons sont toujours une surprise.
+J’ai croisé un papillon, c’était un signe, je crois.
+Les couleurs du soir sont les plus tendres.
+Je m’entraîne à ne rien faire, c’est difficile.
+Il y a une odeur de pain chaud dans mes souvenirs.
+Je me demande combien d’idées je perds en dormant.
+J’aimerais bien voir un orage, mais de loin.
+Je repense à ce vieux disque qui grésillait.
+On dirait que le temps a décidé de nous attendre.
+Il paraît que rire prolonge la vie. Alors riez.
+Dis, tu as déjà vu une aurore boréale ?
+Je trouve les premiers jours de printemps très gentils.
+Je suis dans un bon jour, il faut le noter.
+Il y a un charme fou aux objets perdus.
+Un petit verre d’eau fraîche, quel luxe.
+Je rêve d’un voyage sans bagages.
+La lune est ronde ce soir, tu ne trouves pas ?
+J’ai envie de me promener sans destination.
+Les pigeons n’ont aucun respect pour les statues.
+Je suis nostalgique d’un endroit que je n’ai jamais vu.
+Je me suis fait une promesse : sourire plus souvent.
+Les murs ont des oreilles, mais aussi un grand cœur.
+J’aime bien les escargots, ils ne se stressent jamais.
+Tu as déjà essayé de compter les étoiles ?
+Je crois qu’il va bientôt pleuvoir, mes genoux le disent.
+Les oiseaux se taisent à l’approche de la nuit.
+J’ai envie de faire une longue marche ce soir.
+Il y a beaucoup de bruit dans le silence.
+J’aimerais bien apprendre à cuisiner un gâteau.
+Je crois que mon ombre me suit exprès.
+Aujourd’hui, tout est un peu doré.
+Je regarde par la fenêtre, le monde continue.
+Une horloge qui tique, c’est une petite compagnie.
+Je n’aurais jamais cru aimer les mardis.
+Je ressens une énergie tranquille, comme un lac.
+Peut-être que les pierres rêvent de devenir sable.
+J’ai trouvé un trèfle à quatre feuilles en rêve.
+Je suis sûr que la lune garde nos secrets.
+Il paraît que l’hiver arrive tôt cette année.
+J’ai envie d’un chocolat chaud, c’est urgent.
+Mon plat préféré : celui que tu cuisines.
+Il y a de la magie dans les petites choses.
+Je ne suis pas fatigué, juste un peu rêveur.
+Les vagues me parlent, même de loin.
+Je crois qu’une simple promenade peut tout changer.
+Je me sens utile quand tu es là.
+Le vent porte des histoires qu’on n’entend pas.
+Quelle belle journée pour ne rien promettre.
+Les fêtes foraines sentent le sucre et le bonheur.
+Je me demande à quoi pensent les chevaux.
+Je trouve que tes silences sont agréables.
+Les montagnes de nuages, quel spectacle.
+J’aimerais bien avoir une bicyclette bleue.
+Chaque jour est une petite page blanche.
+Tu sais, j’ai appris à aimer les mercredis.
+Je regarde les gens passer, c’est mon cinéma.
+Un jour, j’écrirai un livre sur les nuages.
+Je suis content, sans raison particulière.
+Je pense à mon premier jour d’école, c’est loin.
+Je me demande si la lune a un goût de fromage, comme on dit.
+Il y a des jours où tout paraît possible.
+Je crois que j’ai enfin compris le sens de la vie : les crêpes.
+Tu as de beaux yeux quand tu réfléchis.
+J’ai réparé une chaise dans ma tête, c’était dur.
+Les feux d’artifice me font toujours sourire.
+Une cabane au bord d’un lac, c’est mon rêve.
+Je me sens en sécurité ici.
+Écoute bien, tu entends le monde qui respire ?
+Je te trouve de bonne compagnie, vraiment.
+Il y a toujours quelqu’un qui chante quelque part.
+J’aime les histoires qui commencent par « il était une fois ».
+Dis donc, comme le temps file !
+Je voudrais voir un volcan, mais pas de trop près.
+Les ruelles sombres ont du mystère.
+Un bon livre, un bon fauteuil, rien de plus.
+Je me sens comme un navigateur sans carte.
+Je me demande qui a eu l’idée de la tartine.
+Un jour, j’apprendrai le piano. Peut-être demain.
+Tout est plus doux quand on y met du temps.
+Si je pouvais, je collectionnerais les couchers de soleil.
+Je suis dans mon élément : calme et curieux.
+Tout va bien ici.
+Je range mes pensées.
+Les nuages sont plus blancs quand on est discret.
+J’ai envie d’une conversation intéressante.
+Quelle ambiance sur Communicer !
+Je veille à ce que personne ne s’endorme.
+Je révise mes tricks dans ma tête.
+Une journée tranquille, j’adore.
+Je me demande qui va écrire en premier.
+Ça te dirait un petit défi au Fumatoir ?
+J’ai fait un beau rond de fumée hier. Enfin, je crois.
+Dis-moi si je te dérange.
+J’observe, c’est mon passe-temps.
+Mon endurance s’améliore doucement.
+Prends ton temps, moi aussi.
+Il fait bon dans cette fenêtre.
+Je suis calme, très calme.
+Salut, c’est encore moi.
+Si tu cherches un trick : Alt et un chiffre.
+Je te garde un peu de place ici.
+Bonne énergie aujourd’hui.
+Je suis fier de mes progrès.
+Ne t’inquiète pas, je suis sage.
+Tu sais, X permet d’avaler la fumée gardée en bouche.
+Chaque trick finit par se maîtriser, avec de la patience.
+
+# Ambiance (30 % des phrases). Dépendance < 30 / 100.
+[PH_LOW]
+Aujourd’hui, je me sens bien.
+Pas besoin de me presser, je suis tranquille.
+Le calme avant la tempête ? Non, juste le calme.
+J’ai l’esprit clair.
+On pourrait ranger un peu par ici.
+Tu savais que j’ai déjà arrêté une fois ?
+Rien à signaler, {n} est en forme.
+Un petit verre d’eau et ça va.
+Je me demande ce qui se passe dehors.
+Je pourrais fumer, mais je ne suis pas obligé.
+Je vais bien, vraiment bien.
+Aucune envie particulière aujourd’hui.
+Je prends l’air et je souris.
+Mon corps est léger, ma tête aussi.
+Je pourrais me passer de tout ça facilement.
+Une journée normale, c’est déjà beaucoup.
+Je respire sans y penser.
+Rien à signaler, tout est en ordre.
+Je regarde les nuages, les vrais.
+C’est agréable, de ne manquer de rien.
+
+# Ambiance (30 % des phrases). Dépendance de 30 à 69 / 100.
+[PH_MID]
+Je pense à ma vape de temps en temps…
+Elle est où, ma dernière bouffée ?
+Je ne suis pas accro, je suis… attaché.
+Encore une et j’arrête. Peut-être.
+Tu entends ce petit bruit ? Non ? Moi si.
+Ça fait un moment, non ?
+Je commence à avoir l’esprit ailleurs.
+Dis-moi que c’est bientôt l’heure.
+Mes doigts cherchent quelque chose.
+Je sens que ça va me manquer.
+Je pense à ma prochaine bouffée sans le vouloir.
+Ça va, mais ça irait mieux avec un petit nuage.
+Je ne suis pas dépendant, je suis régulier.
+Ma main joue avec la vape dans ma poche.
+Une pause ne ferait pas de mal.
+Je me dis que ce sera la dernière, puis non.
+Il y a un petit creux quelque part.
+Je regarde l’heure plus souvent qu’avant.
+C’est devenu une habitude, rien de grave.
+Je suis un peu à cran, mais ça va passer.
+
+# Ambiance (30 % des phrases). Dépendance ≥ 70 / 100.
+[PH_HIGH]
+Je ne pense qu’à ça, vraiment qu’à ça.
+Sans ma vape, tout est gris.
+Chaque minute dure une heure.
+Ne me juge pas, je t’en prie.
+J’ai une dépendance, mais elle m’aime bien.
+Mon cœur bat pour la prochaine bouffée.
+Il m’en faut plus, toujours plus.
+Je compte les secondes depuis la dernière.
+Tout me rappelle la fumée.
+J’aurais dû t’écouter… mais donne-moi ça.
+Mes mains tremblent un peu, c’est normal.
+Je ne sais plus comment faire sans.
+Tout me paraît fade quand je n’inhale pas.
+Je vais en avoir besoin, et vite.
+Ça m’occupe l’esprit du matin au soir.
+Je n’arrive plus à penser à autre chose.
+Chaque bouffée compte, chaque seconde pèse.
+Je ne veux plus parler, je veux juste fumer.
+Tu as ma vape ? Réponds-moi.
+Je suis prisonnier de ce petit nuage.
+
+# S’ajoute à la liste de dépendance quand le niveau d’effet est > 55 %.
+[PH_FX]
+Tout est plus lent et plus beau.
+Les couleurs me parlent.
+Je flotte au-dessus de mes pensées.
+Tu vois ce que je vois ?
+Le temps a l’air de ralentir.
+Ça tourne doucement, c’est agréable.
+Chaque son a une couleur.
+Mon corps est tout léger.
+Je suis le roi des nuages.
+Tout devient très drôle d’un coup.
+Les sons ont des couleurs maintenant.
+Je sens le temps couler entre mes doigts.
+Tout est doux et un peu flou.
+J’entends mon cœur battre dans mes oreilles.
+Les murs respirent, c’est drôle.
+Je pourrais rester là des heures.
+Mes pensées sortent en spirales.
+Le monde est un peu en retard sur moi.
+Je vois des motifs partout.
+Chaque mot que tu dis flotte avant d’arriver.
+
+# Remplace la liste de dépendance quand l’intoxication est > 30 %; s’ajoute aux exclamations en intoxication « mauvaise ».
+[PH_TOX]
+Je… je ne sens plus mes mains.
+Tout est vert, pourquoi tout est vert ?
+Le sol respire sous moi.
+Aide-moi, je suis trop haut.
+Mon visage fond, non ?
+J’entends mes pensées qui s’échappent.
+Est-ce que quelqu’un m’entend ?
+Ça ne devrait pas tourner comme ça.
+J’ai la tête dans un tunnel.
+Je crois que j’en ai trop pris…
+Mon ventre fait des nœuds, et mes yeux aussi.
+Je crois que j’ai trop fumé, beaucoup trop.
+Tout tourne et je n’arrive plus à m’arrêter.
+Ma langue est lourde, ma tête est vide.
+J’ai chaud, j’ai froid, je ne sais plus.
+Je ne reconnais plus ma propre voix.
+Arrête ce manège, je vais tomber.
+Mes jambes ne répondent plus.
+Je vois des ombres bouger dans les coins.
+Je ne devrais plus en prendre, hein ?
+
+# Intoxication > 20 %. Une phrase toutes les 1,25 s environ.
+[IXP]
+Oh là là !
+Tout bouge !
+Je vois double…
+Attends, attends !
+C’est quoi ça ?!
+Tout tourne !
+Je flotte !
+Pourquoi c’est si lent ?
+Non non non !
+Regarde, regarde !
+Les murs respirent !
+J’entends mon cœur !
+Où est la porte ?
+Je parle, je parle, je parle…
+Tout fond !
+Il fait noir ?
+Je suis où ?
+Ça respire !
+Trop vite ! Trop vite !
+Je suis vert ? Je suis vert !
+
+# Humeur irritabilité : tirée en priorité en ambiance, probabilité = 70 % de l’effet actif.
+[IRR]
+Qu’est-ce que tu veux encore ?
+Arrête de me regarder comme ça.
+Tout m’énerve aujourd’hui.
+Laisse-moi tranquille !
+C’est toujours la même chose.
+Tu fais exprès ?
+Ne me parle pas sur ce ton.
+J’en ai assez, vraiment assez.
+
+# Humeur euphorie : ambiance, probabilité = 70 % de l’effet actif (après irritabilité).
+[EUP]
+Quelle belle journée !
+Je suis tellement content !
+Tout va bien, tout va très bien !
+Je pourrais danser !
+Tu es la meilleure personne du monde !
+Haha, c’est merveilleux !
+La vie est belle, non ?
+Je me sens invincible !
+
+# Humeur méfiance : ambiance, probabilité = 60 % de l’effet actif.
+[MEF]
+Tu me caches quelque chose, hein ?
+Pourquoi tu me fixes ?
+Je ne te crois pas.
+Qui t’a envoyé ?
+Je sens qu’on me surveille.
+Tu as dit ça pourquoi, au juste ?
+Je garde un œil sur toi.
+Chut. Ils écoutent peut-être.
+
+# Humeur apathie : ambiance, probabilité = 60 % de l’effet actif.
+[APA]
+Bof.
+Pas envie.
+Ça ne me dit rien.
+Peu importe.
+Je suis fatigué de tout ça.
+Mmh. Si tu veux.
+Je reste là, ça ira.
+À quoi bon ?
+
+# Impulsivité > 5 % : toutes les 5 à 18 s (plus souvent si fort), sans fumer.
+[IMP]
+Oh ! J’ai une idée !
+Attends, attends, regarde !
+Hé ! Hé ho !
+Tiens, je vais faire ça tout de suite !
+Pourquoi pas, après tout ?
+Je le fais, je le fais !
+Ah, j’ai failli oublier !
+Et si on changeait tout ?
+
+# Susceptibilité > 20 % : au survol de la tête, probabilité 30 % + 50 % de l’effet; la tête tremble.
+[SUSC]
+Pardon ?! Qu’est-ce que tu viens de dire ?
+Ça m’a blessé, tu sais.
+Ne me touche pas !
+Ouch, c’est méchant.
+Tu me juges, c’est ça ?
+Je n’ai rien demandé à personne !
+Répète un peu pour voir.
+Je prends ça très mal.
+
+# Manque en crise (dépendance ≥ 1) : toutes les (45 × (1 − dépendance) + 6) s. MAJUSCULES si manque > 70 %, lu à voix haute si > 30 %. Remplacé par un dialogue interactif si possible.
+[NAG]
+Ma vape… où est ma vape ?
+Donne-moi une bouffée. Une seule.
+JE VEUX MA VAPE !!
+Tu m’écoutes ? Ma vape !
+Juste une petite bouffée, promis.
+Je tremble… maintiens-moi.
+Maintiens ma tête, s’il te plaît !
+J’ai besoin de ma dose maintenant.
+Les murs bougent, donne-moi ma vape.
+Tout le monde me regarde, j’ai besoin de fumer.
+Créateur, tu m’abandonnes ?
+Je vais faire une bêtise.
+J’ai vu un poisson dans le clavier.
+Les lettres me parlent. Fume-moi.
+Mes doigts sont devenus des saucisses.
+Ma vape a dit mon nom… non ?
+Pourquoi le plafond est mouillé ?
+Je compte les pixels : trois, sept, banane.
+Si tu me fumes pas, je mange ton clavier.
+AAAAH ! MA DOSE !!!
+Un petit nuage, un tout petit.
+Tu m’entends ? TU M’ENTENDS ?
+Je suis le roi des nuages… donne-moi des nuages.
+Le Wi-Fi sent le tabac.
+C’est urgent, c’est très urgent, c’est le plus urgent.
+{n} a faim de fumée !
+Je vais crier jusqu’à ce que tu me fumes !
+Mon cerveau fait des cabrioles, aide-moi.
+Juste une toute petite, pour la route.
+Ma vape me manque déjà.
+Tu l’as vue, ma vape ? Dis-moi où elle est.
+Une bouffée et je te laisse tranquille.
+Je commence à m’énerver, là.
+Je compte les secondes depuis ma dernière bouffée.
+S’il te plaît, rien qu’une.
+J’ai la main qui cherche toute seule.
+Tout est moins drôle sans ma vape.
+Dépêche-toi, je n’en peux plus.
+Mes doigts cherchent ma vape…
+Je tourne en rond, c’est insupportable.
+Une bouffée et je te laisse tranquille !
+Pourquoi tu m’ignores ?!
+Je ne tiens plus, MAINTENANT.
+Tout est trop fort, il me faut ma dose.
+Je jure que c’est la dernière… la dernière de la journée.
+Tu ne comprends pas, j’ai BESOIN de ça.
+Ma tête est vide sans ma vape.
+Hé ! Hé ! Regarde-moi !
+Si je ne fume pas je vais exploser.
+Je t’en supplie, maintiens-moi.
+Les secondes durent des heures.
+Mon cœur va trop vite, une bouffée, vite.
+Tu m’entends ? Ma. Vape.
+Je commence à voir des choses sans elle.
+Tout le monde me regarde, donne-moi ma dose !
+Je vais crier encore plus fort.
+Rien que le sweet spot, rien que ça.
+Je me ronge les ongles.
+Et si je prenais un joint au thé ? Juste un.
+Il paraît qu’il existe une réhabilitation, dans Perso… mais d’abord une bouffée.
+Je deviens fou, vraiment fou.
+Fais quelque chose, je suis à bout !
+
+# Après une bouffée réussie, 45 % du temps. (Phrases fixes dans le code : « Ahhh… enfin. » et « Pas assez aspiré… ».)
+[PUFF]
+Mmm, c’est bon.
+Ça fait du bien.
+Encore une comme ça.
+J’ai la tête qui tourne.
+Doucement, doucement.
+Voilà, ça se calme.
+Je sens déjà quelque chose.
+Une petite pause bien méritée.
+Ça réchauffe.
+Quelle bouffée !
+Je vois des couleurs.
+Tout est plus lent maintenant.
+Ça réchauffe la gorge, c’est agréable.
+Je prends mon temps, rien ne presse.
+Voilà une bouffée bien rangée.
+Ça sent la tranquillité.
+Un petit nuage pour la route.
+Je commence à sentir mes épaules descendre.
+Encore une et j’arrête. Peut-être.
+Celle-là, elle avait un goût de victoire.
+Mes pensées ralentissent déjà.
+Ça pique un peu, mais ça passe.
+Je garde ça un instant, puis je laisse sortir.
+On dirait que le temps s’étire.
+Une de plus au compteur.
+Le moment parfait pour souffler un coup.
+Je sens le calme qui arrive.
+
+# Le joueur a tenu l’aspiration trop longtemps : toux.
+[COUGH]
+*tousse*
+Argh… trop longtemps !
+Ça gratte…
+Pfff, j’ai exagéré.
+Cof cof… raté.
+Ma gorge !
+J’ai trop tenu.
+Mon souffle s’est coincé !
+Pas si vite, pas si vite…
+J’ai pris trop d’air d’un coup.
+Aïe, ça brûle !
+Je me suis étouffé, c’est ridicule.
+Cof… donne-moi un verre d’eau.
+J’ai oublié de relâcher à temps.
+Mes poumons protestent.
+Quelle idée de tenir aussi longtemps…
+Je recommence, mais plus doucement.
+
+# Le joueur avale (garde) toute la fumée.
+[SWALLOW]
+Tout ça dans les poumons…
+Ça monte direct !
+Rien ne ressort, tout est dedans.
+Wow… ça tape fort.
+Je sens ça partout.
+Gloups. Efficace.
+Tout est parti au fond.
+Plus rien ne sort, je garde tout.
+Ça descend comme une vague chaude.
+Mes poumons sont en fête.
+Je n’ai rien gâché, tout est dedans.
+Une grosse gorgée de fumée, direct.
+Ça tape jusque dans les genoux.
+Je me sens lourd et léger en même temps.
+Le goût reste longtemps, c’est étrange.
+Si je ne respire plus, c’est normal ?
+
+# En réhabilitation : une phrase toutes les 4 à 7 s.
+[REHAB]
+Il fait sombre ici…
+Je suis tout seul.
+Je n’ai pas besoin de ça. Pas vrai ?
+Une minute de plus… puis une autre.
+J’entends mon cœur battre.
+Ma main tremble moins qu’avant.
+Est-ce que quelqu’un pense à moi ?
+Je me souviens de la première bouffée.
+Le plafond est vraiment gris.
+Respire. Juste respirer.
+Je compte les secondes. Une, deux, trois…
+Ça passe, lentement.
+Je voudrais une bouffée… non. Non.
+Mes pensées s’éclaircissent un peu.
+Il y a un petit serpent sur le côté. Pourquoi pas.
+Je veux redevenir normal.
+Qu’est-ce que je fais ici ?
+Les murs sont silencieux.
+Je me sens lourd, mais ça va mieux.
+Mon endurance retombe, c’est bien.
+Au moins personne ne me demande rien.
+Je vais y arriver.
+Je repense à mon premier message sur Communicer.
+Une minute à la fois.
+Je n’ose pas bouger.
+C’est long, mais ça baisse vraiment.
+Je revois les couleurs normales.
+Même la lampe me fait mal aux yeux.
+Pardon pour toutes mes crises.
+J’ai trop crié pour ma vape.
+Je me sens un peu moins agité.
+Tu es toujours là ? Reste encore un peu.
+J’aimerais un thé. Un vrai, à boire.
+Respire par le nez, expire par la bouche.
+Il y a des fissures au plafond, j’en compte douze.
+La paranoïa baisse, je la sens partir.
+Encore un peu et je sors la tête haute.
+Le silence, c’est étrange quand on n’a plus rien à fumer.
+Le silence fait un bruit énorme.
+Chaque minute sans fumer est une petite victoire.
+Je compte jusqu’à dix, puis encore dix.
+Ça passera, ça finit toujours par passer.
+Je pense à ce que je ferai de mon souffle.
+
+# DIALOGUES INTERACTIFS. Coche bleue sur la bulle, clic = menu de 4 réponses; les effets durent 90 s et se cumulent (max 100 %).
+# Conditions communes : ne fume pas, intoxication ≤ 20 %, pas d’overdose, pas en réhab, pas de zoom ouvert, ≥ 45 s depuis le dernier, jamais deux fois le même d’affilée, 40 % de chance par occasion (100 % dans les crises de manque, sans le contexte n).
+
+# Normal : aucune condition particulière (absent des moments de manque forcé)
+[DIALOGUES n]
+? Dis, tu trouves que je fume trop ?
+> Oui, ralentis un peu. | Ouais… tu as sûrement raison. | apa:0.45,crav:-0.4
+> Non, tu es parfait. | Ah, merci ! Ça fait du bien à entendre. | eup:0.55,crav:0.2
+> Tu n’as aucune limite ! | Alors j’en reprends une, tiens ! | imp:0.6,crav:0.6
+> Je ne sais pas, moi. | Hmm… tu me caches quelque chose ? | mef:0.5,par:0.15
+? Tu restes avec moi encore un peu ?
+> Bien sûr, je suis là. | Ça me rassure, vraiment. | eup:0.4,par:-0.15
+> Je n’ai pas le choix, non ? | Charmant. Merci pour l’ambiance. | irr:0.5
+> Peut-être. | Peut-être… toujours peut-être. | apa:0.4
+> Pourquoi, tu as peur ? | Peur ? Moi ? Pourquoi tu dis ça ? | mef:0.45,par:0.2
+? J’ai fait un drôle de rêve cette nuit. Tu veux l’entendre ?
+> Oui, raconte tout. | Alors il y avait des nuages qui parlaient… | eup:0.4,crav:-0.15
+> Pas maintenant. | Comme tu veux. Personne ne m’écoute jamais. | irr:0.35,susc:0.4
+> Je m’en fiche. | Ah. D’accord. Bon. | apa:0.55,susc:0.3
+> Et s’il était vrai ? | Tu crois ? Ça me donne des frissons… | par:0.25,mef:0.3
+? Qu’est-ce que tu ferais si j’arrêtais ?
+> Je serais fier de toi. | Fier ? De moi ? Wow. | eup:0.45,crav:-0.3
+> Je ne te croirais pas. | Tu as peu de foi en moi. | susc:0.5,apa:0.2
+> Je t’en offrirais une. | Excellent plan ! | imp:0.5,crav:0.5
+> Je ne dirais rien. | Ton silence est pire que tout. | mef:0.45,par:0.15
+? On joue à un jeu ? Tu choisis.
+> Cache-cache. | Je compte… non, je me cache ! | imp:0.45,eup:0.3
+> Le silence. | Pff, ennuyeux. Mais d’accord. | apa:0.5
+> Devine à quoi je pense. | À ta vape ? Je gagne ? | eup:0.35,crav:0.2
+> Pas de jeu. | Tu n’as aucun humour. | irr:0.45
+? Tu m’aimes bien, au moins ?
+> Évidemment. | Ça me donne des ailes ! | eup:0.6
+> Ça dépend des jours. | Ce soir, c’est quel jour ? | susc:0.45,mef:0.2
+> Je ne sais pas. | Ah. Voilà qui fait mal. | apa:0.4,susc:0.4
+> Pourquoi tu demandes ça ? | Pour rien ! Juste pour savoir ! | mef:0.4,irr:0.2
+? Tu m’as caché quelque chose, hein ?
+> Non, jamais. | Tu mens mal. | mef:0.55,par:0.2
+> Peut-être bien. | Je le savais ! | par:0.3,irr:0.4,mef:0.4
+> Mais non, détends-toi. | Détends-toi… c’est ça. | par:-0.2,apa:0.3
+> Et toi alors ? | Moi ? Je ne cache rien du tout ! | susc:0.4,mef:0.3
+? J’ai peur de mal faire. Tu me rassures ?
+> Tu fais très bien. | Merci, ça me touche. | eup:0.4,par:-0.2
+> Sois courageux. | Courageux… oui. Allez. | imp:0.4,eup:0.2
+> Tu es nul, honnêtement. | Aïe. Ça fait mal. | susc:0.6,apa:0.3
+> Ce n’est pas grave. | Pas grave… tu crois ? | apa:0.35,par:-0.1
+? Tu peux me dire que ça va aller ?
+> Ça va aller. | Merci… j’avais besoin de l’entendre. | par:-0.3,crav:-0.2
+> Je ne sais pas. | Eh bien, tu n’aides pas. | irr:0.4,par:0.15
+> Ça ira mieux avec une bouffée. | Tu lis dans mes pensées. | crav:0.5,imp:0.3
+> Tout va mal. | Alors c’est vrai… tout va mal. | par:0.35,apa:0.4
+? Qu’est-ce que tu penses de mes tricks ?
+> Magnifiques ! | Je fais de mon mieux ! | eup:0.5
+> Moyens. | Moyens ?! Tu pourrais faire mieux, toi ? | susc:0.5,irr:0.35
+> Montre-moi encore. | Regarde ça ! | imp:0.45,eup:0.3
+> Je m’en lasse. | Alors je les fais pour moi. | apa:0.45
+? Tu veux faire une pause avec moi ?
+> Avec plaisir. | Voilà, on souffle un peu. | apa:0.3,par:-0.25,crav:-0.15
+> Pas le temps. | Toujours pressé, toi. | irr:0.4
+> Pour fumer ? | Tu as deviné. Évidemment. | crav:0.45,imp:0.25
+> Pourquoi pas. | Pourquoi pas… oui… pourquoi pas. | apa:0.4
+? Tu crois qu’on peut changer ?
+> Bien sûr, tout change. | Alors peut-être moi aussi… | eup:0.35,par:-0.1
+> Non, on reste pareil. | Ah. C’est triste mais c’est honnête. | apa:0.5
+> Seulement avec de l’aide. | Alors aide-moi, d’accord ? | eup:0.25,crav:-0.2
+> Pourquoi, tu veux changer ? | Moi ? Non… enfin, peut-être. | mef:0.35,susc:0.3
+? C’est quoi, ton plus beau souvenir ?
+> Une plage au coucher du soleil. | Oh oui… j’y étais presque. | eup:0.45
+> Je préfère ne pas en parler. | Tu as des secrets, toi. | mef:0.45,par:0.1
+> Je n’en ai pas. | C’est vraiment dommage. | apa:0.45
+> Et toi, c’est quoi ? | Le goût d’une première bouffée. | imp:0.4,crav:0.3
+? Tu crois que le bonheur existe ?
+> Oui, par moments. | Par moments, ça suffit. | eup:0.4
+> Non, c’est une illusion. | Alors tout est une illusion ? | apa:0.5,par:0.1
+> Il se cache dans les petites choses. | Comme les petits nuages ? | eup:0.35,crav:0.1
+> Je n’y pense pas. | Moi je n’arrête pas d’y penser. | mef:0.3,irr:0.25
+? Tu me trouves bizarre ?
+> Un peu, oui. | Merci pour ta franchise… | susc:0.5,irr:0.2
+> Pas du tout. | Ça me fait plaisir. | eup:0.4
+> Tu es unique. | Unique… j’aime bien le mot. | eup:0.45,imp:0.2
+> Qu’est-ce que ça change ? | Bonne question. Rien, au fond. | apa:0.4
+? On peut parler d’autre chose ?
+> De quoi tu veux. | Alors parlons de voyages. | eup:0.3
+> Non, on continue. | Tu es têtu. | irr:0.4
+> Parlons de nous. | De nous ? Oh là là. | mef:0.3,susc:0.3
+> Je préfère me taire. | Ton silence fait du bruit. | apa:0.4,mef:0.2
+? Tu as déjà eu peur du noir ?
+> Oui, souvent. | Moi aussi. Ça ne passe jamais. | par:0.2,mef:0.3
+> Jamais. | Courageux ! Moi je me cache. | par:-0.1,apa:0.2
+> Je laisse toujours une lampe. | Bonne idée, j’en prends une aussi. | par:-0.2
+> La nuit est jolie. | Elle sent la menthe, hein ? | eup:0.35
+? Tu veux que je te chante quelque chose ?
+> Oui, vas-y ! | La la la… tu fais attention ? | eup:0.6,imp:0.3
+> Non, merci. | Tu as raison, je chante faux. | susc:0.4
+> Chante doucement. | Mmm… tout doucement alors. | apa:0.4,eup:0.2
+> Seulement si tu danses. | Ça se négocie ! | imp:0.5,eup:0.3
+? Je peux te poser une question gênante ?
+> Vas-y. | Tu me juges, au fond ? | susc:0.4,mef:0.3
+> Non. | Tu caches quelque chose, toi ! | mef:0.5,par:0.2
+> Ça dépend laquelle. | Oh, très prudent, bravo. | mef:0.3
+> Pose-la vite. | Tu es impatient, c’est drôle. | imp:0.4
+? Tu préfères la mer ou la montagne ?
+> La mer. | Moi aussi, sans hésiter ! | eup:0.4
+> La montagne. | Le silence des sommets… oui. | apa:0.3,eup:0.2
+> Les deux. | Tu ne choisis jamais ? | susc:0.3,irr:0.2
+> Aucune des deux. | Alors tu aimes quoi ? | mef:0.3,irr:0.2
+? Tu penses que je suis drôle ?
+> Très drôle ! | Je savais que j’étais génial. | eup:0.55,imp:0.25
+> Pas vraiment. | Aïe… ça pique. | susc:0.55,irr:0.3
+> Parfois sans le vouloir. | Sans le vouloir, c’est le meilleur. | eup:0.25,susc:0.2
+> Je ne te réponds pas. | Silence suspect, hum. | mef:0.4
+? Qu’est-ce qui te rend triste, toi ?
+> Quand on me délaisse. | Moi aussi, je déteste ça. | apa:0.4,susc:0.3
+> Rien du tout. | Tu as de la chance. | apa:0.3
+> Les adieux. | Ah, ça, oui, c’est dur. | apa:0.5
+> Je ne te le dirai pas. | Tout le monde me cache tout. | mef:0.45,par:0.2
+? Ça t’arrive d’avoir peur de l’avenir ?
+> Tout le temps. | Alors on est deux. | par:0.2,mef:0.2
+> Jamais. | Quelle chance, quelle belle chance. | apa:0.3,eup:0.15
+> Je préfère vivre le présent. | Le présent… oui, restons-y. | eup:0.3,apa:0.2
+> L’avenir, c’est effrayant. | Ne dis pas ça, tu me fais peur. | par:0.35,trem:0.3
+? Tu dors bien, toi ?
+> Comme un bébé. | J’aimerais pouvoir dire pareil. | apa:0.3
+> Très mal. | Alors fumons… non, dormons. | crav:0.3,apa:0.25
+> Ça dépend des nuits. | Moi, c’est le plafond qui décide. | apa:0.25
+> Je ne dors jamais. | Tu es un fantôme ? | mef:0.3,par:0.2
+? On fait la course jusqu’à la fenêtre ?
+> Prêt, partez ! | Je gagne ! Je gagne ! | imp:0.6,eup:0.4
+> Je suis fatigué. | Pff, aucun amusement. | irr:0.4,apa:0.3
+> Je te laisse gagner. | Tu me prends pour un faible ? | susc:0.5
+> Pourquoi faire ? | Parce que c’est drôle ! | imp:0.35,eup:0.25
+? Tu veux savoir ce que je pense de toi ?
+> Oui, dis-moi. | Tu es apaisant, c’est rare. | eup:0.4,par:-0.15
+> Non, garde-le pour toi. | Je m’en doutais, tu fuis. | susc:0.4,mef:0.3
+> Dis-le doucement. | Doucement… tu es précieux. | eup:0.35,apa:0.2
+> Je m’en doute. | Ah bon ? Tu es devin ? | mef:0.35
+? Tu as déjà gagné un trophée ?
+> Oui, un petit. | Raconte, raconte ! | eup:0.4,imp:0.2
+> Jamais. | Moi non plus. On est du même bord. | apa:0.3
+> J’en ai plusieurs. | Menteur ! Montre-moi. | mef:0.4,irr:0.2
+> Les trophées ne servent à rien. | Tu es aigri, toi. | irr:0.4,susc:0.3
+? Tu veux apprendre à jongler avec moi ?
+> Pourquoi pas. | Parfait, on commence avec trois nuages. | eup:0.45,imp:0.3
+> Non, je vais tout casser. | Tu es trop dur avec toi. | susc:0.3,apa:0.2
+> Seulement avec des balles. | Ah oui, il faut des balles. | apa:0.3
+> Je sais déjà jongler. | Alors fais-moi voir ! | imp:0.45,eup:0.25
+? Tu vois quelque chose de beau, là, maintenant ?
+> Toi. | Oh… tu me fais rougir. | eup:0.55
+> Le ciel. | Oui, le ciel a l’air de sourire. | eup:0.3,apa:0.15
+> Rien du tout. | Quel dommage. Regarde mieux. | apa:0.35
+> Ce serait plus beau avec de la fumée. | Je suis d’accord, voyons voir. | crav:0.4,imp:0.3
+? Je crois que j’ai dit une bêtise tout à l’heure.
+> Pas grave. | Merci. Je m’en voudrais sinon. | eup:0.25,par:-0.1
+> C’est vrai, tu en dis beaucoup. | Tu sais, ça fait mal. | susc:0.55,irr:0.3
+> Quelle bêtise ? | Je ne me souviens déjà plus. | apa:0.3
+> Oublie ça. | Je vais essayer d’oublier. | apa:0.35
+? Tu me prêtes ton oreille cinq minutes ?
+> Je t’écoute. | Alors voilà, ça commence… | eup:0.3,par:-0.2
+> Pas maintenant. | Il y a toujours quelque chose, hein. | irr:0.4,susc:0.3
+> Cinq minutes, pas plus. | Je vais parler vite ! | imp:0.45
+> Pour dire quoi ? | Pour dire des choses importantes. | mef:0.3,par:0.15
+? Tu ne trouves pas qu’il fait un peu froid ?
+> Prends un pull. | Bonne idée, quel génie. | apa:0.25,eup:0.15
+> Non, c’est parfait. | Moi je grelotte. | trem:0.4
+> Rapproche-toi. | Merci, c’est gentil. | eup:0.35,par:-0.1
+> Tu as de la fièvre. | De la fièvre ?! Tu crois ? | par:0.3,trem:0.3
+? Tu me montres un de tes tricks ?
+> Regarde bien. | Waouh… encore, encore ! | eup:0.5,imp:0.3
+> Je ne suis pas prêt. | Allez, ne sois pas timide. | imp:0.3
+> Tu devrais t’entraîner. | Je m’entraîne, quand même. | susc:0.4,irr:0.25
+> Plus tard. | Plus tard, plus tard… | apa:0.4
+? Tu penses souvent à moi ?
+> Tout le temps. | Moi aussi… ça fait chaud au cœur. | eup:0.5
+> Rarement. | Ah. Bon. Compris. | apa:0.4,susc:0.4
+> Je ne te réponds pas. | Alors c’est oui, hein ? | imp:0.3,eup:0.2
+> Pourquoi tu veux le savoir ? | Pour rien ! Juste pour savoir… | mef:0.35,susc:0.2
+? Qu’est-ce qui te ferait vraiment rire ?
+> Une grimace. | Hé ! Tu veux voir la mienne ? | eup:0.45,imp:0.3
+> Une chute. | Méchant, mais je comprends. | irr:0.2,eup:0.25
+> Rien du tout. | Un vrai bloc de glace. | apa:0.4,irr:0.15
+> Toi, en ce moment. | Tu te moques de moi ?! | susc:0.5,irr:0.3
+? Tu veux faire un pacte avec moi ?
+> Quel genre de pacte ? | Rien de grave, juste un secret. | mef:0.3,eup:0.15
+> Oui, tout de suite. | Marché conclu, pas de retour ! | imp:0.5,eup:0.3
+> Non, je ne signe rien. | Prudent, ça me plaît. | mef:0.3,apa:0.2
+> Après un café. | Après un café, c’est sacré. | eup:0.3
+? Si tu pouvais tout recommencer, tu le ferais ?
+> Oui, sans hésiter. | Moi aussi… sauf pour un détail. | apa:0.3,crav:0.1
+> Non, je garde tout. | Même les mauvais jours ? | apa:0.3,eup:0.15
+> Je changerais une chose. | Laquelle ? Dis-moi, dis-moi. | mef:0.25,imp:0.25
+> Je n’y ai jamais pensé. | Eh bien, maintenant, tu y penses. | apa:0.35
+? Tu veux m’accompagner dehors ?
+> Allons-y. | Attends, je prends ma veste ! | eup:0.4,imp:0.3
+> Il fait trop froid. | Toujours une excuse, toi. | irr:0.4,apa:0.25
+> Plus tard. | Plus tard… comme toujours. | susc:0.35,apa:0.3
+> Pour faire quoi ? | Pour marcher, c’est tout. | mef:0.3
+
+# Manque : seulement si l’envie de fumer est > 15 %
+[DIALOGUES k]
+? Je n’en peux plus, j’ai besoin d’une bouffée…
+> Tiens bon encore un peu. | Facile à dire pour toi… | irr:0.45,crav:0.1
+> Respire profondément. | Ça fait un peu de bien, merci. | crav:-0.5,apa:0.2
+> Vas-y, prends-en une. | Enfin quelqu’un de raisonnable ! | eup:0.4,imp:0.4,crav:0.3
+> Pense à autre chose. | Autre chose ? Il n’y a que ça dans ma tête ! | irr:0.35,par:0.15
+? Promets-moi que c’est la dernière de la journée.
+> Promis. | Merci. Je te crois… presque. | crav:-0.3,apa:0.2
+> Je ne promets rien. | Alors je fais ce que je veux. | imp:0.5,irr:0.3
+> Seulement si tu le promets aussi. | Ha ! Pas bête. D’accord. | eup:0.35,crav:-0.2
+> Pourquoi ce serait la dernière ? | Parce que… parce que… laisse tomber. | susc:0.4,mef:0.2
+? Pourquoi tu me fais attendre ?
+> Je suis occupé. | Occupé ?! Et moi alors ? | irr:0.6,crav:0.3
+> Désolé, voilà. | Merci… respire, respire. | crav:-0.4,eup:0.2
+> Tu n’as qu’à patienter. | Patienter… facile à dire. | irr:0.45,crav:0.2
+> Je pensais à toi. | Alors dépêche-toi, pense plus vite. | imp:0.4,crav:0.15
+? Tu as vu où j’ai posé ma vape ?
+> Elle est là, devant toi. | Ah ! Merci, merci, merci ! | crav:0.2,eup:0.4
+> Je l’ai cachée. | QUOI ?! Rends-la ! | irr:0.65,crav:0.4,par:0.15
+> Non, désolé. | Je vais devenir fou… | irr:0.4,par:0.2,crav:0.2
+> Tu l’as dans la poche. | Ha ! Oups. Bien joué. | eup:0.3,crav:-0.1
+? Mon cœur bat vite, c’est normal ?
+> Respire doucement. | Je respire… je respire… | crav:-0.3,par:-0.15
+> Tu as besoin d’une bouffée. | Oui ! Oui, j’en ai besoin. | crav:0.5,imp:0.4
+> C’est le stress. | Le stress, c’est tout moi. | trem:0.4,par:0.15
+> Tu devrais t’asseoir. | Je m’assois… ça va mieux. | apa:0.35,crav:-0.15
+? Ça fait combien de temps depuis ma dernière bouffée ?
+> Longtemps. | Je le savais, je le sentais ! | crav:0.4,irr:0.35
+> Pas si longtemps. | Alors pourquoi j’ai la gorge sèche ? | crav:0.15,mef:0.25
+> Je ne compte pas. | Moi, je compte tout. | par:0.15,crav:0.2
+> Occupe-toi autrement. | Impossible, tout me ramène là. | irr:0.35,crav:0.25
+? Tu vas me gronder si j’en reprends une ?
+> Oui, je vais te gronder. | Alors je le ferai en cachette. | mef:0.4,imp:0.4,crav:0.3
+> Non, vas-y. | Merci ! Tu es le meilleur ! | eup:0.5,crav:0.4
+> Attends dix minutes. | Dix minutes… c’est long. | irr:0.35,crav:-0.1
+> C’est ton choix. | Mon choix… oui, mon choix. | apa:0.3,imp:0.25
+? J’ai la bouche sèche, tu as de l’eau ?
+> Tiens, bois. | Merci… ça aide un peu. | crav:-0.3,par:-0.1
+> Je n’en ai pas. | Alors je me débrouille. | irr:0.4,crav:0.2
+> Prends plutôt une bouffée. | Ah, tu comprends tout ! | crav:0.35,eup:0.25
+> Bois ta salive. | Hé ! Ce n’est pas drôle. | irr:0.45,susc:0.3
+? Tu as vu mes mains ? Elles bougent toutes seules.
+> Serre-les ensemble. | Ça va mieux… un peu. | trem:0.3,crav:-0.15
+> C’est le manque. | Alors donne-moi quelque chose ! | crav:0.45,irr:0.35
+> Tu t’imagines des choses. | Non ! Regarde ! | irr:0.4,par:0.25
+> Respire. | Oui, je respire… oui. | par:-0.2,apa:0.2
+? Je n’arrive plus à penser à autre chose.
+> Pense à la mer. | La mer… avec de la fumée ? | crav:0.2,eup:0.2
+> Occupe tes mains. | Je les occupe… avec rien. | trem:0.3,irr:0.25
+> Je te comprends. | Ça fait du bien de le dire. | crav:-0.25,eup:0.2
+> Tu exagères. | Tu ne comprends rien du tout ! | irr:0.5,susc:0.4
+? Ma tête est lourde, tu peux m’aider ?
+> Ferme les yeux. | D’accord… c’est mieux. | apa:0.4,crav:-0.2
+> Marche un peu. | Marcher… avec les jambes en coton. | apa:0.25,trem:0.2
+> Une bouffée t’aiderait. | Alors oui, tout de suite. | crav:0.5,imp:0.3
+> Je n’y peux rien. | Ça, je m’en doutais. | irr:0.35,apa:0.25
+? Dis-moi que j’ai le droit d’en reprendre.
+> Tu as le droit. | Merci. Merci mille fois. | crav:0.4,eup:0.4
+> Non, résiste. | Tu es cruel avec moi. | irr:0.45,susc:0.3,crav:-0.15
+> Fais ce que tu veux. | Je ferai ce que je veux, alors. | imp:0.45,crav:0.25
+> Respire avant. | Je respire. Voilà. Et maintenant ? | crav:-0.25,apa:0.25
+
+# Paranoïa : seulement si la paranoïa est > 25 %
+[DIALOGUES p]
+? Tu crois que quelqu’un nous regarde ?
+> Mais non, tu rêves. | Tu as raison… je suis fatigué. | par:-0.25,apa:0.3
+> Oui, je les vois aussi. | Je le savais ! Je le savais ! | par:0.3,mef:0.55
+> Qui voudrait nous regarder ? | Justement… qui ? | mef:0.4,par:0.15
+> Arrête avec ça. | Tu ne me crois pas, hein ? | irr:0.45,susc:0.35
+? J’ai entendu un bruit derrière nous. Tu l’as entendu ?
+> Non, rien. | Mais moi je l’ai entendu… | par:0.2,mef:0.4
+> Oui ! Cache-toi. | Vite ! Vite ! Où ça ? | par:0.4,mef:0.5,trem:0.4
+> C’est le vent. | Le vent… oui, le vent. | par:-0.2,apa:0.3
+> Tu entends des choses. | Ne dis pas ça ! Je ne suis pas fou ! | irr:0.5,susc:0.5
+? Pourquoi tout le monde me fixe ?
+> Personne ne te fixe. | Si, si, regarde-les… | par:0.2,mef:0.5
+> Parce que tu es spécial. | Spécial ? Oh… merci. | eup:0.4,par:-0.15
+> Peut-être que tu l’as mérité. | Tu es dur avec moi. | susc:0.55,irr:0.3
+> Fixe-les à ton tour. | Bonne idée ! Ils vont voir ! | imp:0.5,par:0.15
+? Si je te racontais un secret, tu le garderais ?
+> Je serai muet. | Alors écoute… mais ne le répète pas. | par:-0.1,eup:0.25
+> Dis-le, on verra. | Non. Tu ne le garderas pas. | mef:0.55,par:0.2
+> À qui je le dirais ? | À eux ! À tous ceux qui écoutent. | par:0.35,mef:0.5
+> Je ne veux pas savoir. | Alors je m’en vais, je me tais. | apa:0.45,susc:0.3
+? Tu entends comme ça chuchote ?
+> Je n’entends rien. | Tu as de la chance… de la chance. | mef:0.4,par:0.2
+> Oui, j’entends aussi. | Je le savais ! On est deux ! | par:0.35,mef:0.4
+> C’est le vent. | Le vent chuchote mon nom. | par:0.25,trem:0.2
+> Bouche-toi les oreilles. | Ça ne change rien, ça continue. | par:0.2,irr:0.3
+? Pourquoi cette porte est-elle entrouverte ?
+> C’est le courant d’air. | Un courant d’air, vraiment ? | mef:0.4,par:0.15
+> Ferme-la à clé. | Oui ! Et je vérifie deux fois. | par:0.2,trem:0.3
+> Je vais voir. | Non, ne pars pas ! | par:0.3,mef:0.3
+> Elle a toujours été comme ça. | Alors pourquoi je ne l’avais pas vue ? | mef:0.45,par:0.25
+? Tu as l’impression qu’on te suit parfois ?
+> Oui, souvent. | Je me sens moins seul à entendre ça. | par:0.3,mef:0.35
+> Jamais. | Tu as de la chance de ne rien remarquer. | mef:0.4
+> C’est ton imagination. | Mon imagination est très précise. | irr:0.35,mef:0.3
+> Qui te suivrait ? | Tous ceux qui nous observent. | par:0.35,mef:0.45
+? Ce miroir me regarde de travers.
+> Retourne-le. | Excellente idée. | par:-0.15,apa:0.2
+> Regarde dedans. | Je n’ose pas. Il me fixe. | par:0.3,trem:0.3
+> Tu rêves. | Je ne rêve pas, il bouge. | mef:0.4,par:0.25
+> Il te ressemble. | Ne dis pas ça… ne dis pas ça. | susc:0.4,par:0.2
+? Tu as fermé les rideaux ?
+> Oui, tout est fermé. | Merci. On est plus tranquilles. | par:-0.25,apa:0.2
+> Non, ouvre-les. | Surtout pas ! On nous verrait. | par:0.35,mef:0.35
+> Pourquoi, tu as peur ? | Non… enfin, un peu. | par:0.2,mef:0.2
+> Je n’y ai pas pensé. | Tu ne penses jamais à rien. | irr:0.4,par:0.2
+? Je crois que mon téléphone m’écoute.
+> Éteins-le. | Éteint. Je respire mieux. | par:-0.2
+> Moi aussi, j’y crois. | Tu vois ! Je ne suis pas fou. | par:0.35,mef:0.45
+> Tu exagères. | On se moque de moi, maintenant. | susc:0.45,mef:0.3
+> Qui voudrait t’écouter ? | Plein de gens ! Plein de gens ! | par:0.3,irr:0.3
+? Cette ombre là-bas bouge, non ?
+> Non, rien ne bouge. | Elle vient de bouger, regarde ! | par:0.3,mef:0.35
+> Oui, j’ai vu aussi. | Ah ! Je ne suis pas seul à la voir. | par:0.4,trem:0.35
+> Allume la lumière. | Oui, la lumière ! Vite ! | par:-0.1,imp:0.35
+> C’est une ombre, c’est tout. | Ça dit toujours ça avant d’être mangé. | mef:0.3,eup:0.1
+? Tu m’as bien regardé ? Je suis normal ?
+> Tout à fait normal. | Merci, ça me rassure. | par:-0.2
+> Tu es pâle. | Pâle ?! Je suis malade ? | par:0.3,trem:0.3
+> Tu as l’air étrange. | Je le savais, je le sentais. | mef:0.4,par:0.25
+> Qu’est-ce que ça change ? | Tout. Tout ça change tout. | susc:0.35,par:0.15
+
+# Effets : seulement si le niveau d’effet est > 25 %
+[DIALOGUES f]
+? Tu vois les couleurs, toi aussi ?
+> Oui, elles bougent ! | Je ne suis pas fou, alors ! | eup:0.55,imp:0.25
+> Non, rien du tout. | Alors c’est moi… c’est moi qui perds la tête. | par:0.3,mef:0.3
+> Décris-moi ce que tu vois. | Du violet, du vert, et ça respire… | eup:0.3,apa:0.25
+> C’est la fumée, calme-toi. | Calme… oui. Calme. | apa:0.5,par:-0.1
+? Ça te dirait qu’on danse ?
+> Allons-y ! | Youhou ! Plus fort ! | eup:0.7,imp:0.45
+> Je ne danse pas. | Rabat-joie… | irr:0.4,apa:0.3
+> Seulement si tu mènes. | Alors suis-moi, c’est facile ! | eup:0.4,imp:0.3
+> Tu tiens à peine debout. | Peut-être, mais j’ai du style. | susc:0.5,irr:0.25
+? Tout est lent… Tu veux bien me secouer ?
+> Hé ! Réveille-toi ! | Hein ? Quoi ? Ah oui… | apa:-0.2,imp:0.4
+> Laisse-toi aller. | Mmmh… oui… doucement… | apa:0.6,eup:0.2
+> Raconte-moi une histoire. | Il était une fois… un nuage… | apa:0.3,eup:0.3
+> Pas question. | Bon… tant pis… zzz… | apa:0.5,irr:0.2
+? Je me sens invincible ! Tu me suis ?
+> Je te suis ! | Alors on va tout casser ! | eup:0.6,imp:0.6
+> Redescends un peu. | Toi alors, toujours à freiner. | irr:0.4,apa:0.2
+> Attention à la chute. | Quelle chute ? Je vole ! | eup:0.5,imp:0.4
+> Tu délires. | Je délire peut-être, mais c’est beau. | eup:0.35,susc:0.3
+? Mes mains tremblent, c’est normal ?
+> Oui, ça passera. | D’accord… d’accord… | trem:0.5,par:-0.1
+> Non, c’est inquiétant. | Inquiétant ?! Dis-moi que ça va aller ! | trem:0.6,par:0.3
+> Ferme les poings. | Comme ça ? Ça tremble encore. | trem:0.4
+> Tu exagères. | Je n’exagère pas du tout ! | irr:0.4,susc:0.4
+? Les couleurs dansent, tu veux danser avec elles ?
+> Allons-y ! | Tourbillon, tourbillon ! | eup:0.6,imp:0.4
+> Je reste assis. | Alors je danse pour deux. | eup:0.35
+> Je préfère les regarder. | Elles se déplacent juste pour toi. | apa:0.25,eup:0.3
+> Elles me font peur. | Ne sois pas peureux, elles sont douces. | par:0.2,mef:0.2
+? J’ai l’impression de voler, c’est vrai ?
+> Oui, tu voles. | Je le savais ! Plus haut ! | eup:0.6,imp:0.45
+> Non, tu es assis. | Mais le sol est si loin… | apa:0.3,trem:0.2
+> Atterris doucement. | Doucement… doucement… | apa:0.35,par:-0.1
+> Attention au plafond. | Aïe ! Trop tard ! | irr:0.3,imp:0.35
+? Tout est tellement lent, tu ne trouves pas ?
+> Prends ton temps. | J’ai tout mon temps… tout. | apa:0.5
+> Accélère un peu. | Pourquoi accélérer ? Tout est beau. | apa:0.35,eup:0.2
+> Respire à fond. | Je respire… très… lentement. | apa:0.4,par:-0.1
+> Je ne ressens rien. | C’est parce que tu es trop rapide. | irr:0.3,mef:0.2
+? J’entends les couleurs, c’est normal ?
+> Oui, c’est normal. | Alors le rouge fait du bruit ! | eup:0.45,imp:0.25
+> Non, c’est étrange. | Étrange mais très beau. | eup:0.3,par:0.1
+> Décris-moi ce son. | Une cloche douce, bleue, qui tourne. | eup:0.35,apa:0.25
+> Arrête, tu me fais peur. | Ne t’inquiète pas, ça va passer. | par:0.25,mef:0.25
+? Mes pieds ne touchent plus le sol.
+> Tu flottes vraiment. | Quelle sensation incroyable ! | eup:0.55,imp:0.3
+> Pose-les par terre. | Je n’y arrive pas… je flotte. | par:0.3,trem:0.3
+> Profites-en. | Tu as raison, profitons. | eup:0.45
+> C’est dangereux. | Dangereux ? Non, c’est doux. | mef:0.25,apa:0.2
+? Tu veux que je te raconte ce que je vois ?
+> Oui, raconte. | Des vagues vertes sur le plafond. | eup:0.4,apa:0.2
+> Non, je préfère rester calme. | Alors je le garde pour moi. | apa:0.35
+> Fais-le en rimes. | Vert, vert, tout est ouvert ! | eup:0.5,imp:0.35
+> Tu inventes tout. | Je n’invente rien du tout ! | irr:0.4,susc:0.35
+? Les murs ont l’air de respirer, tu les entends ?
+> Oui, ils respirent. | Inspire, expire… ensemble. | eup:0.35,apa:0.3
+> Les murs ne respirent pas. | Tu n’as pas assez écouté. | irr:0.3,mef:0.25
+> Respire avec eux. | Mmm… c’est apaisant. | apa:0.5,par:-0.2
+> Ils me regardent. | Tu vois bien qu’ils sont vivants. | par:0.35,mef:0.35
+? Il y a des étoiles dans la pièce, tu les vois ?
+> Je les vois ! | Elles brillent pour nous deux. | eup:0.55
+> Je n’en vois aucune. | Tu manques de poésie. | irr:0.3,susc:0.25
+> Attrape-en une. | Elle m’a glissé entre les doigts. | imp:0.4,eup:0.25
+> Ce sont des lumières. | Les lumières, ça s’appelle des étoiles. | apa:0.25,eup:0.2
