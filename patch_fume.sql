@@ -385,9 +385,7 @@ on conflict (code) do update set name = excluded.name, price = excluded.price, p
 alter table public.smoke_items drop constraint if exists smoke_items_kind_check;
 alter table public.smoke_items add constraint smoke_items_kind_check check (kind in ('vape','cigar','cigarette','joint','cone'));
 alter table public.smoke_items drop constraint if exists smoke_items_power_check;
-alter table public.smoke_items
-add constraint smoke_items_power_check
-check (power between 1 and 5000);
+alter table public.smoke_items add constraint smoke_items_power_check check (power between 1 and 2050);
 
 insert into public.smoke_items(code, kind, name, price, power, fx, system) values
  ('cone_reds','cone','Cône REDS',1500,300,'{"scr":1,"mouse":1,"delay":1,"anim":1,"warp":1,"psy":1,"obj":1,"hal":1,"fau":1,"ill":1,"scrl":1,"blur":1,"keys":1,"coord":1,"att":1}',true),
@@ -1272,4 +1270,179 @@ insert into public.smoke_items(code, kind, name, price, power, fx, smoke, system
  ('joint_abyssal','joint','Joint Abyssal',1040,140,'{"scr":0.96,"mouse":0.96,"delay":0.77,"anim":0.96,"warp":0.96,"psy":0.96,"obj":0.96,"hal":0.96,"fau":0.96,"ill":0.96,"eup":0.67,"chro":0.58,"echo":0.85,"dist":0.48,"bav":0.48,"imp":0.48,"acou":0.38,"hyper":0.48,"trem":0.29,"blur":0.85}','{"color":"#8affd6","density":1.36,"size":1.38,"speed":1.2}',true),
  ('joint_infini','joint','Joint Infini',1120,149,'{"scr":1,"mouse":1,"delay":0.8,"anim":1,"warp":1,"psy":1,"obj":1,"hal":1,"fau":1,"ill":1,"eup":0.7,"chro":0.6,"echo":0.6,"dist":0.5,"bav":0.5,"imp":0.5,"acou":0.4,"hyper":0.5,"trem":0.3,"att":0.9,"lent":0.9}','{"color":"#ffffff","density":1.43,"size":1.44,"speed":1.25}',true)
 on conflict (code) do update set name = excluded.name, price = excluded.price, power = excluded.power, fx = excluded.fx, smoke = excluded.smoke, kind = excluded.kind where public.smoke_items.system;
+notify pgrst, 'reload schema';
+
+-- LOT 18m : garde-robe (vêtements, chapeaux, lunettes)
+create table if not exists public.smoke_cosm (code text primary key, slot text not null check (slot in ('outfit','hat','glasses')), name text not null, price numeric not null, sort int not null default 0);
+create table if not exists public.smoke_cosm_inv (user_id uuid not null, code text not null references public.smoke_cosm(code) on delete cascade, primary key (user_id, code));
+alter table public.smoke_cosm enable row level security; alter table public.smoke_cosm_inv enable row level security;
+revoke all on public.smoke_cosm, public.smoke_cosm_inv from anon, authenticated;
+alter table public.smoke_chars add column if not exists outfit text;
+alter table public.smoke_chars add column if not exists hat text;
+alter table public.smoke_chars add column if not exists glasses text;
+insert into public.smoke_cosm(code, slot, name, price, sort) values
+('tee_blanc','outfit','T-shirt blanc',40,0),
+('tee_noir','outfit','T-shirt noir',40,1),
+('tee_rouge','outfit','T-shirt rouge',45,2),
+('polo_vert','outfit','Polo vert',90,3),
+('hoodie_gris','outfit','Hoodie gris',150,4),
+('hoodie_noir','outfit','Hoodie noir à cordons',180,5),
+('carreaux','outfit','Chemise à carreaux',120,6),
+('cravate','outfit','Chemise et cravate',220,7),
+('costume','outfit','Costume noir',600,8),
+('smoking','outfit','Smoking et noeud papillon',900,9),
+('cuir','outfit','Veste de cuir',450,10),
+('jean','outfit','Blouson de jean',260,11),
+('noel','outfit','Pull de Noël',130,12),
+('marin','outfit','Marinière',110,13),
+('kimono','outfit','Kimono',700,14),
+('armure','outfit','Armure de chevalier',1800,15),
+('toge','outfit','Toge romaine',500,16),
+('scrubs','outfit','Uniforme médical',300,17),
+('hockey','outfit','Chandail de hockey',350,18),
+('royal','outfit','Cape royale',3000,19),
+('spatial','outfit','Combinaison spatiale',2500,20),
+('fourrure','outfit','Manteau à fourrure',800,21),
+('casq_rouge','hat','Casquette rouge',60,0),
+('casq_inv','hat','Casquette retournée',70,1),
+('tuque','hat','Tuque',80,2),
+('pompon','hat','Tuque à pompon',100,3),
+('melon','hat','Chapeau melon',300,4),
+('haut','hat','Haut-de-forme',650,5),
+('fedora','hat','Fedora',400,6),
+('cowboy','hat','Chapeau de cowboy',450,7),
+('beret','hat','Béret',150,8),
+('paille','hat','Chapeau de paille',120,9),
+('bob','hat','Bob',90,10),
+('fete','hat','Chapeau de fête',50,11),
+('couronne','hat','Couronne en or',5000,12),
+('sorcier','hat','Chapeau de sorcier',900,13),
+('pere_noel','hat','Bonnet de père Noël',140,14),
+('pompier','hat','Casque de pompier',500,15),
+('kepi','hat','Képi',350,16),
+('chef','hat','Toque de chef',260,17),
+('lapin','hat','Oreilles de lapin',200,18),
+('viking','hat','Casque viking',1200,19),
+('pirate','hat','Tricorne de pirate',1000,20),
+('sombrero','hat','Sombrero',550,21),
+('rondes','glasses','Lunettes rondes',60,0),
+('carrees','glasses','Lunettes carrées',70,1),
+('aviateur','glasses','Lunettes aviateur',250,2),
+('soleil','glasses','Lunettes de soleil',180,3),
+('soleil_rouge','glasses','Soleil rouges',200,4),
+('coeur','glasses','Lunettes coeur',150,5),
+('etoile','glasses','Lunettes étoile',160,6),
+('trois_d','glasses','Lunettes 3D',100,7),
+('monocle','glasses','Monocle',400,8),
+('ski','glasses','Lunettes de ski',350,9),
+('piscine','glasses','Lunettes de natation',90,10),
+('steampunk','glasses','Lunettes steampunk',800,11),
+('neon','glasses','Lunettes néon',600,12),
+('pixel','glasses','Lunettes pixel',700,13),
+('lecture','glasses','Lunettes de lecture dorées',300,14),
+('demi','glasses','Demi-lunes',220,15),
+('chat','glasses','Lunettes papillon',280,16),
+('miroir','glasses','Verres miroir',450,17),
+('lennon','glasses','Rondes fines',240,18),
+('bandeau','glasses','Bandeau de pirate',130,19),
+('vr','glasses','Casque de réalité virtuelle',1500,20),
+('disco','glasses','Lunettes disco',950,21)
+on conflict (code) do update set slot = excluded.slot, name = excluded.name, price = excluded.price, sort = excluded.sort;
+
+create or replace function public.smoke_cosm_list() returns jsonb language plpgsql security definer stable set search_path = public as $$
+declare c public.smoke_chars := public._sm_row(); b numeric;
+begin
+  select balance into b from public.wallets where user_id = auth.uid();
+  return jsonb_build_object('balance', coalesce(b, 0), 'outfit', c.outfit, 'hat', c.hat, 'glasses', c.glasses,
+    'items', coalesce((select jsonb_agg(jsonb_build_object('code', x.code, 'slot', x.slot, 'name', x.name, 'price', x.price, 'owned', i.user_id is not null) order by x.slot, x.sort)
+      from public.smoke_cosm x left join public.smoke_cosm_inv i on i.code = x.code and i.user_id = auth.uid()), '[]'::jsonb));
+end $$;
+revoke all on function public.smoke_cosm_list() from public, anon;
+grant execute on function public.smoke_cosm_list() to authenticated;
+
+create or replace function public.smoke_cosm_buy(p_code text) returns jsonb language plpgsql security definer set search_path = public as $$
+declare c public.smoke_chars := public._sm_row(); s public.smoke_cosm; b numeric;
+begin
+  perform public.rate_ok('smcosm', 60, 3600);
+  select * into s from public.smoke_cosm where code = p_code;
+  if not found then raise exception 'Article inconnu'; end if;
+  if exists (select 1 from public.smoke_cosm_inv where user_id = auth.uid() and code = p_code) then raise exception 'Déjà acheté'; end if;
+  insert into public.wallets(user_id) values (auth.uid()) on conflict do nothing;
+  select balance into b from public.wallets where user_id = auth.uid() for update;
+  if b < s.price then raise exception 'Jetons insuffisants'; end if;
+  perform public.tok_add(auth.uid(), -s.price, 'achat ' || s.name, null);
+  perform public.tok_add('aaaaaaaa-0000-4000-8000-000000000001'::uuid, s.price, 'achat ' || s.name, null);
+  insert into public.smoke_cosm_inv(user_id, code) values (auth.uid(), p_code);
+  return jsonb_build_object('ok', true);
+end $$;
+revoke all on function public.smoke_cosm_buy(text) from public, anon;
+grant execute on function public.smoke_cosm_buy(text) to authenticated;
+
+create or replace function public.smoke_cosm_equip(p_slot text, p_code text) returns void language plpgsql security definer set search_path = public as $$
+declare c public.smoke_chars := public._sm_row();
+begin
+  if p_slot not in ('outfit','hat','glasses') then raise exception 'Emplacement invalide'; end if;
+  if p_code is not null then
+    if not exists (select 1 from public.smoke_cosm x join public.smoke_cosm_inv i on i.code = x.code and i.user_id = auth.uid() where x.code = p_code and x.slot = p_slot) then raise exception 'Article non possédé'; end if;
+  end if;
+  update public.smoke_chars set outfit = case when p_slot = 'outfit' then p_code else outfit end,
+    hat = case when p_slot = 'hat' then p_code else hat end,
+    glasses = case when p_slot = 'glasses' then p_code else glasses end where user_id = auth.uid();
+end $$;
+revoke all on function public.smoke_cosm_equip(text, text) from public, anon;
+grant execute on function public.smoke_cosm_equip(text, text) to authenticated;
+
+create or replace function public.smoke_state() returns jsonb language plpgsql security definer set search_path = public as $$
+declare c public.smoke_chars := public._sm_row(); n int;
+begin
+  n := public._sm_lvl_upd(c);
+  return jsonb_build_object('name', c.name, 'hair', c.hair, 'hc', c.hc, 'eyes', c.eyes, 'ec', c.ec, 'skin', c.skin, 'outfit', c.outfit, 'hat', c.hat, 'glasses', c.glasses, 'item', c.item, 'show', c.show,
+    'dep', round(c.dep, 3), 'endu', c.endu, 'endurance_ms', public._sm_end(c.dep, c.endu), 'puffs', c.puffs, 'level', n, 'lvl_claimed', c.lvl_claimed,
+    'since_s', case when c.last_smoke is null then null else round(extract(epoch from now() - c.last_smoke)) end,
+    'od_left', case when c.od_start is null then null else greatest(0, round(120 - extract(epoch from now() - c.od_start))) end,
+    'rescued_s', case when c.rescued_at is null then null else round(extract(epoch from now() - c.rescued_at)) end,
+    'died_s', case when c.died_at is null then null else round(extract(epoch from now() - c.died_at)) end,
+    'vaze', public._has_vaze(auth.uid()), 'cmd', public.staff_rank_me() >= 4, 'pills', public._sm_pills_active(c.pills),
+    'owned', coalesce((select jsonb_agg(public._sm_def(i.code) || jsonb_build_object('left', i.puffs_left) order by s.price) from public.smoke_inv i join public.smoke_items s on s.code = i.code where i.user_id = auth.uid()), '[]'::jsonb),
+    'tricks', coalesce((select jsonb_agg(jsonb_build_object('code', code, 'uses', uses) order by code) from public.smoke_trick_inv where user_id = auth.uid()), '[]'::jsonb));
+end $$;
+create or replace function public.smoke_profile(p_username text) returns jsonb language plpgsql security definer stable set search_path = public as $$
+declare u uuid; c public.smoke_chars; i public.smoke_items; d numeric;
+begin
+  if auth.uid() is null then raise exception 'Non connecté'; end if;
+  select id into u from public.profiles where lower(username) = lower(btrim(coalesce(p_username,'')));
+  if u is null then return null; end if;
+  select * into c from public.smoke_chars where user_id = u;
+  if not found or (not c.show and u <> auth.uid()) then return null; end if;
+  select * into i from public.smoke_items where code = c.item;
+  d := greatest(0, c.dep - 6 * extract(epoch from now() - c.dep_at) / 3600);
+  return jsonb_build_object('name', c.name, 'hair', c.hair, 'hc', c.hc, 'eyes', c.eyes, 'ec', c.ec, 'skin', c.skin, 'outfit', c.outfit, 'hat', c.hat, 'glasses', c.glasses, 'dep', round(d, 1), 'endurance_ms', public._sm_end(d, c.endu), 'level', c.lvl_top,
+    'power', i.power, 'item', i.name, 'kind', i.kind, 'puffs', c.puffs, 'owned', (select count(*) from public.smoke_inv where user_id = u), 'shown', c.show);
+end $$;
+create or replace function public.smoke_live(p_username text) returns jsonb language plpgsql security definer set search_path = public as $$
+declare u uuid; c public.smoke_chars; i public.smoke_items; d numeric; lv jsonb; od int;
+begin
+  if auth.uid() is null then raise exception 'Non connecté'; end if;
+  select id into u from public.profiles where lower(username) = lower(btrim(coalesce(p_username,'')));
+  if u is null then return null; end if;
+  select * into c from public.smoke_chars where user_id = u;
+  if not found then return null; end if;
+  if c.od_start is not null and now() > c.od_start + interval '2 minutes' then
+    perform public._sm_die(u);
+    select * into c from public.smoke_chars where user_id = u;
+  end if;
+  od := case when c.od_start is null then null else greatest(0, round(120 - extract(epoch from now() - c.od_start)))::int end;
+  if not c.show and u <> auth.uid() then
+    if od is null then return null; end if;
+    return jsonb_build_object('shown', false, 'name', c.name, 'od_left', od, 'self', false, 'live', '{}'::jsonb, 'rescuing', exists(select 1 from public.smoke_rescue r where r.target = u and r.rescuer = auth.uid()));
+  end if;
+  select * into i from public.smoke_items where code = c.item;
+  d := greatest(0, c.dep - 6 * extract(epoch from now() - c.dep_at) / 3600);
+  lv := case when c.live_at is not null and c.live_at > now() - interval '15 seconds' then c.live else '{}'::jsonb end;
+  return jsonb_build_object('name', c.name, 'hair', c.hair, 'hc', c.hc, 'eyes', c.eyes, 'ec', c.ec, 'skin', c.skin, 'outfit', c.outfit, 'hat', c.hat, 'glasses', c.glasses, 'dep', round(d, 1), 'endurance_ms', public._sm_end(d, c.endu), 'level', c.lvl_top,
+    'power', i.power, 'item', i.name, 'kind', i.kind, 'code', i.code, 'smoke', i.smoke, 'puffs', c.puffs, 'owned', (select count(*) from public.smoke_inv where user_id = u), 'shown', c.show,
+    'live', lv, 'online', c.live_at is not null and c.live_at > now() - interval '15 seconds', 'od_left', od, 'self', u = auth.uid(),
+    'rescuing', exists(select 1 from public.smoke_rescue r where r.target = u and r.rescuer = auth.uid()));
+end $$;
+
 notify pgrst, 'reload schema';
