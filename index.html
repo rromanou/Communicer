@@ -11497,7 +11497,7 @@ window.SMK=(function(){
   const uid=()=>Math.random().toString(36).slice(2,7);
 
   /* ---------- filtre racine (anamorphose + hallucinogène) ---------- */
-  const inCall=()=>!!(document.getElementById('callScreen')||document.querySelector('.room.call'));let lastIC=false;
+  const inCall=()=>!!(document.getElementById('callScreen')||document.querySelector('.room.call')||document.getElementById('rmStage')||document.getElementById('lStage'));let lastIC=false;
   /* acouphène : sons fictifs */
   let acTm=0;
   const acouOn=()=>{clearInterval(acTm);acTm=setInterval(()=>{const s=S_('acou');if(s<.05||!sndOn()||document.hidden)return;if(Math.random()>.25+.6*s)return;const a=aud();if(!a)return;const o=a.createOscillator(),g=a.createGain(),t=a.currentTime,r=Math.random();
@@ -11506,7 +11506,7 @@ window.SMK=(function(){
       else{o.type='square';o.frequency.value=900+Math.random()*700;for(let i=0;i<3;i++){g.gain.setValueAtTime(.02*(1+s),t+i*.18);g.gain.setValueAtTime(0,t+i*.18+.08)}o.connect(g);g.connect(a.destination);o.start(t);o.stop(t+.7)}},2200)};
   const acouOff=()=>{clearInterval(acTm);acTm=0};
   let mvx=0,mvy=0,pmx=0,pmy=0;
-  const compose=()=>{const f=[],ic=inCall();if(run.warp&&!ic)f.push('url(#fxWarpF)');if(run.blur&&!ic){const s=S_('blur'),t=(performance.now()-T0)/1000;f.push(`blur(${(s*4.5*(.65+.35*Math.sin(t*.7))).toFixed(2)}px)`)}if(run.chro){const s=S_('chro'),t=(performance.now()-T0)/1000;f.push(`hue-rotate(${(Math.sin(t*.5)*70*s+t*14*s)%360}deg)`,`sepia(${(s*.55*(.6+.4*Math.sin(t*.8))).toFixed(2)})`,`saturate(${(1+s*1.6).toFixed(2)})`,`invert(${(Math.max(0,Math.sin(t*.37))*.28*s).toFixed(2)})`)}
+  const compose=()=>{const f=[],ic=inCall();if(ic){document.documentElement.style.filter='';return}if(run.warp&&!ic)f.push('url(#fxWarpF)');if(run.blur&&!ic){const s=S_('blur'),t=(performance.now()-T0)/1000;f.push(`blur(${(s*4.5*(.65+.35*Math.sin(t*.7))).toFixed(2)}px)`)}if(run.chro){const s=S_('chro'),t=(performance.now()-T0)/1000;f.push(`hue-rotate(${(Math.sin(t*.5)*70*s+t*14*s)%360}deg)`,`sepia(${(s*.55*(.6+.4*Math.sin(t*.8))).toFixed(2)})`,`saturate(${(1+s*1.6).toFixed(2)})`,`invert(${(Math.max(0,Math.sin(t*.37))*.28*s).toFixed(2)})`)}
     if(run.hyper){const s=S_('hyper'),t=(performance.now()-T0)/1000;f.push(`brightness(${(1+s*.28*(.6+.4*Math.sin(t*2.3))).toFixed(3)})`,`contrast(${(1+s*.5).toFixed(2)})`)}
     if(run.echo){const s=S_('echo');const dx=Math.max(-26,Math.min(26,mvx*1.4))*s+Math.sin(performance.now()/700)*5*s,dy=Math.max(-26,Math.min(26,mvy*1.4))*s;f.push(`drop-shadow(${dx.toFixed(1)}px ${dy.toFixed(1)}px ${(2+4*s).toFixed(1)}px rgba(90,120,255,${(.45*s).toFixed(2)}))`,`drop-shadow(${(-dx*.6).toFixed(1)}px ${(-dy*.6).toFixed(1)}px 0 rgba(255,90,140,${(.25*s).toFixed(2)}))`)}
     if(run.psy){const s=S_('psy'),t=(performance.now()-T0)/1000;f.push(`hue-rotate(${(Math.sin(t*.35)*40*s+t*6*s)%360}deg)`,`saturate(${1+s*.9+Math.sin(t*.6)*.15*s})`)}document.documentElement.style.filter=f.join(' ')};
@@ -11657,7 +11657,7 @@ window.SMK=(function(){
       if(run.coord){const s=S_('coord');if(t>co.nt){const A=8+s*55;co.tx=R(-A,A);co.ty=R(-A,A);co.nt=t+R(350,900)}co.x+=(co.tx-co.x)*.06;co.y+=(co.ty-co.y)*.06;tx+=co.x+Math.sin(t/37)*s*2.5;ty+=co.y+Math.cos(t/41)*s*2.5}
       fx0+=(tx-fx0)*k;fy0+=(ty-fy0)*k;cur.style.transform=`translate(${fx0}px,${fy0}px)`}
     if(run.att)attTick(t);
-    if(run.warp||run.blur){const ic=inCall();if(ic!==lastIC){lastIC=ic;compose();if(ic){const a=document.getElementById('app');if(a)a.style.transform=''}}else if(run.blur&&!run.psy&&(t|0)%3===0)compose()}
+    if(run.warp||run.blur||run.chro||run.hyper||run.echo||run.psy){const ic=inCall();if(ic!==lastIC){lastIC=ic;compose();if(ic){const a=document.getElementById('app');if(a)a.style.transform=''}}else if(run.blur&&!run.psy&&(t|0)%3===0)compose()}
     if(run.warp)warpTick(t);if(run.ill)illTick(t);
     if(run.echo){mvx=mvx*.8+(mx-pmx)*.2;mvy=mvy*.8+(my-pmy)*.2;pmx=mx;pmy=my}
     if((run.chro||run.echo||run.hyper)&&(t|0)%2===0)compose();
@@ -11682,7 +11682,7 @@ window.SMK=(function(){
   let attEl=null;
   const attStart=()=>{attEl=document.createElement('div');attEl.id='fxAtt';attEl.setAttribute('data-fxkeep','');document.body.appendChild(attEl)};
   const attStop=()=>{if(attEl)attEl.remove();attEl=null};
-  const attTick=t=>{if(!attEl)return;const s=S_('att'),r=Math.max(110,Math.min(innerWidth,innerHeight)*(.62-.38*s)),z=.5+.5*Math.sin(t/2600+Math.sin(t/7000)*2),a=Math.min(.92,s*(.45+.4*z)),x=mc()?fx0:mx,y=mc()?fy0:my;
+  const attTick=t=>{if(!attEl)return;const ic=inCall();attEl.style.display=ic?'none':'';if(ic)return;const s=S_('att'),r=Math.max(110,Math.min(innerWidth,innerHeight)*(.62-.38*s)),z=.5+.5*Math.sin(t/2600+Math.sin(t/7000)*2),a=Math.min(.92,s*(.45+.4*z)),x=mc()?fx0:mx,y=mc()?fy0:my;
     attEl.style.background=`radial-gradient(circle at ${x.toFixed(0)}px ${y.toFixed(0)}px,rgba(0,0,0,0) ${(r*.55).toFixed(0)}px,rgba(8,8,12,${a.toFixed(3)}) ${(r*1.25).toFixed(0)}px)`};
   const HC=document.documentElement,cls=(c,on)=>HC.classList.toggle(c,on);
   const M={chro:[()=>{},()=>compose()],echo:[()=>{},()=>compose()],hyper:[()=>{},()=>compose()],trem:[()=>cls('fxTrem',true),()=>{cls('fxTrem',false);HC.style.removeProperty('--tr')},()=>HC.style.setProperty('--tr',(S_('trem')*3.2).toFixed(2)+'px')],dist:[()=>cls('fxDist',true),()=>cls('fxDist',false)],lent:[()=>cls('fxLent',true),()=>cls('fxLent',false)],acou:[acouOn,acouOff],pers:[()=>{},()=>{}],bav:[()=>{},()=>{}],mut:[()=>{},()=>{}],imp:[()=>{},()=>{}],irr:[()=>{},()=>{}],eup:[()=>{},()=>{}],apa:[()=>{},()=>{}],mef:[()=>{},()=>{}],susc:[()=>{},()=>{}],scr:[scrStart,scrStop,()=>{scrStop();scrStart()}],mouse:[curOn,curOff],coord:[curOn,curOff],scrl:[()=>{},()=>{}],blur:[()=>{},()=>compose()],keys:[keysStart,keysStop],att:[attStart,attStop],warp:[warpStart,warpStop],delay:[()=>{},()=>{}],anim:[animStart,animStop],psy:[psyStart,psyStop],obj:[()=>spawnLoop('obj'),()=>clearTimeout(timers.obj)],hal:[()=>spawnLoop('hal'),()=>clearTimeout(timers.hal)],fau:[()=>spawnLoop('fau'),()=>clearTimeout(timers.fau)],ill:[illStart,illStop]};
@@ -12375,17 +12375,20 @@ window.SMK=(function(){
     const trickFire=id=>{if(!sk||!sk.has()){toast('Plus de fumée en bouche');return}const t=SMK.TBY[id],m=mast(id),r=sk.take(t.need*(1-.5*m)*1.5);if(!r){toast('Pas assez de fumée pour '+t.name);return}
       const s=seats[me],mo=mouthXY(),b=SMK.beauty(id,r.V,r.zone,m);s.E.look(trLook(itemSm()));SMK.trick(s.E,id,mo.x,mo.y,r.V,b.white,1,m);if(live())beautyS+=b.score;noteUse(id);api.send('sev',{k:'tr',u:me,id,V:r.V,w:b.white,m});
       const bt=seats[me].el.querySelector('.fmSc');bt.textContent=SMK.TBY[id].name+' · beauté '+b.score;setTimeout(()=>{bt.textContent=scoreTx(me)},2200);if(sk.stage==='idle')setMode(me,'')};
-    const kd=e=>{if(!fmOn||typing())return;const k=e.key;
+    let fAlt=false,fUsed=false,fDr=false,fTm=0;
+    const kd=e=>{if(!fmOn||typing())return;const k=e.key,c=e.code||'';
       if(k==='Control'||k==='Tab'){const iv=inhKey();if(k==='Control'&&iv==='tab'||k==='Tab'&&iv==='ctrl')return;if(k==='Tab')e.preventDefault();if(!e.repeat)inhDown();return}
-      if(k==='Alt'){e.preventDefault();if(sk&&!e.repeat)sk.exStart();return}
-      const dg=/^[0-9]$/.test(k)?k:(SLL.includes(k.toUpperCase())&&ST&&ST.vaze?k.toUpperCase():null);if(dg&&(e.altKey||tkMode()==='alt'&&e.altKey)){const id=slotMap()[dg];if(id){e.preventDefault();trickFire(id)}}};
-    const ku=e=>{if(!fmOn)return;const k=e.key;if(k==='Control'||k==='Tab')inhUp();else if(k==='Alt'){e.preventDefault();if(sk)sk.exStop()}};
+      if(k==='Alt'){e.preventDefault();if(!e.repeat&&!fAlt){fAlt=true;fUsed=false;clearTimeout(fTm);fTm=setTimeout(()=>{if(fAlt&&!fUsed&&sk&&sk.exStart()){fDr=true;kick()}},260)}return}
+      if(k==='Shift'){if(fAlt&&tkMode()==='altshift'){fUsed=true;clearTimeout(fTm);if(fDr&&sk){sk.exStop();fDr=false}}return}
+      const dg=/^Digit[0-9]$/.test(c)?c.slice(5):/^Numpad[0-9]$/.test(c)?c.slice(6):/^[0-9]$/.test(k)?k:null,lt=/^[a-zA-Z]$/.test(k)?k.toUpperCase():/^Key[A-Z]$/.test(c)?c.slice(3):null,sl=dg!==null?dg:lt;
+      if(fAlt&&sl!==null&&(sl!=='X'||e.shiftKey)){e.preventDefault();if(tkMode()==='altshift'&&!e.shiftKey)return;if(SLL.includes(sl)&&!(ST&&ST.vaze))return;fUsed=true;clearTimeout(fTm);const id=slotMap()[sl];if(id)trickFire(id)}};
+    const ku=e=>{if(!fmOn)return;const k=e.key;if(k==='Control'||k==='Tab')inhUp();else if(k==='Alt'){e.preventDefault();fAlt=false;clearTimeout(fTm);if(fDr&&sk)sk.exStop();fDr=false}};
     document.addEventListener('keydown',kd,true);document.addEventListener('keyup',ku,true);
     /* messages */
     const upd=()=>{const pl=P0();return pl};
     const roundTx=()=>ph==='wait'?'Fumatoir':ph==='done'?'Partie terminée':`Manche ${rd+1} / 3 : ${FM_R[rd]?FM_R[rd].t:''}`;
     const bot=()=>{const B=$$('#fmBot');if(!B)return;const own=(ST&&ST.tricks||[]).map(t=>t.code),sm=slotMap(),inv={};for(const k in sm)inv[sm[k]]=k;
-      B.innerHTML=`<span class="muted">Maintenez votre tête, CTRL ou TAB pour inhaler ; relâchez dans la zone dorée, ALT pour expirer.</span>${own.map(id=>`<button class="ghost lite" data-ft="${esc(id)}">${esc((SMK.TBY[id]||{}).name||id)}${inv[id]?' ('+inv[id]+')':''}</button>`).join('')}`};
+      B.innerHTML=`<span class="muted">Maintenez votre tête, CTRL ou TAB pour inhaler ; relâchez dans la zone dorée, ALT pour expirer, ALT + MAJ + n° pour un trick.</span>${own.map(id=>`<button class="ghost lite" data-ft="${esc(id)}">${esc((SMK.TBY[id]||{}).name||id)}${inv[id]?' ('+inv[id]+')':''}</button>`).join('')}`};
     $$('#fmBot').addEventListener('click',e=>{const id=e.target.dataset&&e.target.dataset.ft;if(id)trickFire(id)});
     const ov=(h)=>{const o=$$('#fmOv');if(!o)return;o.style.display=h?'flex':'none';o.innerHTML=h||''};
     const showWait=()=>{ov(`<h2>Fumatoir</h2><p class="muted" style="max-width:420px">Jusqu’à 8 fumeurs, 3 manches : plus de fumée inhalée, meilleurs tricks, plus forte hausse de dépendance. Le premier à gagner 2 manches l’emporte. Votre personnage et votre objet équipé sont utilisés.</p>${api.isHost?'<button id="fmGo">Lancer la partie</button>':'<p class="muted">En attente du lancement par l’hôte…</p>'}`);const g=$$('#fmGo');if(g)g.onclick=()=>hostGo(0,true)};
