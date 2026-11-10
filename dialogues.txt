@@ -1369,3 +1369,170 @@ Je pense à ce que je ferai de mon souffle.
 > Tu dérailles. | Pas du tout, je suis très clair. | susc:0.35,irr:0.2
 > Raconte-moi. | Il y a un lapin vert qui chante. | eup:0.4,par:0.1
 > Respire. | Je respire du violet. Merci. | apa:0.3,eup:0.25
+
+# ======================================================================
+# PERSONNALITÉ : le personnage apprend à connaître le joueur.
+# Tout est stocké UNIQUEMENT dans le cache du navigateur (localStorage), jamais envoyé au serveur.
+# Répartition à chaque prise de parole : 60 % phrase simple, 25 % dialogue à choix, 15 % personnalisé.
+# Personnalisé : s'il manque des infos, 30 % question pour apprendre / 70 % phrase qui utilise la base ; sans aucune info, toujours une question.
+# Une question de profil (prénom, âge, surnom, pays, énergie, caractère) n'est jamais reposée. Une réponse de plus d'un mois n'est plus citée et peut être redemandée.
+# ======================================================================
+
+# [PERSO_ASK] champ | phrase. Champs : prenom, age, surnom, pays, calme, intro
+[PERSO_ASK]
+prenom | Au fait, je ne connais même pas ton prénom. Tu me le dis ?
+prenom | Dis-moi, comment tu t’appelles, toi ?
+prenom | On discute depuis un moment et j’ignore ton prénom. Je peux le savoir ?
+prenom | Quel est ton prénom ? J’aimerais mieux m’adresser à toi.
+age | Je suis curieux : quel âge as-tu ?
+age | Tu as quel âge, au juste ? Ça m’aiderait à te parler.
+age | Dis-moi ton âge, juste pour savoir à qui je parle.
+age | Question indiscrète : tu as combien d’années ?
+surnom | Tu as un surnom ? J’aimerais t’appeler autrement.
+surnom | Comment on t’appelle, entre amis ? Un surnom ?
+surnom | Si tu pouvais choisir un surnom, ce serait lequel ?
+surnom | Tu veux que je t’appelle par un petit nom ? Lequel ?
+pays | Dans quel pays habites-tu ?
+pays | Tu vis où, exactement ? Dans quel pays ?
+pays | Dis-moi dans quel pays tu habites, que je me fasse une idée.
+pays | Au fait, tu habites dans quel pays ?
+calme | Tu préfères que je sois plutôt calme ou plutôt énergique ?
+calme | Choix important : je suis calme ou énergique avec toi ?
+calme | Pour mon caractère, tu aimes mieux le calme ou l’énergie ?
+calme | Dis-moi, quelle ambiance tu préfères : posée ou énergique ?
+intro | Tu es plutôt introverti ou extraverti ?
+intro | Dans la vie, tu es plutôt introverti ou extraverti ?
+intro | Je me demande : tu te sens plus introverti ou extraverti ?
+intro | Question de caractère : introverti ou extraverti ?
+
+# [PERSO_THX] réaction après une réponse. {v} = la réponse donnée.
+[PERSO_THX]
+Merci de me le dire !
+Parfait, je m’en souviendrai.
+Ah, très bien. Je note ça.
+Intéressant ! Merci.
+Voilà qui m’aide à mieux te connaître.
+Je garde ça dans un coin de ma tête.
+Merci, ça me fait plaisir que tu partages ça.
+Noté, {v} !
+D’accord, {v}. Je m’en souviendrai.
+Ah, {v} ! Voilà qui est bien.
+Merci pour ta confiance.
+Super, on avance !
+
+# [PERSO_Q] id | t (texte) ou c (choix) | question | choix séparés par ; | phrase qui cite l'ancienne réponse ({a})
+[PERSO_Q]
+couleur | t | Quelle est ta couleur préférée ? |  | Ta couleur préférée, c’était {a}, non ? Ça n’a pas changé ?
+plat | t | Quel est ton plat préféré ? |  | Tu m’avais parlé de {a} comme plat préféré. J’en ai l’eau à la bouche.
+animal | t | Quel est ton animal préféré ? |  | Tu m’avais dit aimer {a}. Tu en as vu récemment ?
+saison | c | Quelle est ta saison préférée ? | Printemps;Été;Automne;Hiver | Ta saison préférée, c’était : {a}. On en est loin ?
+matin | c | Tu es plutôt du matin ou du soir ? | Du matin;Du soir;Ça dépend | Tu m’avais dit : « {a} ». C’est toujours le cas ?
+dormi | c | Tu as bien dormi cette nuit ? | Très bien;Moyen;Mal | Quand je t’ai demandé, tu avais dormi : {a}. Et aujourd’hui ?
+humeur | c | Comment tu te sens aujourd’hui ? | Bien;Moyen;Pas terrible | La dernière fois, tu te sentais : {a}. Ça va mieux ?
+musique | t | Quel genre de musique tu écoutes ? |  | Tu écoutais du {a}, non ? J’aimerais entendre ça.
+film | t | Quel est ton film préféré ? |  | Ton film préféré, c’était {a}. Tu l’as revu ?
+serie | t | Une série que tu aimes beaucoup ? |  | Tu m’avais parlé de la série {a}. Il y a du nouveau ?
+livre | t | Tu lis des livres ? Lequel t’a marqué ? |  | Le livre {a}, il t’avait marqué. Tu en lis un autre ?
+jeu | t | À quel jeu tu joues le plus ? |  | Tu jouais surtout à {a}. Tu y joues encore ?
+sport | t | Tu pratiques un sport ? Lequel ? |  | Tu m’avais parlé de {a}. Tu t’y es remis ?
+hobby | t | Quel est ton passe-temps favori ? |  | Ton passe-temps favori, c’était {a}. Tu y as consacré du temps ?
+cafe | c | Café, thé ou rien du tout ? | Café;Thé;Rien | Pour toi, c’était : {a}. Tu en as pris aujourd’hui ?
+boisson | t | Quelle est ta boisson préférée ? |  | Ta boisson préférée, c’était {a}. Ça se boit bien en ce moment.
+dessert | t | Quel est ton dessert préféré ? |  | Tu adorais {a} comme dessert. Quelle gourmandise !
+fruit | t | Quel fruit tu préfères ? |  | Tu aimais les {a}. Je les imagine bien juteux.
+chocolat | c | Chocolat noir, au lait ou blanc ? | Noir;Au lait;Blanc | Tu préférais le chocolat {a}. Tu en as mangé ?
+pizza | t | Qu’est-ce que tu mets sur ta pizza ? |  | Sur ta pizza, il y avait {a}. Une bonne idée.
+ville | t | Dans quelle ville tu habites ? |  | Tu habitais à {a}. Il s’y passe quelque chose de nouveau ?
+voyage | t | Où aimerais-tu voyager un jour ? |  | Tu rêvais d’aller à {a}. On y va quand ?
+reve | t | Quel est ton plus grand rêve ? |  | Ton plus grand rêve, c’était : {a}. Tu t’en rapproches ?
+metier | t | Tu fais quoi dans la vie : études, travail ? |  | Dans la vie, tu m’avais dit : {a}. Ça se passe comment ?
+ecole | t | Qu’est-ce que tu étudies ou tu as étudié ? |  | Tu m’avais parlé de {a}. C’est toujours aussi intéressant ?
+peur | t | De quoi as-tu le plus peur ? |  | Tu avais peur de {a}. Ça t’a repris dernièrement ?
+talent | t | Quel est ton plus grand talent ? |  | Ton talent, c’était {a}. Tu l’utilises encore ?
+defaut | t | Et ton plus grand défaut ? |  | Tu m’avais avoué ce défaut : {a}. Tu t’y fais ?
+fratrie | c | Tu as des frères et sœurs ? | Oui;Non;Un seul | Pour la famille, tu avais répondu : {a}. Tout le monde va bien ?
+animaux | c | Tu as un animal à la maison ? | Oui;Non;J’en voudrais | Côté animaux, tu avais dit : {a}. Il y a du nouveau ?
+voiture | c | Tu préfères marcher, rouler ou voler ? | Marcher;Rouler;Voler | Tu préférais : {a}. Tu as bougé aujourd’hui ?
+chaud | c | Tu préfères le chaud ou le froid ? | Le chaud;Le froid;Entre les deux | Tu aimais : {a}. Il fait comment dehors ?
+pluie | c | La pluie, tu aimes ça ? | Oui, beaucoup;Pas trop;Je déteste | Pour la pluie, tu avais répondu : {a}. Il pleut chez toi ?
+neige | c | La neige, tu aimes ça ? | J’adore;C’est correct;Je déteste | Pour la neige : {a}. Elle est déjà là ?
+nuit | c | Tu es plutôt oiseau de nuit ou lève-tôt ? | Oiseau de nuit;Lève-tôt | Tu m’avais dit être {a}. Tu es debout à quelle heure ?
+soleil | c | Plutôt plage ou montagne ? | Plage;Montagne;Les deux | Tu choisissais : {a}. J’y serais bien.
+bruit | c | Tu aimes le silence ou le bruit ? | Le silence;Le bruit;Les deux | Tu aimais : {a}. C’est comment autour de toi ?
+bricole | c | Tu es plutôt bricoleur ou rêveur ? | Bricoleur;Rêveur;Un peu des deux | Tu t’étais décrit comme : {a}. C’est toujours juste ?
+lire | c | Tu préfères lire ou regarder ? | Lire;Regarder;Écouter | Tu préférais : {a}. Tu en as profité ?
+planifie | c | Tu planifies tout ou tu improvises ? | Je planifie;J’improvise;Selon le jour | Tu disais : {a}. Pas de changement de plan ?
+ordre | c | Ta chambre est plutôt rangée ou en désordre ? | Rangée;En désordre;Organisé dans le désordre | Tu disais que ta chambre était : {a}. Ça a bougé ?
+reveil | c | Tu te lèves facilement ? | Oui;Non;Avec un café | Pour le réveil, tu m’avais répondu : {a}. Et ce matin ?
+eau | c | Tu as bu assez d’eau aujourd’hui ? | Oui;Pas assez;Presque pas | Je t’avais demandé pour l’eau : {a}. Tu as pensé à boire ?
+manger | c | Tu as mangé aujourd’hui ? | Oui;Pas encore;Seulement un peu | Je t’avais demandé si tu avais mangé : {a}. Tu manges bien ?
+mange_midi | t | Qu’est-ce que tu as mangé ce midi ? |  | Ce midi-là, tu avais mangé : {a}. Ça se renouvelle ?
+film_soir | t | Qu’as-tu regardé dernièrement ? |  | Tu avais regardé {a}. Tu as aimé jusqu’au bout ?
+projet | t | Tu travailles sur un projet en ce moment ? |  | Tu travaillais sur : {a}. Ça avance ?
+objectif | t | Quel est ton objectif du moment ? |  | Ton objectif, c’était : {a}. Tu y es presque ?
+fierte | t | De quoi es-tu fier ces temps-ci ? |  | Tu étais fier de {a}. Tu devrais l’être encore.
+changement | t | Y a-t-il quelque chose que tu voudrais changer dans ta vie ? |  | Tu voulais changer : {a}. Où en es-tu ?
+conseil | t | Quel est le meilleur conseil qu’on t’a donné ? |  | Le meilleur conseil, c’était : {a}. Tu l’as suivi aujourd’hui ?
+ami | t | Comment s’appelle ton meilleur ami ? |  | Ton meilleur ami, c’était {a}. Vous vous êtes parlé ?
+langue | t | Quelles langues tu parles ? |  | Tu parlais : {a}. Tu as pratiqué ?
+chanson | t | Quelle chanson te met de bonne humeur ? |  | La chanson {a} te mettait de bonne humeur. Tu l’as écoutée ?
+instrument | t | Tu joues d’un instrument ? Lequel ? |  | Tu jouais de {a}. Joue-moi quelque chose, un jour.
+mot | t | Quel est ton mot préféré ? |  | Ton mot préféré, c’était « {a} ». Il sonne bien, en effet.
+nombre | t | Quel est ton chiffre porte-bonheur ? |  | Ton chiffre porte-bonheur, le {a}. Il t’a porté chance ?
+heure | c | Quel moment de la journée préfères-tu ? | Matin;Après-midi;Soir;Nuit | Tu préférais : {a}. C’est bientôt le moment ?
+fete | t | Quelle est ta fête préférée ? |  | Ta fête préférée, c’était {a}. Elle approche ?
+cadeau | t | Quel est le plus beau cadeau que tu as reçu ? |  | Ton plus beau cadeau, c’était : {a}. Ça donne le sourire.
+enfance | t | Quel est ton plus beau souvenir d’enfance ? |  | Tu m’avais parlé de ce souvenir : {a}. C’est doux, non ?
+rire | t | Qu’est-ce qui te fait le plus rire ? |  | Ce qui te fait rire, c’est {a}. Tu as ri aujourd’hui ?
+stress | t | Qu’est-ce qui te détend quand tu es stressé ? |  | Pour te détendre, tu faisais : {a}. Tu en as eu besoin ?
+meteo | c | Il fait quel temps chez toi aujourd’hui ? | Beau;Nuageux;Pluvieux;Neigeux | Tu m’avais dit : « {a} » chez toi. Et maintenant ?
+energie | c | Comment est ton énergie aujourd’hui ? | Pleine;Moyenne;À plat | Ton énergie était : {a}. Elle a changé ?
+cuisine | c | Tu cuisines souvent ? | Souvent;Parfois;Jamais | Pour la cuisine : {a}. Tu as essayé une recette ?
+
+# [PERSO_USE] champs requis séparés par des virgules (prenom, age, surnom, pays, calme, intro, nom) | phrase.
+# {prenom} {age} {surnom} {pays} {calme} {intro} {nom} (= surnom, sinon prénom). Les champs requis doivent être remplis.
+[PERSO_USE]
+prenom | {prenom}, content de te voir.
+prenom | Alors, {prenom}, comment se passe ta journée ?
+prenom | Dis donc {prenom}, tu as l’air de bonne humeur.
+prenom | {prenom}, tu veux qu’on discute un peu ?
+prenom | Je me demande ce que tu fais de beau, {prenom}.
+prenom | {prenom}, t’es quelqu’un de bien, tu sais.
+prenom | Hé, {prenom} ! Une belle pensée pour toi.
+prenom | Tout va comme tu veux, {prenom} ?
+surnom | Alors, {surnom}, quoi de neuf ?
+surnom | {surnom} ! Ça me fait plaisir de t’appeler comme ça.
+surnom | Dis, {surnom}, tu as fait quelque chose de drôle aujourd’hui ?
+surnom | Je garde un œil sur toi, {surnom}.
+surnom | {surnom}, tu me manquais.
+surnom | Raconte, {surnom}, je suis tout ouïe.
+nom | {nom}, tu as pensé à boire de l’eau ?
+nom | {nom}, un petit moment de pause, ça te dirait ?
+nom | Merci d’être là, {nom}.
+nom | {nom}, j’aime bien discuter avec toi.
+nom | Tu es de bonne compagnie, {nom}.
+age | Tu as {age} ans, et tu en fais déjà beaucoup. Bravo.
+age | {age} ans, c’est un bel âge pour apprendre des choses.
+age | À {age} ans, tu as déjà plein d’histoires à raconter.
+age | {age} ans… le temps passe vite, non ?
+age,prenom | {prenom}, à {age} ans, tu as le temps de tout faire.
+pays | {pays}, c’est comment, comme endroit pour vivre ?
+pays | Dans ton pays, {pays}, quel temps il fait en ce moment ?
+pays | Il doit être quelle heure chez toi, là-bas ?
+pays | Dis-moi, qu’est-ce qu’on mange de bon dans ton coin, {pays} ?
+pays | Il y a de beaux paysages dans ton pays, {pays}, non ?
+pays | Je me demande ce qui se passe dans ton pays, {pays}.
+pays | {pays}, j’aimerais bien y faire un tour.
+pays | Comment ça se passe là-bas, dans ton pays, {pays} ?
+pays,prenom | {prenom}, qu’est-ce que tu me conseilles de visiter, chez toi, {pays} ?
+pays,prenom | Dis-moi, {prenom}, la vie dans ton pays, {pays}, ça te plaît ?
+pays,surnom | {surnom}, c’est la fête chez vous, dans ton pays, {pays} ?
+calme | Je reste {calme} avec toi, comme tu l’aimes.
+calme | Tu m’as dit préférer quelqu’un de {calme}. Je fais de mon mieux.
+calme | Je sais que tu aimes quand je suis {calme}.
+intro | Tu es {intro}, je respecte ça.
+intro | Les gens {intro}s ont souvent une belle vie intérieure, tu ne trouves pas ?
+intro | Être {intro}, c’est un beau caractère.
+calme,prenom | {prenom}, je reste {calme}, comme tu préfères.
+intro,nom | {nom}, je tiens compte que tu es {intro}.
+calme,intro | Calme ou énergique, introverti ou extraverti : je m’adapte à toi.
