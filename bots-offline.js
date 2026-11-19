@@ -5,7 +5,7 @@
 const R=n=>Math.floor(Math.random()*n);
 const pk=a=>a[R(a.length)];
 const NAMES=['Alex','Sam','Charlie','Robin','Morgan','Jules','Camille'];
-const IDS=['ttt','rps','bj','uno','dam','chess','ludo','back','hang','poker'];
+const IDS=['tag','ttt','rps','bj','uno','dam','chess','ludo','back','hang','poker','c4','rev','yams'];
 
 function make(M){
   const P={};
@@ -136,6 +136,48 @@ function make(M){
     if(s>=19&&R(3)===0)return [{t:'raise',to:st.cur+st.minr},{t:'call'},{t:'fold'}];
     if(s>=(big?15:10))return [{t:'call'},{t:'fold'}];
     return [{t:'fold'},{t:'call'}];
+  };
+
+
+  P.c4=(st,hp,b)=>{
+    if(st.w||st.pl[st.t]!==b)return null;
+    const C=M.C4,me=st.t+1,op=3-me,sc=[];
+    for(let c=0;c<7;c++){
+      const i=C.drop(st.b,c);if(i<0)continue;let v=3-Math.abs(3-c)+Math.random();
+      const t=st.b.slice();t[i]=me;if(C.win(t,i)){v+=1000}
+      else{
+        const t2=st.b.slice();t2[i]=op;if(C.win(t2,i))v+=500;
+        const j=i-7;if(j>=0){const t3=t.slice();t3[j]=op;if(C.win(t3,j))v-=400;const t4=t.slice();t4[j]=me;if(C.win(t4,j))v+=2}
+      }
+      sc.push([v,c]);
+    }
+    sc.sort((a,c)=>c[0]-a[0]);
+    return sc.map(x=>({t:'drop',c:x[1]}));
+  };
+
+  P.rev=(st,hp,b)=>{
+    if(st.w||st.pl[st.t]!==b)return null;
+    const ms=M.REV.moves(st.b,st.t+1);if(!ms.length)return null;
+    const corner=i=>i===0||i===7||i===56||i===63;
+    const nearC=i=>[1,8,9,6,14,15,48,49,57,54,55,62].includes(i);
+    const edge=i=>{const r=(i/8)|0,c=i%8;return r===0||r===7||c===0||c===7};
+    const val=([i,f])=>f.length+(corner(i)?25:0)-(nearC(i)?7:0)+(edge(i)?3:0)+Math.random()*2;
+    return ms.map(m=>[val(m),m[0]]).sort((a,c)=>c[0]-a[0]).slice(0,4).map(x=>({t:'put',i:x[1]}));
+  };
+
+  P.yams=(st,hp,b)=>{
+    if(st.over||st.pl[st.t]!==b)return null;
+    if(st.rolls===0)return [{t:'roll'}];
+    const Y=M.YAMS,d=st.dice,open=Y.CATS.filter(c=>st.sheet[b][c]===undefined);
+    const best=open.map(c=>[Y.score(c,d)-Y.EXP[c],c]).sort((x,y)=>y[0]-x[0])[0];
+    const sc=Y.score(best[1],d);
+    const big=['yams','gstr','pstr','full'].includes(best[1])&&sc>=25;
+    if(big||st.rolls>=3)return [{t:'score',c:best[1]}];
+    const cnt={};d.forEach(v=>cnt[v]=(cnt[v]||0)+1);
+    const tv=+Object.keys(cnt).sort((x,y)=>cnt[y]-cnt[x]||y-x)[0];
+    const h=d.map(v=>v===tv);
+    if(st.held.some((x,i)=>x!==h[i]))return [{t:'holds',h}];
+    return [{t:'roll'}];
   };
 
   return {pick(id,st,hp,bot){const f=P[id];return f?f(st,hp,bot):null}};
