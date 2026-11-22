@@ -8,9 +8,11 @@ const SOURCES = [
   { id: "audiolibrary", host: "audiolibrary.com.co", url: (q: string) => `https://audiolibrary.com.co/?s=${encodeURIComponent(q)}` },
   { id: "fma", host: "freemusicarchive.org", url: (q: string) => `https://freemusicarchive.org/search?quicksearch=${encodeURIComponent(q)}` },
   { id: "ccmixter", host: "ccmixter.org", url: (q: string) => `https://ccmixter.org/api/query?f=json&search=${encodeURIComponent(q)}&limit=12&sort=rank` },
+  { id: "openverse", host: "api.openverse.org", url: (q: string) => `https://api.openverse.org/v1/audio/?q=${encodeURIComponent(q)}&page_size=12&mature=false` },
+  { id: "archive", host: "archive.org", url: (q: string) => `https://archive.org/advancedsearch.php?q=${encodeURIComponent("(" + q + ") AND mediatype:audio")}&fl[]=identifier&fl[]=title&fl[]=creator&rows=5&output=json` },
   { id: "sonotheque", host: "lasonotheque.org", url: (q: string) => `https://lasonotheque.org/search?q=${encodeURIComponent(q)}` },
 ];
-const HOSTS = ["pixabay.com", "cdn.pixabay.com", "audiolibrary.com.co", "freemusicarchive.org", "files.freemusicarchive.org", "ccmixter.org", "lasonotheque.org", "www.lasonotheque.org", "storage.googleapis.com"];
+const HOSTS = ["pixabay.com", "cdn.pixabay.com", "audiolibrary.com.co", "freemusicarchive.org", "files.freemusicarchive.org", "ccmixter.org", "lasonotheque.org", "www.lasonotheque.org", "storage.googleapis.com", "cdn.freesound.org", "freesound.org", "jamendo.com", "archive.org", "wikimedia.org", "upload.wikimedia.org"];
 const norm = (s: string) => (s || "").toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g, "").replace(/[^a-z0-9 ]/g, " ").replace(/\s+/g, " ").trim();
 function lev(a: string, b: string) { const m = a.length, n = b.length; if (!m) return n; if (!n) return m; let p = Array.from({ length: n + 1 }, (_, j) => j); for (let i = 1; i <= m; i++) { const c = [i]; for (let j = 1; j <= n; j++) c.push(Math.min(p[j] + 1, c[j - 1] + 1, p[j - 1] + (a[i - 1] === b[j - 1] ? 0 : 1))); p = c; } return p[n]; }
 function score(q: string, title: string, artist: string) {
@@ -34,6 +36,9 @@ function fromHtml(html: string, base: string, source: string) {
 async function searchOne(s: typeof SOURCES[number], q: string) {
   const r = await get(s.url(q)); if (!r.ok) throw new Error(String(r.status));
   if (s.id === "ccmixter") { const j = await r.json(); const out: any[] = []; for (const x of (Array.isArray(j) ? j : [])) { const f = (x.files || []).find((f: any) => AUDIO.test(f.download_url || "")); if (f) out.push({ title: x.upload_name, artist: x.user_real_name || x.user_name || "", source: s.id, audio: f.download_url, page: x.file_page_url || "" }); } return out; }
+  if (s.id === "openverse") { const j = await r.json(); const out: any[] = []; for (const x of (j.results || [])) { if (x.url && /^https:/.test(x.url)) out.push({ title: x.title || "Sans titre", artist: x.creator || "", source: s.id, audio: x.url, page: x.foreign_landing_url || "" }); } return out; }
+  if (s.id === "archive") { const j = await r.json(); const docs = (j.response && j.response.docs) || []; const out: any[] = [];
+    await Promise.all(docs.slice(0, 4).map(async (d: any) => { try { const m = await (await get("https://archive.org/metadata/" + encodeURIComponent(d.identifier), 6000)).json(); const f = (m.files || []).find((f: any) => /\.mp3$/i.test(f.name) && +(f.size || 0) < 15000000); if (f) out.push({ title: d.title || d.identifier, artist: Array.isArray(d.creator) ? d.creator[0] : (d.creator || ""), source: s.id, audio: `https://archive.org/download/${d.identifier}/${encodeURIComponent(f.name)}`, page: `https://archive.org/details/${d.identifier}` }); } catch { /* ignore */ } })); return out; }
   return fromHtml(await r.text(), s.url(q), s.id);
 }
 Deno.serve(async (req) => {
