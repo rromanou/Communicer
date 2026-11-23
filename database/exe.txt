@@ -1,0 +1,47 @@
+# Communicer! — ordre d'exécution de TOUS les scripts SQL (éditeur SQL de Supabase, de haut en bas).
+# Tous sont additifs et relançables. Chaque nouveau script SQL est ajouté ICI (à la fin, sauf dépendance contraire).
+# Un chemin par ligne (relatif à database/) ; les lignes commençant par # sont des commentaires.
+# Vérifié par .github/workflows/database/sql-consistency.yml
+sql/supabase.sql
+sql/patch_jeux.sql
+sql/patch_jeux2.sql
+sql/patch_jeux3.sql
+sql/patch_jeux4.sql
+sql/patch_jeux5.sql
+sql/patch_bots.sql
+sql/patch_bots2.sql
+sql/patch_bots3.sql
+sql/patch_hierarchie.sql
+# patch_jetons.sql est remplacé par patch_jetons_v2.sql : à ne pas exécuter sur une nouvelle base
+sql/patch_jetons_v2.sql
+sql/patch_paiement.sql
+sql/patch_journaux.sql
+sql/patch_bans.sql
+sql/patch_sanctions.sql
+sql/patch_droits.sql
+sql/patch_systeme.sql
+sql/patch_compte.sql
+sql/patch_comptes2.sql
+sql/patch_apparence.sql
+sql/patch_cadres.sql
+sql/patch_outils.sql
+sql/patch_actions.sql
+sql/patch_correctifs.sql
+sql/patch_tournois.sql
+sql/patch_equipes.sql
+sql/patch_audit.sql
+sql/patch_correctifs2.sql
+sql/patch_customize.sql
+sql/patch_badges.sql
+sql/patch_bourse.sql
+sql/patch_analyse.sql
+sql/patch_temps_partiel.sql
+sql/patch_chats.sql
+sql/patch_staff2.sql
+sql/patch_boutique.sql
+sql/patch_fume.sql
+sql/patch_bots_officiels.sql
+sql/patch_vlafi_web.sql
+sql/patch_lot20.sql
+sql/patch_lot21.sql
+sql/patch_lot22.sql

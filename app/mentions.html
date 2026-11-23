@@ -1,0 +1,236 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Communicer! — Conditions d’utilisation, sécurité et confidentialité</title>
+<style>
+:root{--bg:#f5f7fb;--card:#fff;--text:#1b1f2a;--muted:#5d6580;--line:#d9deea;--accent:#2f6bff}
+@media (prefers-color-scheme:dark){:root{--bg:#0f1320;--card:#171c2e;--text:#e7eaf5;--muted:#9aa3c2;--line:#2a3150;--accent:#6c97ff}}
+html{scroll-behavior:smooth}
+body{margin:0;background:var(--bg);color:var(--text);font:16px/1.55 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;padding:env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left)}
+main{max-width:860px;margin:0 auto;padding:18px 16px 60px}
+h1{font-size:24px;margin:.2em 0}h2{font-size:19px;margin:1.6em 0 .4em;padding-top:.4em;border-top:1px solid var(--line)}h3{font-size:16px;margin:1.1em 0 .2em}
+p,li{color:var(--text)}.muted{color:var(--muted)}ul{padding-left:1.2em}li{margin:.3em 0}
+nav{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:10px 16px;margin:14px 0}nav ol{margin:.2em 0;padding-left:1.3em;columns:2;column-gap:24px}nav a{color:var(--accent);text-decoration:none}
+@media (max-width:640px){nav ol{columns:1}}
+table{border-collapse:collapse;width:100%;font-size:14px;margin:.6em 0}th,td{border:1px solid var(--line);padding:6px 8px;text-align:left;vertical-align:top}th{background:var(--card)}
+.box{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:10px 14px;margin:.8em 0}
+</style>
+</head>
+<body>
+<main>
+<h1>Conditions d’utilisation, sécurité et confidentialité</h1>
+<p class="muted">Communicer! — Version du <b>23 novembre 2026</b>. Ces conditions s’appliquent à Communicer!, à Communicer Lite, à la version téléphone et à l’application Android, ainsi qu’à tous les services rattachés (bots, jeux, boutique, jetons, support). En créant un compte, vous adhérez à ces conditions ; en vous connectant, vous confirmez les avoir lues. Lorsque les conditions changent, un écran « Changement de conditions » vous est présenté (section 17).</p>
+
+<nav><b>Sommaire</b><ol>
+<li><a href="#s1">Sécurité</a></li><li><a href="#s2">Chiffrement de bout en bout</a></li><li><a href="#s3">Scommunicookie et adresses IP</a></li><li><a href="#s4">Compte, âge et consentement des mineurs</a></li>
+<li><a href="#s5">Comportements interdits</a></li><li><a href="#s6">Modération, personnel et drapeaux</a></li><li><a href="#s7">Consultation des conversations</a></li><li><a href="#s8">Bots, Ciffron et développeurs</a></li>
+<li><a href="#s9">Jetons, médaillons et monnaie virtuelle</a></li><li><a href="#s10">Paiements (Stripe)</a></li><li><a href="#s11">Disponibilité, sauvegardes et limitation de responsabilité</a></li><li><a href="#s12">Application mobile (Android)</a></li>
+<li><a href="#s13">Renseignements personnels recueillis</a></li><li><a href="#s14">Conservation, suppression et sauvegardes</a></li><li><a href="#s15">Prestataires et pays de traitement</a></li><li><a href="#s16">Vos droits, responsable et incidents</a></li><li><a href="#s17">Modifications de ces conditions</a></li>
+</ol></nav>
+
+<h2 id="s1">1. Sécurité</h2>
+<ul>
+<li><b>Contrôles côté serveur.</b> Les droits, les rangs du personnel, les limites d’envoi, les restrictions et les achats sont vérifiés par le serveur, jamais seulement par l’interface. Les mots de passe ne sont jamais stockés en clair et aucun membre du personnel ne peut les lire.</li>
+<li><b>Médias.</b> Les images, vidéos, dessins et messages vocaux envoyés dans les discussions sont stockés dans un espace privé : seuls les membres de la conversation et, dans les cas prévus à la section 7, le personnel autorisé y ont accès. Les photos de profil, cadres et fonds d’écran sont publics. <b>Les images, GIF et vidéos sont compressés automatiquement par votre appareil avant l’envoi</b> : le fichier stocké est une version allégée (dimensions et qualité réduites ; un GIF animé devient une courte vidéo en boucle).</li>
+<li><b>Limites de fréquence.</b> Des limites s’appliquent aux messages, demandes d’amitié, invitations, achats, récupérations de compte, envois de courriels et autres actions, pour empêcher les abus et les attaques automatisées.</li>
+<li><b>Signaler une faille.</b> Écrivez à @staff ou ouvrez une demande de support. Merci de ne pas exploiter ni divulguer une faille avant sa correction.</li>
+<li><b>Aucune sécurité n’est absolue.</b> Nous faisons des efforts raisonnables, mais le service est fourni « tel quel » (section 11).</li>
+</ul>
+
+<h2 id="s2">2. Chiffrement de bout en bout : ce qu’il couvre et ne couvre pas</h2>
+<ul>
+<li><b>Ce qui est chiffré.</b> Dans une discussion en mode chiffré, le contenu des messages et des médias est chiffré (AES-256) sur votre appareil avant l’envoi ; le serveur ne le voit pas.</li>
+<li><b>Ce qui reste visible (métadonnées).</b> Le serveur et le personnel autorisé voient que des échanges ont eu lieu : qui écrit à qui ou dans quel groupe, l’heure, le type et la taille des éléments, les accusés de lecture, la liste des membres, le nom et l’image du groupe, ainsi que les signalements que vous faites volontairement.</li>
+<li><b>Clés.</b> Votre clé privée est stockée sur le serveur sous forme <b>enveloppée</b> (chiffrée) par une clé dérivée de votre mot de passe ; le serveur ne la connaît pas en clair. Les clés des conversations sont distribuées aux membres sous forme chiffrée.</li>
+<li><b>Code de récupération.</b> Il sert à retrouver vos clés si vous oubliez votre mot de passe. <b>Si vous perdez à la fois votre mot de passe et votre code de récupération, vos messages chiffrés deviennent définitivement illisibles et nous ne pouvons pas les récupérer.</b> Conservez votre code hors de l’application.</li>
+<li><b>Mode normal (non chiffré).</b> Les discussions en mode normal sont stockées lisibles par le serveur pour permettre la modération, les signalements et les bots.</li>
+<li><b>Limites.</b> Un appareil compromis, un membre qui copie ou transfère un message, une capture d’écran ou un bot que vous ajoutez à une discussion ne sont pas couverts par le chiffrement. Le départ d’un membre d’un groupe chiffré n’efface pas ce qu’il a déjà reçu.</li>
+</ul>
+
+<h2 id="s3">3. Scommunicookie et adresses IP</h2>
+<h3>Scommunicookie</h3>
+<p>Le Scommunicookie est un identifiant de navigateur ou d’application émis par le serveur, associé à votre compte, qui sert uniquement à la sécurité : repérer des comptes multiples créés pour contourner une sanction et permettre au personnel de bloquer un navigateur abusif. Précisions :</p>
+<ul>
+<li>Il comporte une <b>signature</b> vérifiée par le serveur ; le serveur n’en conserve qu’une <b>empreinte</b> (valeur transformée), pas la valeur elle-même.</li>
+<li>Ce n’est <b>pas un identifiant d’appareil physique</b> : il identifie un navigateur ou une installation, pas votre téléphone ou votre ordinateur. Effacer les données du navigateur ou réinstaller l’application peut en faire émettre un nouveau.</li>
+<li>Il est <b>sécurisé</b> (transmission chiffrée) et <b>révocable</b> : le personnel peut bannir ou lever le blocage d’un navigateur ; l’empreinte est supprimée après la durée de conservation de la section 14.</li>
+<li>Il ne sert ni à la publicité, ni au pistage commercial, ni à la revente. Un blocage de navigateur n’est pas une preuve d’infraction : il peut être réexaminé sur demande au support.</li>
+</ul>
+<h3>Adresses IP</h3>
+<ul>
+<li><b>Quand elles sont enregistrées.</b> À chaque connexion, l’adresse IP de la connexion est examinée. <b>La première adresse d’un compte est enregistrée comme adresse d’inscription ; toute autre adresse différente vue ensuite est ajoutée à la liste du compte ; une adresse déjà enregistrée pour ce compte n’est pas réécrite.</b> Seules les adresses distinctes sont conservées, avec la date de première et de dernière vue.</li>
+<li><b>À quoi elles servent.</b> Sécurité, détection d’abus et de faux comptes, limitation du débit, bannissement par adresse. Elles ne sont consultables que par les rangs autorisés du personnel.</li>
+<li><b>Adresses partagées.</b> Plusieurs personnes peuvent partager une même adresse (famille, école, réseau mobile, VPN). Une adresse commune ne prouve donc pas qu’il s’agit de la même personne, et un <b>bannissement par adresse n’est pas une preuve</b> de faute : il peut toucher des personnes innocentes et être levé sur demande.</li>
+<li><b>Durée.</b> Voir la section 14.</li>
+</ul>
+
+<h2 id="s4">4. Compte, âge et consentement des mineurs</h2>
+<ul>
+<li>Vous êtes responsable de votre compte et de tout ce qui y est fait. Gardez votre mot de passe et votre code de récupération secrets.</li>
+<li><b>Moins de 14 ans :</b> l’utilisation du service exige le consentement d’un parent ou d’un tuteur, qui accepte ces conditions au nom de l’enfant et peut demander l’accès, la correction ou la suppression de ses renseignements (section 16).</li>
+<li><b>14 ans et plus :</b> vous pouvez consentir vous-même, ou avec l’accord d’un parent ou tuteur.</li>
+<li>Nous pouvons demander une preuve de consentement et suspendre un compte lorsque le consentement requis semble manquer.</li>
+</ul>
+
+<h2 id="s5">5. Comportements interdits</h2>
+<ul>
+<li>Harcèlement, menaces, contenus illégaux, usurpation d’identité, spam, tentatives de contourner les limites, restrictions ou bannissements, création de faux comptes pour contourner une sanction.</li>
+<li>Atteinte à la sécurité du service : exploitation de failles, bots ou jeux malveillants, surcharge volontaire, tentative d’accès aux données d’autrui.</li>
+<li>Triche dans les jeux et l’économie, revente non autorisée de jetons ou d’objets, exploitation d’un défaut du service pour obtenir un avantage.</li>
+<li>Le contenu que vous publiez reste le vôtre ; vous nous autorisez à l’héberger, le transmettre et l’afficher aux personnes à qui vous l’envoyez, et à le traiter dans les cas prévus par ces conditions.</li>
+</ul>
+
+<h2 id="s6">6. Modération, personnel et drapeaux</h2>
+<ul>
+<li><b>Hiérarchie.</b> Administrateur élève, modérateur, administrateur, chef des administrateurs, commandant. Chaque rang n’accède qu’aux fonctions de son niveau, vérifiées par le serveur ; les fonctions les plus sensibles sont réservées au commandant.</li>
+<li><b>Pouvoirs.</b> Avertir, restreindre des droits, suspendre ou bannir un compte, une adresse IP ou un navigateur, supprimer des contenus, retirer des bots, traiter les signalements et le support, corriger des soldes en cas d’erreur.</li>
+<li><b>Drapeaux internes.</b> Le personnel peut apposer sur un compte un drapeau interne (par exemple « suspect », « dangereux », « possible faux compte », ou un niveau d’avertissement). <b>Un drapeau est un indicateur de travail et non une accusation, un constat de faute ni une décision.</b> Il peut être erroné, est réexaminé et retiré lorsqu’il n’est plus justifié, et ne doit pas être communiqué à des tiers. Nous limitons l’accès aux rangs autorisés afin de réduire les risques d’atteinte à la réputation. Vous pouvez demander un réexamen en ouvrant une demande de support.</li>
+<li><b>Contrôle du personnel.</b> Les actions du personnel sont inscrites dans des journaux d’administration protégés contre la modification : une suppression ou une modification directe dans la base est détectée et signalée au commandant. Chaque membre du personnel voit ses propres journaux ; les journaux du commandant ne sont consultables que par lui. Les sanctions, signalements et consultations laissent des traces. Pour limiter l’espace utilisé, certains journaux sont supprimés automatiquement après leur durée de conservation (section 14).</li>
+<li><b>Sanctions et contestation.</b> Vous pouvez contester une sanction par une demande de support ; elle peut être confirmée, modifiée ou levée. Le personnel peut agir sans préavis lorsque la sécurité du service ou des personnes l’exige.</li>
+<li><b>Signalements.</b> Un signalement transmet au personnel les messages choisis, un instantané, la raison et le nom des personnes concernées. Les signalements abusifs peuvent être sanctionnés.</li>
+</ul>
+
+<h2 id="s7">7. Consultation des conversations</h2>
+<ul>
+<li>Une conversation <b>non chiffrée</b> ne peut être consultée que par une <b>personne autorisée</b> (rang d’administrateur ou plus selon le cas), et seulement pour traiter un signalement, un litige, une demande de support, une enquête de sécurité ou une obligation légale.</li>
+<li>Chaque consultation est <b>journalisée</b> : identité de la personne qui consulte, date et heure, motif invoqué et éléments consultés. Ces traces sont conservées selon la section 14.</li>
+<li>Le personnel ne peut pas lire le contenu des conversations chiffrées de bout en bout ; il ne voit que ce que vous joignez à un signalement et les métadonnées décrites à la section 2.</li>
+<li>La suppression d’une discussion de votre côté la retire de votre liste et de votre accès ; elle n’efface pas nécessairement les copies que possèdent les autres membres ni les éléments conservés pour un signalement en cours. La suppression pour tous, lorsqu’elle est offerte, retire le contenu du service sous réserve des sauvegardes (section 14).</li>
+</ul>
+
+<h2 id="s8">8. Bots, Ciffron et développeurs</h2>
+<h3>Bots et jeux importés</h3>
+<ul>
+<li>Un bot n’agit qu’avec les <b>permissions</b> acceptées pour la discussion (par exemple envoyer des messages, afficher une interface, lire des commandes, utiliser le son d’un appel). Il s’exécute dans un bac à sable isolé, sans accès direct à la base de données, au réseau ni au stockage de votre navigateur.</li>
+<li>Un bot ne lit que les commandes et événements qui lui sont destinés, selon ses permissions ; il ne peut pas lire des conversations auxquelles il n’a pas été ajouté.</li>
+</ul>
+<h3>Clés d’interface (API) et responsabilité du développeur</h3>
+<ul>
+<li>Les clés sont stockées chiffrées côté serveur, visibles seulement de leur propriétaire et transmises uniquement sur une connexion chiffrée. Le propriétaire peut les <b>révoquer ou les renouveler</b> à tout moment ; le personnel peut les révoquer en cas d’abus. Ne partagez jamais une clé privée.</li>
+<li>Le développeur est <b>responsable</b> du fonctionnement, du contenu et des effets de son bot. Cela n’exonère pas Communicer! de ses propres obligations légales, mais le développeur répond de ce qu’il programme, publie ou partage.</li>
+<li><b>Ressources.</b> Les bots sont soumis à des seuils de mémoire, de temps de calcul, de cadence de messages et de taille ; en cas de dépassement, le bot est ralenti, suspendu ou bloqué.</li>
+</ul>
+<h3>Ciffron : détections et contestation</h3>
+<ul>
+<li>Ciffron analyse le code des bots, jeux et fichiers importés (règles de détection, surveillance à l’exécution). Il fait la différence entre une <b>erreur</b> (bogue, boucle involontaire, message trop long) et une <b>intention malveillante</b> (contournement du bac à sable, collecte de données, spam) : l’erreur entraîne en général un blocage temporaire à corriger, la malveillance peut entraîner un blocage durable et une sanction.</li>
+<li>Une détection peut être <b>contestée</b>. Le personnel habilité réexamine le code concerné (un extrait de quelques lignes autour du passage signalé pour les rangs de formation) ; le blocage peut être levé ou maintenu, avec une exception encadrée lorsque c’est justifié.</li>
+<li>Les détections de Ciffron et leurs journaux sont conservés selon la section 14. Une détection automatique n’est pas une décision définitive.</li>
+</ul>
+
+<h2 id="s9">9. Jetons, médaillons et monnaie virtuelle</h2>
+<ul>
+<li>Les jetons, médaillons, objets, cadres et badges sont des <b>éléments de jeu à usage limité à Communicer!</b>. Ils <b>n’ont aucune valeur monétaire</b>, ne peuvent pas être <b>convertis en argent</b>, <b>échangés contre de l’argent ou des biens extérieurs</b>, ne constituent <b>pas un dépôt</b> ni un placement et <b>ne produisent aucun rendement ou intérêt</b>.</li>
+<li>La bourse et ses cryptomonnaies sont une <b>simulation</b> de jeu : aucun actif réel n’est acheté, vendu ni détenu.</li>
+<li>Les jetons et objets peuvent être ajustés ou retirés en cas d’erreur, d’abus ou de fraude. Les récompenses (quotidiennes, quêtes, victoires, parrainage) sont plafonnées et vérifiées par le serveur ; les gains obtenus par triche ou exploitation d’un défaut peuvent être annulés.</li>
+<li><b>Remboursement.</b> Les jetons, médaillons et objets sont généralement non remboursables après leur crédit ou leur utilisation, sous réserve des droits et recours prévus par les lois applicables.</li>
+</ul>
+
+<h2 id="s10">10. Paiements (Stripe)</h2>
+<ul>
+<li><b>Commerçant et prestataire.</b> La vente est faite par l’exploitant de Communicer!. Le paiement par carte est traité par <b>Stripe</b>, qui agit comme prestataire de paiement ; nous ne voyons ni ne conservons votre numéro de carte, seulement la confirmation, le montant et la référence de la commande.</li>
+<li><b>Devise et taxes.</b> Le prix est affiché dans la devise indiquée au moment du paiement ; les taxes applicables sont ajoutées lorsque la loi l’exige et indiquées avant la confirmation.</li>
+<li><b>Erreurs de paiement.</b> Si un paiement échoue, aucun jeton n’est crédité. Une même commande n’est créditée qu’une seule fois.</li>
+<li><b>Payé mais non crédité.</b> Ouvrez une demande de support avec la référence de la commande : nous vérifions le paiement auprès de Stripe puis créditons la commande une seule fois, ou la rembourserons si le crédit est impossible.</li>
+<li><b>Remboursements et rétrofacturations.</b> Les remboursements sont accordés selon la section 9 et les lois applicables. Une rétrofacturation (contestation auprès de votre banque) peut entraîner le retrait des jetons concernés, la suspension du compte le temps de l’examen et la transmission des preuves de la commande à Stripe.</li>
+<li>Les données de paiement (commande, montant, référence, date) sont conservées selon la section 14.</li>
+</ul>
+
+<h2 id="s11">11. Disponibilité, sauvegardes et limitation de responsabilité</h2>
+<ul>
+<li><b>Service fourni « tel quel ».</b> Communicer! est un projet indépendant, fourni sans garantie de disponibilité, de continuité, d’absence d’erreurs ou d’adéquation à un usage particulier. Le service peut être interrompu, ralenti, modifié ou limité (maintenance, sécurité, quotas de stockage, panne d’un prestataire).</li>
+<li><b>Hébergeurs et prestataires.</b> Le service repose sur des prestataires tiers (hébergement de la base de données, du stockage et des fonctions ; hébergement des pages ; paiement ; courriels ; réseau de diffusion). <b>Les pannes, pertes de données, incidents de sécurité ou décisions de ces prestataires relèvent de leur responsabilité propre</b>, et l’exploitant de Communicer! n’en répond pas dans la mesure permise par la loi.</li>
+<li><b>Sauvegardes.</b> Des sauvegardes peuvent exister chez l’hébergeur, mais <b>elles ne garantissent pas la restauration</b> d’un contenu précis, d’une conversation ou d’un compte. Conservez vos propres copies et votre <b>code de récupération</b>. Des données peuvent être perdues.</li>
+<li><b>Limitation de responsabilité.</b> Dans toute la mesure permise par la loi applicable, l’exploitant de Communicer!, ses collaborateurs et ses représentants ne sont pas responsables des dommages indirects, accessoires, spéciaux ou consécutifs, de la perte de données, de contenus, de jetons, d’objets, de profits, d’occasions ou de réputation, ni de ce que publient ou font les utilisateurs et les développeurs de bots.</li>
+<li><b>Compensation exclusive.</b> Lorsqu’une compensation est due malgré ce qui précède, elle est limitée, à titre de recours exclusif, à un <b>crédit de jetons ou de médaillons</b> d’une valeur de jeu maximale de <b>500 jetons ou 5 médaillons par personne et par période de douze mois</b>, à notre choix. Aucune compensation monétaire n’est offerte, sauf remboursement d’un paiement non crédité (section 10) ou obligation légale.</li>
+<li><b>Droits qui subsistent.</b> Rien dans ces conditions n’exclut ni ne limite une responsabilité qui ne peut l’être selon la loi (notamment en cas de faute intentionnelle ou lourde) ni les droits que la loi de consommation vous reconnaît ; si une stipulation est jugée inapplicable, le reste demeure valide.</li>
+</ul>
+
+<h2 id="s12">12. Application mobile (Android) : ce qui diffère de la version ordinateur</h2>
+<p>Les conditions ci-dessus s’appliquent aussi à la version téléphone (<code>/phone/</code>) et à l’application <b>Communicer</b> pour Android. Différences :</p>
+<ul>
+<li><b>Scommunicookie.</b> Dans l’application, il est enregistré <b>directement dans l’application</b>, sous protection du système Android, et non seulement dans un navigateur. Il est conservé tant que l’application reste installée et que ses données ne sont pas effacées. Le reste des règles de la section 3 s’applique.</li>
+<li><b>Autorisations demandées.</b> Internet (obligatoire), <b>caméra</b> (photos, appels, prise de photo), <b>microphone</b> (messages vocaux, appels), <b>localisation / GPS</b>, <b>stockage et médias</b> (choisir et enregistrer des images, vidéos et fichiers), notifications, vibration et maintien de l’écran allumé. Vous pouvez les refuser ou les retirer dans les réglages Android ; les fonctions correspondantes sont alors indisponibles. L’application ne les utilise que lorsque vous activez la fonction qui en a besoin.</li>
+<li><b>Localisation.</b> Elle n’est utilisée que par une fonction qui la demande expressément et pendant son usage ; nous ne suivons pas votre position en continu.</li>
+<li><b>Écran maintenu allumé.</b> L’écran ne s’éteint pas pendant la lecture d’une vidéo, l’affichage d’une image, un message vocal, un appel ou une partie de jeu ; il peut se fermer normalement le reste du temps.</li>
+<li><b>Orientation et plein écran.</b> L’application s’adapte au portrait et au paysage, aux encoches et aux barres système ; les barres sont masquées en paysage et pendant les vidéos en plein écran.</li>
+<li><b>Interface tactile.</b> Les raccourcis clavier et menus de souris sont remplacés par des gestes (appui long) et une manette à l’écran pour les jeux.</li>
+<li><b>Liens et téléchargements.</b> Les liens vers d’autres sites s’ouvrent dans votre navigateur ; les fichiers téléchargés sont enregistrés dans le dossier Téléchargements.</li>
+<li><b>Signature.</b> L’APK est signé par « Echo Romeo ». N’installez Communicer que depuis le lien officiel du projet.</li>
+</ul>
+
+<h2 id="s13">13. Renseignements personnels recueillis</h2>
+<ul>
+<li><b>Compte :</b> nom d’utilisateur, surnom, description, photo, dates de création et de dernière activité, état de connexion, paramètres d’apparence, anciens noms d’utilisateur (que vous pouvez masquer), amis, blocages, groupes et rôles.</li>
+<li><b>Authentification :</b> mot de passe (stocké sous forme protégée), clés de chiffrement (clé privée enveloppée), courriel ou téléphone seulement si vous les fournissez pour la récupération ou la double authentification.</li>
+<li><b>Réseau et appareil :</b> adresses IP (section 3), empreinte du Scommunicookie, informations techniques de la requête.</li>
+<li><b>Messages et médias :</b> contenu des messages non chiffrés, médias envoyés (sous leur forme compressée), heures, expéditeurs, destinataires, accusés de lecture, signalements ; pour le mode chiffré, uniquement les métadonnées (section 2).</li>
+<li><b>Activité et économie :</b> jetons, médaillons, achats, inventaire, quêtes, statistiques de jeux, parrainage, bourse simulée, équipes et tournois.</li>
+<li><b>Sécurité et support :</b> journaux de sécurité, détections de Ciffron, signalements, demandes de support, indicateurs internes de modération, sanctions, journaux du personnel, journaux de courriels.</li>
+<li><b>Paiement :</b> commande, montant, référence et date ; jamais le numéro de carte.</li>
+<li><b>Localisation (mobile) :</b> seulement si vous utilisez une fonction qui la demande.</li>
+</ul>
+<p>Finalités : fournir le service, assurer la sécurité et la modération, prévenir la fraude, faire respecter ces conditions, traiter les paiements et le support, améliorer le service, respecter la loi. Nous ne vendons pas vos renseignements.</p>
+
+<h2 id="s14">14. Conservation, suppression et sauvegardes</h2>
+<h3>Durées de conservation</h3>
+<table>
+<tr><th>Donnée</th><th>Durée de conservation</th><th>Critère</th></tr>
+<tr><td>Adresses IP</td><td>12 mois</td><td>après la dernière vue de l’adresse</td></tr>
+<tr><td>Empreinte du navigateur (Scommunicookie)</td><td>24 mois</td><td>après la dernière activité du navigateur ; un blocage actif est conservé tant qu’il dure</td></tr>
+<tr><td>Messages et médias</td><td>tant que le compte et la discussion existent</td><td>jusqu’à suppression par vous ou par les autres membres, ou suppression du compte</td></tr>
+<tr><td>Journaux d’administration et alertes de journaux</td><td>24 mois</td><td>après l’inscription de l’action</td></tr>
+<tr><td>Signalements, rapports de bogues, demandes de support fermées</td><td>12 mois</td><td>après la clôture (signalements : après la date de création)</td></tr>
+<tr><td>Détections Ciffron, journaux de bots, demandes de bots, drapeaux d’audit</td><td>12 mois</td><td>après l’événement</td></tr>
+<tr><td>Journaux de courriels envoyés</td><td>6 mois</td><td>après l’envoi</td></tr>
+<tr><td>Compteurs de limites de fréquence, codes de courriel</td><td>1 mois au plus (compteurs par adresse : 2 jours)</td><td>après création</td></tr>
+<tr><td>Données de paiement (commande, montant, référence)</td><td>7 ans</td><td>obligations comptables et fiscales</td></tr>
+<tr><td>Comptes inactifs : données personnelles listées à la section 14.2</td><td>paramétrable (1, 2, 3, 6, 9, 12 ou 24 mois)</td><td>depuis la dernière activité du compte</td></tr>
+<tr><td>Sauvegardes de l’hébergeur</td><td>selon l’offre de l’hébergeur (généralement quelques jours à quelques semaines)</td><td>rotation automatique</td></tr>
+</table>
+<p class="muted">Ces durées sont des maximums par défaut appliqués par une tâche automatique quotidienne ; elles peuvent être raccourcies mais pas prolongées sans nouvelle version des conditions, sauf obligation légale, litige ou enquête en cours.</p>
+<h3>14.2 Suppression du compte et des données</h3>
+<ul>
+<li><b>Suppression du compte :</b> le compte, le profil, les clés, le portefeuille, l’inventaire et les liens sociaux sont supprimés ou anonymisés. Les messages que vous avez envoyés dans des discussions partagées peuvent subsister pour les autres membres, attribués à un « compte supprimé ».</li>
+<li><b>Suppression de données seulement :</b> vous pouvez demander la suppression de certaines données (par exemple historique de noms, statistiques) sans supprimer le compte.</li>
+<li><b>Données non listées.</b> Les données qui ne figurent pas dans le tableau (par exemple un bannissement actif, une sanction, une trace de fraude) sont conservées <b>aussi longtemps que nécessaire</b> à leur finalité et à nos obligations, puis supprimées ou anonymisées ; en cas de doute, la durée la plus courte raisonnable est appliquée.</li>
+<li><b>Comptes inactifs :</b> pour les seuls comptes inactifs, certaines données personnelles (message d’absence, demandes de badge, surnoms et épingles, droits personnels, statistiques et victoires de jeux, inventaire, préférences, parrainage, sauvegardes de jeux externes, données du mode « fumée », demandes de support, inscriptions aux tournois, blocages, quêtes, historique des noms d’utilisateur et portefeuille) peuvent être supprimées après la durée choisie. Les comptes actifs et ceux du personnel ne sont pas touchés.</li>
+<li><b>Suppressions du commandant :</b> exigent une confirmation indiquant l’espace libéré estimé, sont journalisées, limitées à une liste fermée de tables et exécutées de façon atomique ; elles sont définitives.</li>
+<li><b>Sauvegardes.</b> Une donnée supprimée peut subsister dans une sauvegarde de l’hébergeur jusqu’à sa rotation. Seules des personnes autorisées peuvent restaurer une sauvegarde ; si une restauration a lieu, <b>les suppressions faites depuis la sauvegarde sont réappliquées</b> dans les meilleurs délais.</li>
+</ul>
+
+<h2 id="s15">15. Prestataires et pays de traitement</h2>
+<table>
+<tr><th>Prestataire</th><th>Fonction</th><th>Données concernées</th><th>Pays / région</th></tr>
+<tr><td>Supabase</td><td>Base de données, authentification, stockage de fichiers, fonctions serveur</td><td>Toutes les données du service, médias compris</td><td>Région du projet (États-Unis ou Union européenne selon la configuration)</td></tr>
+<tr><td>GitHub (GitHub Pages)</td><td>Hébergement des pages et scripts</td><td>Adresse IP et métadonnées de requête lors du chargement du site</td><td>États-Unis</td></tr>
+<tr><td>Stripe</td><td>Paiement par carte</td><td>Données de paiement saisies chez Stripe, référence de commande</td><td>États-Unis, Irlande et autres</td></tr>
+<tr><td>Fournisseur de courriel (SMTP) et, le cas échéant, de SMS</td><td>Courriels de récupération et de double authentification</td><td>Adresse courriel ou numéro, contenu du message de sécurité</td><td>Selon le fournisseur configuré</td></tr>
+<tr><td>Giphy</td><td>Recherche de GIF</td><td>Termes de recherche, adresse IP</td><td>États-Unis</td></tr>
+<tr><td>Wikipédia (Wikimedia)</td><td>Contenu des jeux de culture générale</td><td>Requêtes de jeu, adresse IP</td><td>États-Unis</td></tr>
+<tr><td>Sites de musique libre (Pixabay, Audio Library, Free Music Archive, ccMixter, La Sonothèque)</td><td>Recherche et lecture de musique par VlafiBOT</td><td>Termes recherchés, adresse IP du serveur relais</td><td>Variable</td></tr>
+<tr><td>jsDelivr</td><td>Diffusion d’une bibliothèque de code</td><td>Adresse IP</td><td>Mondial</td></tr>
+</table>
+<p class="muted">Vos renseignements peuvent donc être traités hors du Québec et du Canada. Nous demandons à ces prestataires des garanties raisonnables, sans pouvoir contrôler leurs pratiques.</p>
+
+<h2 id="s16">16. Vos droits, responsable de la protection et incidents</h2>
+<ul>
+<li><b>Responsable de la protection des renseignements personnels.</b> L’exploitant de Communicer! assume ce rôle. Pour toute demande ou plainte, ouvrez une demande de support ou écrivez à @staff en indiquant « protection des renseignements ».</li>
+<li><b>Accès, correction, portabilité.</b> Vous pouvez demander l’accès aux renseignements que nous détenons, leur correction et <b>une copie dans un format structuré et couramment utilisé</b> (portabilité), dans la mesure prévue par la loi applicable, notamment la législation québécoise sur la protection des renseignements personnels. Nous répondons dans un délai raisonnable (30 jours visés) après vérification de votre identité.</li>
+<li><b>Retrait du consentement et suppression.</b> Vous pouvez retirer votre consentement, demander la suppression de votre compte ou de certaines données (section 14). Certaines données peuvent être conservées lorsque la sécurité, l’application d’une sanction, la prévention de la fraude, un litige ou une obligation légale l’exige.</li>
+<li><b>Mineurs.</b> Un parent ou tuteur peut exercer ces droits pour un enfant de moins de 14 ans.</li>
+<li><b>Incident de confidentialité.</b> En cas d’incident présentant un risque de préjudice sérieux, nous prenons les mesures pour réduire le risque, avisons les personnes concernées et les autorités compétentes lorsque la loi l’exige (notification par message système et, si possible, courriel), et consignons l’incident dans un registre.</li>
+<li><b>Plaintes.</b> Vous pouvez aussi vous adresser à l’autorité de protection des renseignements personnels de votre territoire.</li>
+</ul>
+
+<h2 id="s17">17. Modifications de ces conditions</h2>
+<ul>
+<li>Nous pouvons modifier ces conditions. Chaque version a une <b>date d’entrée en vigueur</b> (indiquée en haut de ce document) et un <b>numéro</b> ; l’historique des versions publiées est conservé.</li>
+<li><b>Information et nouveau consentement.</b> Lorsqu’une version est publiée, les comptes existants voient à leur prochaine connexion un écran « Changement de conditions » avec un résumé et le texte complet : <b>Accepter</b> pour continuer, ou <b>Refuser</b> pour être déconnecté et ne plus pouvoir utiliser le service. Les nouveaux comptes adhèrent à la version en vigueur en s’inscrivant.</li>
+<li><b>Droit de cesser d’utiliser le service.</b> Vous pouvez cesser d’utiliser Communicer! et demander la suppression de votre compte à tout moment, sans frais.</li>
+<li>Pour toute question : @staff.</li>
+</ul>
+</main>
+</body>
+</html>

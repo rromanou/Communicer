@@ -1,0 +1,6 @@
+title = "Communicer!"
+[extend]
+useDefault = true
+[allowlist]
+description = "Clé anon Supabase (publique par conception, protégée par RLS)"
+regexes = ['''eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9\.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRvc2pwbHh3b3V1bmhtZnRlbXRmIiwicm9sZSI6ImFub24i[A-Za-z0-9_\-\.]+''']

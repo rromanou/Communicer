@@ -1,0 +1,64 @@
+import groovy.json.JsonSlurper
+
+// Toutes les valeurs de l'application (nom, version, adresse) viennent de android/src/data/data.json.
+def data = new JsonSlurper().parse(file('../src/data/data.json'))
+
+// Signature : variables d'environnement (GitHub Actions) ou android/keystore.properties (local, jamais publié).
+def ksFile = System.getenv('ANDROID_KEYSTORE_FILE')
+def ksPass = System.getenv('ANDROID_KEYSTORE_PASSWORD')
+def ksAlias = System.getenv('ANDROID_KEY_ALIAS')
+def keyPass = System.getenv('ANDROID_KEY_PASSWORD')
+def propsFile = rootProject.file('keystore.properties')
+if (!ksFile && propsFile.exists()) {
+    def p = new Properties(); propsFile.withInputStream { p.load(it) }
+    ksFile = p.getProperty('file'); ksPass = p.getProperty('storePassword')
+    ksAlias = p.getProperty('keyAlias'); keyPass = p.getProperty('keyPassword')
+}
+
+apply plugin: 'com.android.application'
+
+android {
+    namespace data['package']
+    compileSdk data.targetSdk
+
+    defaultConfig {
+        applicationId data['package']
+        minSdk data.minSdk
+        targetSdk data.targetSdk
+        versionCode data.versionCode as int
+        versionName data.version
+        resValue 'string', 'app_name', data.name
+        buildConfigField 'String', 'APP_URL', '"' + data.url + '"'
+        buildConfigField 'String', 'APP_VERSION', '"' + data.version + '"'
+    }
+    buildFeatures { buildConfig = true }
+
+    signingConfigs {
+        release {
+            if (ksFile) {
+                storeFile file(ksFile)
+                storePassword ksPass
+                keyAlias ksAlias
+                keyPassword keyPass
+            }
+        }
+    }
+    buildTypes {
+        release {
+            minifyEnabled true
+            shrinkResources true
+            proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
+            if (ksFile) signingConfig signingConfigs.release
+        }
+    }
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_17
+        targetCompatibility JavaVersion.VERSION_17
+    }
+    lint { abortOnError false }
+}
+
+// nom du fichier produit : Communicer.apk
+android.applicationVariants.all { variant ->
+    variant.outputs.all { outputFileName = "${data.name}.apk" }
+}

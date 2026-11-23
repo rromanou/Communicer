@@ -1,0 +1,12 @@
+name: "Maintenance / Fichiers en double"
+on:
+  pull_request:
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  dup:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - run: python3 .github/scripts/check_files.py dup

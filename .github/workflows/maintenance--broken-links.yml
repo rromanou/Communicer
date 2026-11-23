@@ -1,0 +1,17 @@
+name: "Maintenance / Liens brisés"
+on:
+  schedule:
+    - cron: "0 6 * * 2"
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  links:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - run: .github/scripts/build-site.sh _site
+      - uses: lycheeverse/lychee-action@v2
+        with:
+          args: --no-progress --exclude 'supabase\.co' --exclude 'localhost' --exclude '^file:' --exclude 'api\.giphy' --exclude 'w3\.org' '_site/**/*.html'
+          fail: true

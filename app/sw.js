@@ -3,11 +3,13 @@ self.addEventListener('install',e=>{e.waitUntil(caches.open(PAGE).then(c=>c.add(
 self.addEventListener('activate',e=>{e.waitUntil((async()=>{for(const k of await caches.keys())if(k!==PAGE&&k!==GAMES)await caches.delete(k);await self.clients.claim()})())});
 self.addEventListener('message',e=>{const d=e.data||{};
   if(d.t==='games-on')e.waitUntil(caches.open(GAMES).then(async c=>{const u=new URL('./',self.registration.scope).href;
-    for(const x of [u,u+'index.html',u+'bots-offline.js'])try{const r=await fetch(x,{cache:'reload'});if(r.ok)await c.put(x,r.clone())}catch(_){}
-    const ok=!!(await c.match(u))&&!!(await c.match(u+'bots-offline.js'));const cl=await self.clients.matchAll();cl.forEach(k=>k.postMessage({t:'games-ready',ok}))}));
+    let L=[u,u+'index.html',u+'scripts/bots-offline.js',u+'assets/src/dialogues.txt'];
+    try{const h=await (await fetch(u,{cache:'reload'})).text();for(const m of h.matchAll(/(?:src|href)="((?:scripts|style)\/[^"?]+)"/g))L.push(u+m[1])}catch(_){}
+    for(const x of L)try{const r=await fetch(x,{cache:'reload'});if(r.ok)await c.put(x,r.clone())}catch(_){}
+    const ok=!!(await c.match(u))&&!!(await c.match(u+'scripts/bots-offline.js'));const cl=await self.clients.matchAll();cl.forEach(k=>k.postMessage({t:'games-ready',ok}))}));
   if(d.t==='games-off')e.waitUntil(caches.delete(GAMES))});
 self.addEventListener('fetch',e=>{const r=e.request;
-  if(r.method==='GET'&&new URL(r.url).pathname.endsWith('/bots-offline.js')&&new URL(r.url).origin===location.origin){
+  if(r.method==='GET'&&/\/(scripts|style|assets\/src)\/[^\/]+$/.test(new URL(r.url).pathname)&&!/\.enc$/.test(new URL(r.url).pathname)&&new URL(r.url).origin===location.origin){
     e.respondWith((async()=>{const g=await caches.open(GAMES);try{const n=await fetch(r);if(n.ok&&(await g.keys()).length)g.put(r.url.split('?')[0],n.clone());return n}catch(_){return (await g.match(r.url.split('?')[0]))||Response.error()}})());return}
   if(r.method!=='GET'||r.mode!=='navigate')return;
   e.respondWith((async()=>{try{const n=await fetch(r);if(n.ok){const g=await caches.open(GAMES).catch(()=>null);if(g&&(await g.keys()).length){const u=new URL('./',self.registration.scope).href;g.put(u,n.clone())}}return n}

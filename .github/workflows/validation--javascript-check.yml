@@ -1,0 +1,24 @@
+name: "Validation / JavaScript"
+on:
+  push:
+    paths: ["scripts/**","phone/**","database/functions/*.js","tests/**"]
+  pull_request:
+permissions:
+  contents: read
+jobs:
+  js:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: 20 }
+      - name: Syntaxe (node --check)
+        run: |
+          fail=0
+          for f in scripts/*.js phone/*.js database/functions/*.js tests/*.js; do [ -f "$f" ] || continue; node --check "$f" || { echo "::error file=$f::erreur de syntaxe"; fail=1; }; done
+          exit $fail
+      - name: Test de fumée
+        run: |
+          .github/scripts/build-site.sh _site
+          npm i --no-save playwright@1.49.0 && npx playwright install --with-deps chromium
+          node tests/smoke.js _site

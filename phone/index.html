@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, interactive-widget=resizes-content">
+<meta name="theme-color" content="#2f6bff">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="format-detection" content="telephone=no">
+<base href="../">
+<script>window.__PHONE=1;window.__PBASE=location.pathname.replace(/\/phone(\/[^\/]*)?$/,"").replace(/\/+$/,"")</script>
+<script src="phone/phone.js"></script>
+<title>Communicer!</title>
+<link rel="icon" id="fav" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='16' fill='%232f6bff'/%3E%3Cpath d='M16 20a4 4 0 0 1 4-4h24a4 4 0 0 1 4 4v16a4 4 0 0 1-4 4H30l-10 9v-9a4 4 0 0 1-4-4z' fill='white'/%3E%3C/svg%3E">
+<script>
+/* Applique tout de suite le titre / favicon personnalisés (sauvegardés localement) */
+(function(){try{var t=JSON.parse(localStorage.getItem('cm_tab')||'{}');if(t.title)document.title=t.title;if(t.icon)document.getElementById('fav').href=t.icon;}catch(e){}})();
+</script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script>if(!navigator.onLine||!window.supabase){window.__OFF=1;(function(){const mk=()=>new Proxy(function(){},{get:(t,k)=>k==='then'?(r=>r({data:null,error:{message:'Hors ligne'}})):k==='auth'?auth:mk(),apply:()=>mk()});const auth={getSession:async()=>({data:{session:null}}),onAuthStateChange:()=>({data:{subscription:{unsubscribe(){}}}}),signOut:async()=>({})};window.supabase={createClient:()=>mk()}})()}
+try{if('serviceWorker' in navigator&&location.protocol==='https:')navigator.serviceWorker.register('sw.js').catch(()=>{})}catch(e){}</script>
+<script src="scripts/cmm.js"></script><script src="scripts/zcm.js"></script><script src="scripts/ciffron-loader.js"></script>
+<link rel="stylesheet" href="style/style.css">
+<link rel="stylesheet" href="phone/phone.css">
+
+</head>
+<body>
+<div id="splash" aria-hidden="true"><img src="assets/images/icon.svg" alt="" width="112" height="112"><b>Communicer</b><i></i></div>
+
+<div id="auth" hidden>
+  <div class="card">
+    <div class="logo">Communicer!</div>
+    <div class="muted" style="text-align:center">Messagerie sans courriel : un nom et un mot de passe</div>
+    <div class="tabs"><button id="tabIn" class="on" type="button">Connexion</button><button id="tabUp" type="button">Inscription</button></div>
+    <form id="authForm" autocomplete="on">
+      <label>Nom d'utilisateur</label><input id="fu" autocomplete="username" autocapitalize="off" spellcheck="false" required>
+      <label>Mot de passe</label><input id="fp" type="password" autocomplete="current-password" required>
+      <div id="up2" hidden><label>Confirmer le mot de passe</label><input id="fp2" type="password" autocomplete="new-password"></div>
+      <div class="err" id="authErr"></div>
+      <button id="authGo" style="width:100%;margin-top:6px">Se connecter</button>
+    </form>
+    <div class="authterms muted"><span id="authTermsUp" hidden>En vous créant un compte, vous adhérez aux conditions d’utilisation. </span><a id="authTermsLink">Lire les conditions d’utilisation et la politique de confidentialité</a></div>
+  </div>
+</div>
+
+<script src="scripts/theme.js"></script>
+<div id="app" hidden>
+  <aside id="side">
+    <div class="me" id="meBox"></div>
+    <div class="tabs"><button data-tab="chats" class="on">Discussions</button><button data-tab="friends">Amis<span id="reqBadge"></span></button></div>
+    <div id="paneChats" style="display:flex;flex-direction:column;flex:1;min-height:0">
+      <div class="acts"><button id="btnNew">Nouvelle discussion</button><button id="btnGroup" class="ghost">Nouveau groupe</button></div>
+      <div id="list"></div>
+    </div>
+    <div id="paneFriends" hidden></div>
+  </aside>
+  <main id="chat">
+    <div id="empty"><div class="logo">Communicer!</div><p>Choisissez une discussion ou ajoutez un ami.</p></div>
+    <div id="chatBox" hidden>
+      <div class="hd">
+        <button class="icon" id="bBack" title="Retour"></button>
+        <span id="hAv"></span>
+        <div class="grow"><div id="hName" style="font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis"></div><div id="hSt" class="muted" style="font-size:12px"></div></div>
+        <button class="icon" id="bCall" title="Appel"></button>
+        <button class="icon" id="bGames" title="Jeux et activités"></button>
+        <button class="icon" id="bTheme" title="Personnaliser"></button>
+        <button class="icon" id="bInfo" title="Détails"></button>
+      </div>
+      <div id="botReqBox" hidden></div><div id="botSlotTop"></div>
+      <div id="msgs"></div><div id="botSlotBottom"></div>
+      <div class="comp">
+        <div id="picker" hidden></div><div id="botSug" hidden></div><div id="botSlotComposer"></div><input type="file" id="fileMusic" accept="audio/*" hidden>
+        <div class="row" id="compRow">
+          <button class="icon" id="bPlus" title="Plus"></button>
+          <button class="icon" id="bEmo" title="Emojis"></button>
+          <button class="icon" id="bImg" title="Envoyer une photo"></button>
+          <button class="icon" id="bCam" title="Prendre une photo"></button>
+          <button class="icon" id="bGif" title="GIF"></button>
+          <textarea id="in" rows="1" placeholder="Votre message"></textarea>
+          <button class="icon" id="bMic" title="Message vocal"></button>
+          <button class="icon" id="bSend" title="Envoyer" style="color:var(--accent)"></button>
+        </div>
+        <div class="row" id="recRow" hidden>
+          <div class="recbar"><span class="recdot"></span><span id="recT">0:00</span><span class="muted">Enregistrement</span></div>
+          <button class="ghost" id="recCancel">Annuler</button><button id="recSend">Envoyer</button>
+        </div>
+        <input type="file" id="fileImg" accept="image/*,video/*" hidden>
+      </div>
+    </div>
+  </main>
+</div>
+<script src="scripts/app.js"></script>
+<script src="phone/phone-ui.js"></script>
+</body>
+</html>

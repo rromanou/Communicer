@@ -1,0 +1,16 @@
+name: "Validation / TypeScript (fonctions edge)"
+on:
+  push:
+    paths: ["database/functions/*.ts"]
+  pull_request:
+    paths: ["database/functions/*.ts"]
+permissions:
+  contents: read
+jobs:
+  ts:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: denoland/setup-deno@v2
+        with: { deno-version: v2.x }
+      - run: deno check database/functions/*.ts

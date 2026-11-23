@@ -1,0 +1,16 @@
+name: "Validation / CSS"
+on:
+  push:
+    paths: ["style/**","phone/**"]
+  pull_request:
+permissions:
+  contents: read
+jobs:
+  css:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: 20 }
+      - run: npm i --no-save postcss@8
+      - run: node .github/scripts/check_css.js

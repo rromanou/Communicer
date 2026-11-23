@@ -1,0 +1,10 @@
+{
+  "name": "Communicer",
+  "package": "com.communicer.app",
+  "version": "1.0.0",
+  "versionCode": 1,
+  "url": "https://rromanou.github.io/Communicer/phone/",
+  "minSdk": 24,
+  "targetSdk": 34,
+  "icon": "img.ico"
+}

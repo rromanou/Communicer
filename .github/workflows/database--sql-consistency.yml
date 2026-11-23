@@ -1,0 +1,14 @@
+name: "Base de données / Cohérence (exe.txt)"
+on:
+  push:
+    paths: ["database/**",".github/scripts/check_sql.py"]
+  pull_request:
+    paths: ["database/**"]
+permissions:
+  contents: read
+jobs:
+  sql:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - run: python3 .github/scripts/check_sql.py consistency

@@ -1,0 +1,2 @@
+-keepclassmembers class com.communicer.app.MainActivity$Bridge { @android.webkit.JavascriptInterface <methods>; }
+-keepattributes JavascriptInterface

@@ -1,0 +1,13 @@
+name: "Sécurité / Droits (workflows et application Android)"
+on:
+  push:
+    paths: [".github/**","android/**"]
+  pull_request:
+permissions:
+  contents: read
+jobs:
+  perms:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - run: python3 .github/scripts/check_perms.py

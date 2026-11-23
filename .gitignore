@@ -1,0 +1,32 @@
+# secrets et clés : ne JAMAIS publier
+*.keystore
+*.jks
+keystore.properties
+local.properties
+.env
+.env.*
+*.pem
+*.key
+secrets/
+cif/KEY.txt
+
+# construction / dépendances
+_site/
+node_modules/
+build/
+.gradle/
+android/app/build/
+android/.gradle/
+android/app/src/main/res/mipmap-*/ic_launcher*.png
+android/app/src/main/assets/data.json
+
+# système / éditeurs
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
+*.log
+*.tmp
+__pycache__/
+android/app/src/main/res/drawable-nodpi/splash_logo.png
+scripts/ciffron.js

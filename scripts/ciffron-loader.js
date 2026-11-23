@@ -27,7 +27,7 @@ G.CiffronUnlock=function(url,anon,token){
   busy=(async()=>{
     const kr=await fetch(url+'/functions/v1/ciffron-key',{headers:{apikey:anon,Authorization:'Bearer '+token}});if(!kr.ok)throw new Error('clé refusée');
     const kb=Uint8Array.from(atob((await kr.json()).k),c=>c.charCodeAt(0));
-    const er=await fetch('ciffron.enc?v=2');if(!er.ok)throw new Error('ciffron.enc introuvable');
+    const er=await fetch('scripts/ciffron.enc?v=2');if(!er.ok)throw new Error('ciffron.enc introuvable');
     const raw=Uint8Array.from(atob((await er.text()).trim()),c=>c.charCodeAt(0));
     const key=await crypto.subtle.importKey('raw',kb,'AES-GCM',false,['decrypt']);
     const code=new TextDecoder().decode(await crypto.subtle.decrypt({name:'AES-GCM',iv:raw.slice(0,12)},key,raw.slice(12)));
