@@ -711,6 +711,22 @@ create or replace function public._live_size(p regclass) returns bigint language
 $$;
 revoke all on function public._live_size(regclass) from public, anon, authenticated;
 
+create or replace function public._purge_del(p_tbl regclass, p_where text, p_depth int default 0) returns bigint language plpgsql security definer set search_path = public as $$
+declare f record; n bigint; pc text; cc text;
+begin
+  if p_depth > 5 then raise exception 'Dépendances trop profondes'; end if;
+  -- supprime d'abord les lignes qui référencent celles à supprimer (clés étrangères sans suppression en cascade)
+  for f in select c.conrelid as child, c.conkey, c.confkey from pg_constraint c where c.contype = 'f' and c.confrelid = p_tbl and c.confdeltype in ('a', 'r') and c.conrelid <> p_tbl loop
+    select string_agg(quote_ident(a.attname), ',' order by k.o) into cc from unnest(f.conkey) with ordinality k(attnum, o) join pg_attribute a on a.attrelid = f.child and a.attnum = k.attnum;
+    select string_agg(quote_ident(a.attname), ',' order by k.o) into pc from unnest(f.confkey) with ordinality k(attnum, o) join pg_attribute a on a.attrelid = p_tbl and a.attnum = k.attnum;
+    perform public._purge_del(f.child::regclass, format('(%s) in (select %s from %s where %s)', cc, pc, p_tbl, p_where), p_depth + 1);
+  end loop;
+  execute format('delete from %s where %s', p_tbl, p_where);
+  get diagnostics n = row_count;
+  return n;
+end $$;
+revoke all on function public._purge_del(regclass, text, int) from public, anon, authenticated;
+
 create or replace function public._purge_do(p_kind text, p_item text, p_mode text, p_n int, p_months int) returns bigint language plpgsql security definer set search_path = public as $$
 declare c record; tc text; w text := 'true'; n bigint;
 begin
@@ -726,18 +742,18 @@ begin
         execute format('truncate table public.%I', c.tbl);          -- libère réellement l'espace disque
         return n;
       end if;
-      execute format('delete from public.%I where %s', c.tbl, w);
+      return public._purge_del(('public.' || c.tbl)::regclass, w);
     elsif p_mode = 'oldest' then
       tc := public._purge_tcol(c.tbl); if tc is null then raise exception 'Aucune colonne de date : utilisez « tout »'; end if;
-      execute format('delete from public.%I where ctid in (select ctid from public.%I where %s order by %I asc limit %s)', c.tbl, c.tbl, w, tc, p_n);
+      return public._purge_del(('public.' || c.tbl)::regclass, format('ctid in (select ctid from public.%I where %s order by %I asc limit %s)', c.tbl, w, tc, p_n));
     else
       tc := public._purge_tcol(c.tbl); if tc is null or p_months is null then raise exception 'Durée invalide'; end if;
-      execute format('delete from public.%I where %s and %I < now() - make_interval(months => %s)', c.tbl, w, tc, p_months);
+      return public._purge_del(('public.' || c.tbl)::regclass, format('%s and %I < now() - make_interval(months => %s)', w, tc, p_months));
     end if;
   else
     if p_months is null then raise exception 'Durée invalide'; end if;
-    execute format('delete from public.%I where %s and (%I in (select public._purge_inactive(%s))%s)', c.tbl, w, c.col, p_months,
-      case when c.col2 is null then '' else format(' or %I in (select public._purge_inactive(%s))', c.col2, p_months) end);
+    return public._purge_del(('public.' || c.tbl)::regclass, format('%s and (%I in (select public._purge_inactive(%s))%s)', w, c.col, p_months,
+      case when c.col2 is null then '' else format(' or %I in (select public._purge_inactive(%s))', c.col2, p_months) end));
   end if;
   get diagnostics n = row_count;
   return n;

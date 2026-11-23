@@ -117,10 +117,14 @@ async function legalGate(){
   let lp=null;try{lp=(await sb.rpc('legal_pending')).data}catch(e){}
   if(!lp||!lp.pending)return true;
   return new Promise(res=>{
-    const ov=document.createElement('div');ov.id='legalGate';ov.style.cssText='position:fixed;inset:0;z-index:2147483100;background:var(--bg,#f5f7fb);display:flex;flex-direction:column;padding:12px;gap:10px;box-sizing:border-box;color:var(--text,#1b1f2a)';
-    ov.innerHTML=`<h3 style="margin:0">Changement de conditions</h3><div class="muted">${esc(lp.summary||'Les conditions d’utilisation et la politique de confidentialité ont changé.')}</div>
-      <iframe src="mentions.html?v=${+lp.version||0}" title="Conditions" style="flex:1;min-height:0;width:100%;border:1px solid var(--line,#d9deea);border-radius:12px;background:#fff"></iframe>
-      <div class="row end" style="gap:8px"><button class="ghost" id="lgNo">Refuser (déconnexion)</button><button id="lgOk">Accepter et continuer</button></div>`;
+    const ov=document.createElement('div');ov.id='legalGate';ov.style.cssText='position:fixed;inset:0;z-index:2147483100;background:rgba(10,14,24,.55);display:flex;align-items:center;justify-content:center;padding:16px;box-sizing:border-box';
+    ov.innerHTML=`<div role="dialog" aria-modal="true" style="width:100%;max-width:400px;max-height:100%;overflow:auto;background:var(--card,var(--bg,#fff));color:var(--text,#1b1f2a);border:1px solid var(--line,#d9deea);border-radius:16px;padding:20px;box-shadow:0 12px 40px rgba(0,0,0,.3);box-sizing:border-box;display:flex;flex-direction:column;gap:12px">
+      <h3 style="margin:0;font-size:18px">Changement des conditions</h3>
+      <div style="white-space:pre-wrap;word-break:break-word">${esc(lp.summary||'Les conditions d’utilisation et la politique de confidentialité ont changé.')}</div>
+      <div class="muted" style="font-size:13px">Pour continuer à utiliser Communicer!, vous devez accepter les nouvelles conditions. Vous pouvez les lire <a href="mentions.html?v=${+lp.version||0}" target="_blank" rel="noopener">ici</a>. Si vous refusez, vous serez déconnecté : vous pourrez vous reconnecter, mais ce message s’affichera de nouveau et vous devrez accepter ou refuser.</div>
+      <button id="lgOk" style="width:100%">Accepter</button>
+      <button class="ghost" id="lgNo" style="width:100%">Refuser</button>
+      <div class="muted" style="font-size:12px;text-align:center;margin-top:-6px">Refuser vous déconnectera.</div></div>`;
     document.body.appendChild(ov);
     const done=v=>{ov.remove();res(v)};
     ov.querySelector('#lgOk').onclick=async()=>{try{await rpcd('legal_accept',{p_version:lp.version});done(true)}catch(e){toast(errMsg(e))}};
