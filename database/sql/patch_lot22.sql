@@ -925,3 +925,6 @@ begin
   insert into public.user_devices(user_id, dev) values (me, h) on conflict (user_id, dev) do update set last_seen = now();
   return jsonb_build_object('ok', true, 'banned', exists(select 1 from public.device_bans where dev = h));
 end $$;
+
+-- recharge le cache de schéma de l'API
+notify pgrst, 'reload schema';
