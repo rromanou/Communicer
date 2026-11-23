@@ -1011,7 +1011,8 @@ button.on.ghost{background:#ffd24d;color:#111}
 .emt-i{object-fit:cover}.emt-s{width:26px;height:26px;border-radius:50%;object-fit:cover;background:#222;flex:none}.emt-i.noimg{display:block;background:#222}
 
 /* ===== Jetons v2 ===== */
-.balchip{display:inline-flex;align-items:center;gap:5px;border:1px solid #f5b30166;background:#f5b30122;color:#c99a00;border-radius:99px;padding:2px 10px 2px 7px;font-size:13px;font-weight:600;cursor:pointer;line-height:1.5;white-space:nowrap;flex:none}
+.balchip{display:inline-flex;align-items:center;gap:4px;border:1px solid #f5b30166;background:#f5b30122;color:#c99a00;border-radius:99px;padding:2px 9px 2px 5px;font-size:13px;font-weight:600;cursor:pointer;line-height:1.5;white-space:nowrap;flex:0 0 auto;max-width:96px;overflow:hidden}
+.balchip svg{width:16px;height:16px;flex:none}.balchip b{overflow:hidden;text-overflow:ellipsis;font-weight:600}
 .balchip:hover{background:#f5b30144}.balchip.ready{box-shadow:0 0 0 2px #f5b30188;animation:balpulse 2s ease-in-out infinite}
 @keyframes balpulse{50%{box-shadow:0 0 0 5px #f5b30122}}
 #meBox .balchip{margin-right:4px}#chatBox .hd .balchip{margin-right:4px}
@@ -1195,7 +1196,8 @@ html[data-mode=dark] img,html[data-mode=dark] video,html[data-mode=dark] canvas,
 .lkcol{display:flex;gap:8px;flex-wrap:wrap}
 .lkcol button{width:34px;height:34px;border-radius:50%;padding:0;border:3px solid transparent;background:var(--c)}
 .lkcol button.on{border-color:var(--text)}
-.medchip{display:inline-flex;align-items:center;gap:4px;border:1px solid #d9343466;background:#d9343418;color:#b42323;border-radius:99px;padding:2px 9px 2px 5px;font-size:13px;font-weight:600;line-height:1.5;margin-right:4px;white-space:nowrap;flex:none}
+.medchip{display:inline-flex;align-items:center;gap:4px;border:1px solid #d9343466;background:#d9343418;color:#b42323;border-radius:99px;padding:2px 9px 2px 5px;font-size:13px;font-weight:600;line-height:1.5;margin-right:4px;white-space:nowrap;flex:0 0 auto;max-width:96px;overflow:hidden}
+.medchip b{overflow:hidden;text-overflow:ellipsis;font-weight:600}
 .medchip .poppy{width:16px;height:16px;display:block}
 .medrow{display:flex;align-items:center;gap:6px;margin:6px 0 0;font-size:13px}
 .medrow .poppy{width:18px;height:18px}
@@ -1263,3 +1265,7 @@ html[data-mode=dark] img,html[data-mode=dark] video,html[data-mode=dark] canvas,
 .termsbox{max-height:70vh;overflow:auto;line-height:1.45}
 .termsbox h3{margin-top:0}.termsbox h4{margin:16px 0 4px}.termsbox ul{padding-left:18px;margin:4px 0}.termsbox li{margin:4px 0}
 .authterms{text-align:center;font-size:12px;margin-top:10px}.authterms a{color:var(--accent);cursor:pointer;text-decoration:underline}
+
+/* le nom a toujours priorité : les pastilles jetons/médaillons ne le recouvrent plus */
+#meBox .grow,#chatBox .hd .grow{min-width:0;flex:1 1 0}
+#meBox .balchip,#meBox .medchip{margin-left:0}

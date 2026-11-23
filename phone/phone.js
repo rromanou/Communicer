@@ -4,6 +4,10 @@
 (function(){
 'use strict';
 var D=document,W=window,APP=W.CMApp||null,ROOT=D.documentElement;
+/* la version téléphone n'est pas accessible depuis un ordinateur : retour à la version ordinateur */
+(function(){var ua=navigator.userAgent||'',s=Math.min(screen.width,screen.height),coarse=matchMedia('(pointer:coarse)').matches&&!matchMedia('(any-pointer:fine)').matches;
+  var phone=/CommunicerApp/.test(ua)||(s<=820&&(coarse||/Android.+Mobile|iPhone|iPod/i.test(ua)));
+  if(!phone){ROOT.style.display='none';location.replace(location.pathname.replace(/\/phone(\/[^\/]*)?$/,'/')+location.search+location.hash);throw new Error('phone-only')}})();
 W.__PHONE=1;
 /* 1) adresses : le site ordinateur utilise /@pseudo ; ici on reste dans /phone/ avec ?u=pseudo */
 var PATH=location.pathname;

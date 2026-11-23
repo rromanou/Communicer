@@ -3,6 +3,19 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<!--DEVICE-->
+<script>
+/* Choix de la version : téléphone (phone/) ou ordinateur selon l'écran et le mode de pointage. ?v=desktop force l'ordinateur (mémorisé), ?v=auto revient au choix automatique. */
+(function(){try{
+  var q=location.search.match(/[?&]v=(desktop|auto)/),L=localStorage;if(q){if(q[1]==='desktop')L.setItem('cm_view','desktop');else L.removeItem('cm_view')}
+  var ua=navigator.userAgent||'',s=Math.min(screen.width,screen.height),coarse=matchMedia('(pointer:coarse)').matches&&!matchMedia('(any-pointer:fine)').matches;
+  var phone=/CommunicerApp/.test(ua)||(s<=820&&(coarse||/Android.+Mobile|iPhone|iPod/i.test(ua)));
+  if(phone&&L.getItem('cm_view')!=='desktop'&&!/\/phone\//.test(location.pathname)&&!window.__LITE){
+    var b=location.pathname.replace(/[^\/]*$/,'').replace(/\/app\/$/,'/');location.replace(b+'phone/'+location.search.replace(/[?&]v=(desktop|auto)/,'').replace(/^&/,'?')+location.hash);
+  }
+  if(/\/app\/(index\.html)?$/.test(location.pathname))document.write('<base href="../">');
+}catch(e){}})();
+</script>
 <title>Communicer!</title>
 <link rel="icon" id="fav" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='16' fill='%232f6bff'/%3E%3Cpath d='M16 20a4 4 0 0 1 4-4h24a4 4 0 0 1 4 4v16a4 4 0 0 1-4 4H30l-10 9v-9a4 4 0 0 1-4-4z' fill='white'/%3E%3C/svg%3E">
 <script>

@@ -49,3 +49,7 @@ button,.icon,select,.tabs button{min-height:40px}
 .phAc button,.phSm button{touch-action:none;min-width:58px;min-height:48px;padding:8px 12px;border-radius:14px;border:1px solid rgba(255,255,255,.3);background:rgba(20,24,40,.62);color:#fff;font:700 14px system-ui}
 .phSm{display:flex;flex-wrap:wrap;gap:6px;width:100%;justify-content:center}
 #phPad button.on,.phDp i.on{background:#2f6bff}
+/* pastilles jetons/médaillons : identiques et compactes sur téléphone */
+.balchip,.medchip{font-size:12px;padding:1px 7px 1px 4px;max-width:78px;min-height:0}
+.balchip{min-height:0}
+.balchip svg,.medchip .poppy{width:14px;height:14px}

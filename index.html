@@ -1,0 +1,20 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Communicer!</title>
+<script>
+/* Page d'entrée du dépôt (utile quand GitHub Pages sert directement la branche) : choisit la version téléphone ou ordinateur
+   selon l'écran, puis ouvre l'application. Quand le site est publié par le workflow de déploiement, cette page n'est pas utilisée. */
+(function(){try{
+  var ua=navigator.userAgent||'',s=Math.min(screen.width,screen.height),coarse=matchMedia('(pointer:coarse)').matches&&!matchMedia('(any-pointer:fine)').matches;
+  var phone=/CommunicerApp/.test(ua)||(s<=820&&(coarse||/Android.+Mobile|iPhone|iPod/i.test(ua)));
+  var force=localStorage.getItem('cm_view')==='desktop';
+  location.replace((phone&&!force?'phone/':'app/index.html')+location.search+location.hash);
+}catch(e){location.replace('app/index.html')}})();
+</script>
+<style>body{font-family:system-ui,sans-serif;display:grid;place-items:center;min-height:100vh;margin:0;background:#2f6bff;color:#fff}a{color:#fff}</style>
+</head>
+<body><div><h2>Communicer!</h2><p><a href="app/index.html">Ouvrir la version ordinateur</a> · <a href="phone/">Ouvrir la version téléphone</a></p></div></body>
+</html>

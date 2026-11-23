@@ -21,12 +21,13 @@ class P(HTMLParser):
         if s.st and s.st[-1][0]==t:s.st.pop()
         else:s.err.append(f'ligne {s.getpos()[0]} : </{t}> inattendu (ouvert : {s.st[-1] if s.st else None})')
 bad=0
-for root in ('app','phone'):
+for root in ('app','phone','.'):
     d=os.path.join(R,root)
     if not os.path.isdir(d):continue
     for f in sorted(os.listdir(d)):
         if not f.endswith('.html'):continue
         p=os.path.join(d,f);s=open(p,encoding='utf-8').read();h=P();h.feed(s)
+        if root=='.' and f!='index.html':continue
         e=list(h.err)+[f'balise non fermée <{t}> ligne {n}' for t,n in h.st]
         if not h.doctype:e.append('doctype absent')
         if not h.lang:e.append('attribut lang absent')

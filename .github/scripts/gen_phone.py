@@ -11,6 +11,7 @@ rep('<meta name="viewport" content="width=device-width, initial-scale=1, viewpor
     '<meta name="theme-color" content="#2f6bff">\n<meta name="mobile-web-app-capable" content="yes">\n<meta name="format-detection" content="telephone=no">\n'
     '<base href="../">\n<script>window.__PHONE=1;window.__PBASE=location.pathname.replace(/\\/phone(\\/[^\\/]*)?$/,"").replace(/\\/+$/,"")</script>\n'
     '<script src="phone/phone.js"></script>')
+s=re.sub(r'<!--DEVICE-->\n<script>.*?</script>\n','',s,flags=re.S)
 rep('<link rel="stylesheet" href="style/style.css">','<link rel="stylesheet" href="style/style.css">\n<link rel="stylesheet" href="phone/phone.css">')
 rep('<body>','<body>\n<div id="splash" aria-hidden="true"><img src="assets/images/icon.svg" alt="" width="112" height="112"><b>Communicer</b><i></i></div>')
 rep('<script src="scripts/app.js"></script>','<script src="scripts/app.js"></script>\n<script src="phone/phone-ui.js"></script>')
