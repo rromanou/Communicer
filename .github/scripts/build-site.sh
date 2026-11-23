@@ -13,5 +13,10 @@ rm -f "$OUT/scripts/ciffron.js"                 # source en clair : jamais publi
 cp database/functions/bots-offline.js "$OUT/scripts/bots-offline.js"
 cp style/*.css "$OUT/style/"
 cp -r assets/. "$OUT/assets/"
+# anti-cache : chaque publication change l'adresse des scripts et styles (le navigateur recharge la nouvelle version)
+STAMP="${GITHUB_SHA:-$(date +%s)}"; STAMP="${STAMP:0:10}"
+for f in "$OUT"/*.html "$OUT"/phone/*.html; do
+  [ -f "$f" ] && sed -i -E "s#((scripts|style)/[A-Za-z0-9_.-]+\.(js|css))(\"|')#\1?v=$STAMP\4#g" "$f"
+done
 touch "$OUT/.nojekyll"
 echo "Site assemblé dans $OUT ($(find "$OUT" -type f | wc -l) fichiers)"

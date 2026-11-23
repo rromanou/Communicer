@@ -257,14 +257,14 @@ public class MainActivity extends Activity {
                 customView = view; customCb = cb;
                 root.addView(view, new FrameLayout.LayoutParams(-1, -1));
                 web.setVisibility(View.INVISIBLE);
-                setImmersive(true);
+                applyImmersive(true);
             }
             @Override public void onHideCustomView() {
                 if (customView == null) return;
                 root.removeView(customView); customView = null;
                 if (customCb != null) customCb.onCustomViewHidden();
                 web.setVisibility(View.VISIBLE);
-                setImmersive(immersiveWanted);
+                applyImmersive(immersiveWanted);
             }
         };
         web.setWebChromeClient(chrome);
@@ -389,7 +389,7 @@ public class MainActivity extends Activity {
     }
 
     // ---- barres système / orientation
-    private void setImmersive(boolean on) {
+    private void applyImmersive(boolean on) {
         View dv = getWindow().getDecorView();
         if (Build.VERSION.SDK_INT >= 30) {
             android.view.WindowInsetsController c = getWindow().getInsetsController();
@@ -407,7 +407,7 @@ public class MainActivity extends Activity {
     private void applyOrientationBars(Configuration c) {
         // paysage : barres masquées (balayer le bord pour les revoir) ; portrait : barres visibles
         immersiveWanted = c.orientation == Configuration.ORIENTATION_LANDSCAPE;
-        if (customView == null) setImmersive(immersiveWanted);
+        if (customView == null) applyImmersive(immersiveWanted);
     }
 
     @Override public void onConfigurationChanged(Configuration c) {
@@ -418,7 +418,7 @@ public class MainActivity extends Activity {
 
     @Override public void onWindowFocusChanged(boolean f) {
         super.onWindowFocusChanged(f);
-        if (f && (customView != null || immersiveWanted)) setImmersive(true);
+        if (f && (customView != null || immersiveWanted)) applyImmersive(true);
     }
 
     @Override public void onBackPressed() {
