@@ -428,9 +428,6 @@ begin
 end $$;
 revoke all on function public.api_guard() from public;
 grant execute on function public.api_guard() to anon, authenticated;
-do $$ begin
-  begin execute 'alter role authenticator set pgrst.db_pre_request = ''public.api_guard'''; exception when others then raise notice 'db_pre_request : %', sqlerrm; end;
-end $$;
-
+-- Le crochet db_pre_request n'est PAS activé (il a bloqué tout le monde) : api_guard reste disponible mais inactif.
 notify pgrst, 'reload config';
 notify pgrst, 'reload schema';
