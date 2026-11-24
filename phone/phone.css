@@ -79,3 +79,5 @@ body::before{content:"";position:fixed;left:0;right:0;top:0;height:env(safe-area
 #chatBox .hd .grow{min-width:0;flex:1 1 0}
 #hSt{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-size:12px;line-height:1.3}
 @media (max-width:430px){#chatBox .hd .balchip{display:none}}
+#app{margin-top:0;top:calc(env(safe-area-inset-top,0px) + var(--lah,0px));height:auto}
+#logAlert{top:env(safe-area-inset-top,0px)}

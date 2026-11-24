@@ -1277,3 +1277,14 @@ html[data-mode=dark] img,html[data-mode=dark] video,html[data-mode=dark] canvas,
 .ntItem span{font-size:13px;opacity:.85;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .ntItem.men{border-left-color:#f97316}
 .ntItem.out{animation:popout .26s forwards}
+
+/* message d'appel dans la discussion */
+.callmsg{display:flex;flex-direction:column;gap:8px;min-width:200px;padding:2px 0}
+.callmsg .cm-t{display:flex;align-items:center;gap:6px;font-weight:600}
+.callmsg .cm-av{display:flex;flex-wrap:wrap;gap:4px;align-items:center}
+.callmsg .cm-av .av{width:30px;height:30px;font-size:13px}
+.callmsg .cm-j{align-self:flex-start;padding:6px 14px}
+
+/* la bannière d'alerte pousse l'application vers le bas au lieu de la recouvrir */
+#app{margin-top:var(--lah,0px);height:calc(100% - var(--lah,0px))}
+#logAlert{font-size:14px;line-height:1.3;padding:8px 12px}

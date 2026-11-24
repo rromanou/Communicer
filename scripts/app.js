@@ -254,7 +254,7 @@ let refT;function scheduleRefresh(){clearTimeout(refT);refT=setTimeout(async()=>
 
 /* ---------- décodage des messages ---------- */
 async function decode(c,row){
-  if(c.mode==='clear'||row.kind==='system'){const d={k:row.kind,t:row.body,p:row.media_path,m:null};if(row.kind==='game'){try{d.g=JSON.parse(row.body)}catch(e){d.g={title:'Résultat',lines:[]}}}if(row.kind==='image'&&!row.media_path)d.u=row.body;botDecode(row,d);row._d=d;return row}
+  if(c.mode==='clear'||row.kind==='system'){const d={k:row.kind,t:row.body,p:row.media_path,m:null};if(row.kind==='game'){try{d.g=JSON.parse(row.body)}catch(e){d.g={title:'Résultat',lines:[]}}}if(row.kind==='image'&&!row.media_path)d.u=row.body;botDecode(row,d);if(typeof d.t==='string'&&d.t.startsWith(CALLSENT)){try{d.c=JSON.parse(d.t.slice(CALLSENT.length));d.k='call';d.t=''}catch(e){}}row._d=d;return row}
   try{row._d=JSON.parse(await decText(c.id,row.body))}catch(e){row._d={k:'text',t:'[Message chiffré illisible]',bad:true}}
   return row;
 }
@@ -289,7 +289,7 @@ function convAv(c,cls=''){if(c.kind==='self')return `<span class="av ${cls}" sty
 const isOn=p=>p&&S.online.has(p.username);
 function preview(c){
   const m=c.last;if(!m)return 'Aucun message';const d=m._d||{};const pre=m.sender_id===S.me.id?'Vous : ':'';
-  const t=d.k==='video'?(d.loop?'GIF':'Vidéo'):d.k==='image'?(d.u?'GIF':'Photo'):d.k==='voice'?'Message vocal':d.k==='drawing'?'Dessin':d.k==='game'?'Résultats : '+((d.g&&d.g.title)||''):(d.t||'');
+  const t=d.k==='video'?(d.loop?'GIF':'Vidéo'):d.k==='image'?(d.u?'GIF':'Photo'):d.k==='voice'?'Message vocal':d.k==='drawing'?'Dessin':d.k==='call'?'Appel':d.k==='game'?'Résultats : '+((d.g&&d.g.title)||''):(d.t||'');
   return pre+t.replace(/\s+/g,' ').slice(0,60);
 }
 function renderMe(){
@@ -366,6 +366,7 @@ const gifOk=u=>/^https:\/\/(media\d*|i)\.giphy\.com\//.test(String(u||''));
 const gameCard=g=>`<div class="gmsg"><h4>${ic('gamepad',16)} ${esc((g&&g.title)||'Résultat')} <span class="gb">résultats</span></h4><ul>${((g&&g.lines)||[]).map(l=>`<li>${esc(l)}</li>`).join('')}</ul></div>`;
 function bodyHtml(d){
   if(d.k==='game')return gameCard(d.g);
+  if(d.k==='call')return `<div class="callmsg" data-s="${esc((d.c||{}).s||'')}"></div>`;
   if(d.u)return gifOk(d.u)?`<img class="pic" src="${esc(d.u)}" alt="GIF">`:'<div class="muted">[GIF non autorisé]</div>';
   if(d.k==='video')return `<video class="pic" ${d.loop?'autoplay loop muted':'controls'} playsinline preload="metadata" data-p="${esc(d.p)}" data-m="${esc(d.m||'video/webm')}"></video>`;
   if(d.k==='image'||d.k==='drawing')return `<img class="pic" data-p="${esc(d.p)}" data-m="${esc(d.m||'image/jpeg')}" alt="">`;
@@ -423,7 +424,8 @@ document.addEventListener('visibilitychange',()=>{if(!document.hidden&&S.active)
 /* ================= ENVOI ================= */
 async function sendPayload(c,pl,ttl){
   let kind,body,media=null;
-  if(c.mode==='clear'){kind=pl.k;body=kind==='game'?JSON.stringify(pl.g):(kind==='image'&&pl.u)?pl.u:(pl.t||null);media=pl.p||null;if(pl.bot||pl.fx)body=BOTSENT+JSON.stringify({bot:pl.bot,fx:pl.fx,t:pl.t||'',n:pl.n})}
+  if(c.mode==='clear'&&pl.k==='call'){kind='text';body=CALLSENT+JSON.stringify(pl.c)}
+  else if(c.mode==='clear'){kind=pl.k;body=kind==='game'?JSON.stringify(pl.g):(kind==='image'&&pl.u)?pl.u:(pl.t||null);media=pl.p||null;if(pl.bot||pl.fx)body=BOTSENT+JSON.stringify({bot:pl.bot,fx:pl.fx,t:pl.t||'',n:pl.n})}
   else{kind='text';body=await encText(c.id,JSON.stringify(pl))}
   let r=await sb.rpc('send_message',ttl?{p_conv:c.id,p_kind:kind,p_body:body,p_media:media,p_ttl:ttl}:{p_conv:c.id,p_kind:kind,p_body:body,p_media:media});
   if(r.error&&(r.error.code==='PGRST202'||/schema cache|could not find the function/i.test(r.error.message||''))){
@@ -732,6 +734,8 @@ async function openDirect(username,mode){
 function directModal(pre){
   const me=S.me.id;
   const fr=S.friends.filter(f=>f.status==='accepted').map(f=>S.profiles.get(f.requester===me?f.addressee:f.requester)).filter(Boolean);
+  if(isOff(S.me.id)){const m=modal(`<h3>Nouvelle discussion</h3><label>Nom d’utilisateur</label><input id="dmO" placeholder="username" autocapitalize="off" autocomplete="off"><div class="row end"><button class="ghost" id="dmOx">Annuler</button><button id="dmOg">Ouvrir</button></div>`);
+    $('#dmOx',m).onclick=()=>m.close();$('#dmOg',m).onclick=async e=>{const u=$('#dmO',m).value.trim().replace(/^@/,'').toLowerCase();if(!u)return;e.target.disabled=true;try{await openDirect(u,'clear');m.close()}catch(x){toast(errMsg(x));e.target.disabled=false}};return}
   if(!fr.length)return toast("Ajoutez d'abord un ami");
   const m=modal(`<h3>Nouvelle discussion</h3><label>Ami</label><select id="dmU">${fr.map(p=>`<option value="${esc(p.username)}" ${p.username===pre?'selected':''}>${esc(dname(p))}</option>`).join('')}</select><label>Type de messagerie</label>${modeRadios()}<div class="row end"><button class="ghost" data-x>Annuler</button><button id="dmGo">Démarrer</button></div>`);
   $('#dmGo',m).onclick=async e=>{e.target.disabled=true;try{await openDirect($('#dmU',m).value,$('input[name=mode]:checked',m).value);m.close()}catch(x){toast(errMsg(x));e.target.disabled=false}};
@@ -6577,7 +6581,7 @@ function typPaint(){
   if(S.stick)box.scrollTop=box.scrollHeight;
 }
 {
-  const _rm=renderMsgs;renderMsgs=function(f){const r=_rm.apply(this,arguments);typPaint();return r};
+  const _rm=renderMsgs;renderMsgs=function(f){const r=_rm.apply(this,arguments);typPaint();try{callCardsPaint()}catch(e){}return r};
   const _os=onSignal;onSignal=function(s){
     if(s&&s.t==='typing'){
       const c=S.convs.get(s.convId);
@@ -6615,6 +6619,7 @@ Object.assign(P,{
   pause:'<rect x="6" y="5" width="4" height="14" rx="1"/><rect x="14" y="5" width="4" height="14" rx="1"/>'
 });
 const BOTSENT='⁣⁤bot⁤';
+const CALLSENT='\u2063\u2064call\u2064';
 const PERM_LABEL={
   'msg.send':'Écrire des messages dans le groupe (chiffrés si le groupe l’est)',
   'call.join':'Rejoindre les appels du groupe',
@@ -7248,10 +7253,16 @@ async function botRoomCall(inst,m,a){
     case 'game.list':return Object.entries(GAMES).map(([id,g])=>({id,name:g.name,conv:g.conv}));
     case 'game.freeze':{botNeed(inst,'game.control');need();if(ss.game==='appel')throw new Error('La pause est impossible dans un appel');roomFreeze(Math.max(1,Math.min(15,+a[0]||15)),botUserArg(a[1])||'?');return true}
     case 'game.unfreeze':{botNeed(inst,'game.control');need();roomUnfreeze();return true}
-    case 'game.kick':{botNeed(inst,'game.control');need();const t=botResolve(c,a[0]);if(!t)throw new Error('Indiquez un nom d’utilisateur');
+    case 'game.kick':{botNeed(inst,'game.control');const t=botResolve(c,a[0]);if(!t)throw new Error('Indiquez un nom d’utilisateur');
       const {data:ok}=await sb.rpc('has_cmd_right',{p_conv:c.id,p_user:S.me.id});if(ok!==true)throw new Error('Vous n’avez pas le droit d’exclure quelqu’un');
       if(t===S.profile.username)throw new Error('Utilisez « Quitter »');
-      rsend('bot',{b:u,k:'$kick',d:{u:t},f:S.profile.username},ss);return true}
+      if(ss&&ss.conv===c.id){rsend('bot',{b:u,k:'$kick',d:{u:t},f:S.profile.username},ss);return true}
+      /* exclusion depuis l'extérieur : on se branche brièvement sur le canal de l'appel sans y entrer */
+      const {data:lv}=await sb.rpc('live_list',{p_conv:c.id});const l=(lv||[]).find(x=>x.kind==='call')||(lv||[])[0];
+      if(!l)throw new Error('Aucun appel en cours dans ce groupe');
+      const ch=sb.channel('room-'+l.session,{config:{broadcast:{self:false}}});
+      await new Promise((res,rej)=>{const to=setTimeout(()=>rej(new Error('Connexion à l’appel impossible')),6000);ch.subscribe(st=>{if(st==='SUBSCRIBED'){clearTimeout(to);res()}})});
+      await bcast(ch,'bot',c,{b:u,k:'$kick',d:{u:t},f:S.profile.username});setTimeout(()=>{try{sb.removeChannel(ch)}catch(e){}},1500);return true}
     case 'group.note':{botNeed(inst,'game.control');const {error}=await sb.rpc('libon_note',{p_conv:c.id,p_user:botResolve(c,a[1])||S.profile.username,p_action:String(a[0]),p_detail:botClip(a[2],200)});if(error)throw error;return true}
   }
   if(m.startsWith('audio.')){botNeed(inst,'audio.play');return audCall(inst,m.slice(6),a)}
@@ -8584,13 +8595,15 @@ async function quizRun(kind,done){
     const ok=data.status==='passed';
     end(null,data.status==='violation'?'Test invalidé : '+(data.reason||''):ok?`Test réussi : ${data.score}/${data.total}.`:kind==='grad'?`Test échoué : ${data.score}/${data.total}. Vos pouvoirs ont été retirés.`:`Mini-test échoué : ${data.score}/${data.total}. Un avertissement a été donné ; au prochain échec avec un avertissement en cours, une demande de rétrogradation sera envoyée au chef.`)};
 }
+function laFit(){const b=document.getElementById('logAlert');document.documentElement.style.setProperty('--lah',(b?b.offsetHeight:0)+'px')}
+addEventListener('resize',()=>{try{laFit()}catch(e){}});
 const laHidden=()=>{try{return localStorage.getItem('cm_hidela_'+S.me.id)==='1'}catch(e){return false}};
 async function logAlertCheck(){
-  if(laHidden()){const o=document.getElementById('logAlert');if(o)o.remove();return}
+  if(laHidden()){const o=document.getElementById('logAlert');if(o)o.remove();laFit();return}
   try{const {data}=await sb.rpc('log_alert_list');const open=(data||[]).filter(a=>!a.ack);let b=document.getElementById('logAlert');
-    if(!open.length){if(b)b.remove();return}
+    if(!open.length){if(b)b.remove();laFit();return}
     if(!b){b=document.createElement('div');b.id='logAlert';b.onclick=logAlertOpen;document.body.appendChild(b)}
-    b.textContent='ALERTE SÉCURITÉ : '+open.length+' tentative'+(open.length>1?'s':'')+' de modification ou de suppression de journaux. '+(RK()>=4?'Inspection requise.':'Le commandant doit inspecter.')}catch(e){}
+    b.textContent='ALERTE SÉCURITÉ : '+open.length+' tentative'+(open.length>1?'s':'')+' de modification ou de suppression de journaux. '+(RK()>=4?'Inspection requise.':'Le commandant doit inspecter.');laFit()}catch(e){}
 }
 async function logAlertOpen(){
   const data=await rpcd('log_alert_list');
@@ -8836,7 +8849,7 @@ async function bmInv(box,bal,show){
   const has=c=>inv.items.includes(c),e=inv.ext||{};
   const sel=new Set((e.badges||[]).filter(c=>c!=='moderateur'));
   const fr=(cat,field,pass,label)=>{const l0=sh.frames.filter(f=>f.cat===cat),pass0=has(pass),gm=l0.filter(f=>mine.includes(f.code)),l=l0,ok=pass0||gm.length>0,cur=e[field];
-    return `<label>${label}${pass0?'':' <span class="muted">(pass à acheter)</span>'}</label><div class="fgrid">${ok?`<div class="fcell ${!cur?'on':''}" data-f="${field}" data-v="">Aucun</div>`:''}${l.map(f=>{const can=pass0||mine.includes(f.code);return `<div class="fcell ${can?'':'lock'} ${cur===f.code?'on':''}" ${can?`data-f="${field}" data-v="${f.code}"`:`data-lk="${f.code}" data-pr="${IFR[f.code]&&IFR[f.code].price?IFR[f.code].price+' jetons':''}"`}>${field==='photo_frame'?`<span class="av ${f.code}" style="background:#667"><i style="font-style:normal">A</i></span>`:`<span class="rfs ${f.code}" style="${/_a/.test(f.code)?'box-shadow:0 0 0 2px #60a5fa':'box-shadow:0 0 0 2px #e0a800'}"></span>`}<span>${esc(f.name)}</span></div>`}).join('')}</div>`};
+    return `<label>${label}${pass0?'':' <span class="muted">(pass à acheter)</span>'}</label><div class="fgrid">${ok?`<div class="fcell ${!cur?'on':''}" data-f="${field}" data-v="">Aucun</div>`:''}${l.map(f=>{const pr0=IFR[f.code]&&IFR[f.code].price;const can=(pass0&&!pr0)||mine.includes(f.code);return `<div class="fcell ${can?'':'lock'} ${cur===f.code?'on':''}" ${can?`data-f="${field}" data-v="${f.code}"`:`data-lk="${f.code}" data-pr="${IFR[f.code]&&IFR[f.code].price?IFR[f.code].price+' jetons':''}"`}>${field==='photo_frame'?`<span class="av ${f.code}" style="background:#667"><i style="font-style:normal">A</i></span>`:`<span class="rfs ${f.code}" style="${/_a/.test(f.code)?'box-shadow:0 0 0 2px #60a5fa':'box-shadow:0 0 0 2px #e0a800'}"></span>`}<span>${esc(f.name)}</span></div>`}).join('')}</div>`};
   box.innerHTML=`<label>Badges affichés (${inv.slots>=1000?'sans limite':inv.slots+' au maximum'}${inv.badges.some(b=>b.code==='moderateur')?', Modérateur toujours en premier':''})</label>
     ${inv.badges.length?inv.badges.map(b=>`<div class="bdgrow">${medal(b,24)}<span class="grow"><b>${esc(b.name)}</b> <span class="tag t-${esc(b.tier)}">${esc(TIERN[b.tier])}</span></span>${b.code==='moderateur'?'<span class="tag">fixe</span>':`<input type="checkbox" data-bs="${esc(b.code)}" ${sel.has(b.code)?'checked':''}>`}</div>`).join(''):'<p class="muted">Aucun badge.</p>'}
     <div class="row end"><button class="lite" id="ivBd">Enregistrer les badges</button></div>
@@ -9211,6 +9224,7 @@ async function liveRefresh(){
   if(cur()!==c)return;LIVE.list=list;LIVE.conv=c.id;livePaint();
 }
 function livePaint(){
+  try{ensureProfiles([].concat(...LIVE.list.map(l=>l.users||[]))).then(callCardsPaint)}catch(e){}callCardsPaint();
   const c=cur();let bar=document.getElementById('liveBar');
   if(!bar){const m=document.getElementById('msgs');if(!m)return;bar=document.createElement('div');bar.id='liveBar';bar.hidden=true;m.parentNode.insertBefore(bar,m);
     bar.onclick=e=>{const b=e.target.closest('[data-j]');if(b)liveJoin(b.dataset.j)}}
@@ -9219,15 +9233,25 @@ function livePaint(){
   if(!rows.length){bar.hidden=true;bar.innerHTML='';return}
   bar.innerHTML=rows.map(l=>{const g=GAMES[l.game];return l.kind==='call'
     ?`<div class="lv-r"><span class="lv-dot"></span><span class="grow">Appel en cours · ${esc(l.host_name||'')}</span><button data-j="${esc(l.session)}">Rejoindre l’appel</button></div>`
-    :`<div class="lv-r"><span class="lv-dot g"></span><span class="grow">${esc(g?g.name:'Jeu')} en cours · ${esc(l.host_name||'')}</span><button data-j="${esc(l.session)}">Rejoindre (observateur)</button></div>`}).join('');
+    :`<div class="lv-r"><span class="lv-dot g"></span><span class="grow">${esc(g?g.name:'Jeu')} en cours · ${esc(l.host_name||'')}</span><button data-j="${esc(l.session)}">${l.phase==='live'?'Rejoindre (observateur)':'Rejoindre'}</button></div>`}).join('');
   bar.hidden=false;
 }
+function callCardsPaint(){
+  document.querySelectorAll('.callmsg').forEach(el=>{
+    const l=(LIVE.conv===(S.active||null)?LIVE.list:[]).find(x=>x.session===el.dataset.s&&x.kind==='call');
+    const mine=S.sess&&S.sess.id===el.dataset.s;
+    if(!l){el.innerHTML=`<div class="cm-t">${ic('phone',16)} Appel terminé</div>`;return}
+    const us=(l.users||[]).map(id=>S.profiles.get(id)).filter(Boolean);
+    el.innerHTML=`<div class="cm-t">${ic('phone',16)} Appel en cours · ${esc(l.host_name||'')}</div><div class="cm-av">${us.slice(0,8).map(p=>av(p.avatar_url,p.username,'xs')).join('')}${us.length>8?`<span class="muted">+${us.length-8}</span>`:''}</div><button class="cm-j" data-j="${esc(l.session)}" ${mine?'disabled':''}>${mine?'Vous êtes dans l’appel':'Rejoindre l’appel'}</button>`;
+  });
+}
+document.addEventListener('click',e=>{const b=e.target.closest&&e.target.closest('.callmsg [data-j]');if(b&&!b.disabled)liveJoin(b.dataset.j)});
 function liveJoin(sid){
   const l=LIVE.list.find(x=>x.session===sid);if(!l)return;
   if(S.pend&&!S.sess&&!S.call){clearTimeout(S.pend.to);S.pend=null;hideRing()}
   if(S.sess||S.call||S.pend)return toast('Quittez d’abord votre activité en cours');
   joinSession({id:l.session,game:l.game,conv:LIVE.conv,host:l.host});
-  if(l.kind==='game')S.sess.spec=true;
+  if(l.kind==='game'&&l.phase==='live')S.sess.spec=true;
 }
 (function liveWatch(){
   let ch=null;
@@ -9328,6 +9352,7 @@ liveStart=function(ss){
   sb.rpc('live_start',{p_conv:ss.conv,p_kind:kind,p_session:ss.id,p_game:ss.game}).then(({error})=>{
     if(error){if(S.sess===ss){toast(errMsg(error));ss.liveBad=true;leaveSession(true)}return}
     ss.liveOk=true;liveBeatStart(ss);
+    if(kind==='call'&&ss.isHost){const c=S.convs.get(ss.conv);if(c)sendPayload(c,{k:'call',c:{s:ss.id,h:S.me.id}}).catch(()=>{})}
     if(S.sess!==ss)bgRpc('live_leave',{p_session:ss.id});
   });
 };
@@ -9336,6 +9361,7 @@ function liveBeatStart(ss){
   ss.beatT=setInterval(()=>{if(S.sess!==ss){clearInterval(ss.beatT);return}bgRpc('live_beat',{p_session:ss.id})},10000);
 }
 liveEnd=function(ss){clearInterval(ss.beatT);if(ss.liveBad)return;try{sb.rpc('live_leave',{p_session:ss.id}).then(()=>{liveRefresh()},()=>{})}catch(e){}};
+const _sg=startGame;startGame=function(){_sg.apply(this,arguments);const ss=S.sess;if(ss&&ss.isHost&&ss.phase==='live')bgRpc('live_phase',{p_session:ss.id,p_phase:'live'})};
 const _js=joinSession;
 joinSession=function(p){
   _js.apply(this,arguments);const ss=S.sess;if(!ss)return;
