@@ -53,3 +53,29 @@ button,.icon,select,.tabs button{min-height:40px}
 .balchip,.medchip{font-size:12px;padding:1px 7px 1px 4px;max-width:78px;min-height:0}
 .balchip{min-height:0}
 .balchip svg,.medchip .poppy{width:14px;height:14px}
+
+/* ---- zones système : barre d'état (heure), encoche, barre de navigation ---- */
+html{background:var(--bg,#f5f7fb)}
+body::before{content:"";position:fixed;left:0;right:0;top:0;height:env(safe-area-inset-top,0px);background:var(--panel,var(--card,#fff));z-index:2147482500;pointer-events:none}
+#app{position:absolute;top:env(safe-area-inset-top,0px);bottom:env(safe-area-inset-bottom,0px);left:env(safe-area-inset-left,0px);right:env(safe-area-inset-right,0px);height:auto;width:auto}
+.room,.rmn-ov{padding:env(safe-area-inset-top,0px) env(safe-area-inset-right,0px) env(safe-area-inset-bottom,0px) env(safe-area-inset-left,0px);box-sizing:border-box}
+.modal-back{padding-top:calc(12px + env(safe-area-inset-top,0px));padding-bottom:calc(12px + env(safe-area-inset-bottom,0px))}
+.modal{max-height:calc(100dvh - 24px - env(safe-area-inset-top,0px) - env(safe-area-inset-bottom,0px))}
+/* ---- jeux : tout recentré, rien ne déborde ---- */
+.room .rm-top{flex-wrap:nowrap;padding:6px 12px}
+.room .rm-title{min-width:0;flex:1 1 auto}
+.room .rm-title b,.room #rmSub{display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.room .rm-actions{flex:0 0 auto;flex-wrap:nowrap;gap:6px}
+.room .rbtn{min-height:36px;padding:6px 10px;font-size:13px}
+.room .rm-tiles{justify-content:safe center}
+.room .rm-stage{justify-content:safe center;align-items:safe center}
+.room .rm-stage>*{margin:auto}
+.room .rm-bar{flex-wrap:nowrap}
+.room .rm-bar input{min-width:0}
+/* ---- en-tête de discussion : nom et « N membres · M en ligne » bien cadrés ---- */
+#chatBox .hd{gap:4px;padding:6px 8px;min-width:0}
+#chatBox .hd .icon{min-width:34px;width:34px;min-height:34px;padding:0;flex:0 0 auto}
+#chatBox .hd #hAv{flex:0 0 auto}
+#chatBox .hd .grow{min-width:0;flex:1 1 0}
+#hSt{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-size:12px;line-height:1.3}
+@media (max-width:430px){#chatBox .hd .balchip{display:none}}

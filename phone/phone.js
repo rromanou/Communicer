@@ -17,6 +17,22 @@ function fix(u){if(typeof u!=='string')return u;var m=u.match(/\/@([^\/?#]+)(?:[
 D.addEventListener('click',function(e){var a=e.target.closest&&e.target.closest('a[href]');if(a&&a.getAttribute('href').charAt(0)==='#')e.preventDefault()},true);
 /* 2b) champs de saisie : le menu de copier/coller du système (appui long) remplace celui du site, pensé pour la souris */
 D.addEventListener('contextmenu',function(e){var t=e.target;if(t&&t.closest&&t.closest('textarea,input,[contenteditable=true]'))e.stopImmediatePropagation()},true);
+/* 2c) la manette n'apparaît que lorsque le site demande le clavier : un jeu qui enregistre des touches (keydown/keyup sur la fenêtre ou le document) après le chargement */
+(function(){
+  var booted=false,live=[];
+  W.addEventListener('load',function(){booted=true});
+  var add=EventTarget.prototype.addEventListener,rem=EventTarget.prototype.removeEventListener;
+  function isG(t){return t===W||t===D||t===D.body||t===D.documentElement}
+  function cap(o){return o===true||!!(o&&o.capture)}
+  function ping(){try{W.dispatchEvent(new Event('phkeys'))}catch(e){}}
+  EventTarget.prototype.addEventListener=function(type,fn,opt){
+    if(booted&&(type==='keydown'||type==='keyup')&&isG(this)&&fn){live.push({t:this,k:type,f:fn,c:cap(opt)});ping();
+      if(opt&&opt.once){var self=this,o=fn;arguments[1]=function(){drop(self,type,o,cap(opt));return typeof o==='function'?o.apply(this,arguments):o.handleEvent(arguments[0])}}}
+    return add.apply(this,arguments)};
+  function drop(t,k,f,c){for(var i=live.length-1;i>=0;i--){var x=live[i];if(x.t===t&&x.k===k&&x.f===f&&x.c===c){live.splice(i,1);break}}ping()}
+  EventTarget.prototype.removeEventListener=function(type,fn,opt){if((type==='keydown'||type==='keyup')&&isG(this))drop(this,type,fn,cap(opt));return rem.apply(this,arguments)};
+  W.__phKeysWanted=function(){return live.length>0};
+})();
 /* 3) orientation + zone utile : classes et variables CSS */
 function layout(){
   var vv=W.visualViewport,w=vv?vv.width:W.innerWidth,h=vv?vv.height:W.innerHeight,land=w>h;

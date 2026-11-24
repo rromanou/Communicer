@@ -45,3 +45,4 @@ sql/patch_vlafi_web.sql
 sql/patch_lot20.sql
 sql/patch_lot21.sql
 sql/patch_lot22.sql
+sql/patch_lot23.sql

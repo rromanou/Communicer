@@ -63,7 +63,8 @@ table{border-collapse:collapse;width:100%;font-size:14px;margin:.6em 0}th,td{bor
 <li><b>Quand elles sont enregistrées.</b> À chaque connexion, l’adresse IP de la connexion est examinée. <b>La première adresse d’un compte est enregistrée comme adresse d’inscription ; toute autre adresse différente vue ensuite est ajoutée à la liste du compte ; une adresse déjà enregistrée pour ce compte n’est pas réécrite.</b> Seules les adresses distinctes sont conservées, avec la date de première et de dernière vue.</li>
 <li><b>À quoi elles servent.</b> Sécurité, détection d’abus et de faux comptes, limitation du débit, bannissement par adresse. Elles ne sont consultables que par les rangs autorisés du personnel.</li>
 <li><b>Adresses partagées.</b> Plusieurs personnes peuvent partager une même adresse (famille, école, réseau mobile, VPN). Une adresse commune ne prouve donc pas qu’il s’agit de la même personne, et un <b>bannissement par adresse n’est pas une preuve</b> de faute : il peut toucher des personnes innocentes et être levé sur demande.</li>
-<li><b>Durée.</b> Voir la section 14.</li>
+<li><b>Durée.</b> Les adresses IP d’un compte sont conservées jusqu’à la suppression de ce compte, et lors d’un bannissement, conservées tant qu’il dure. Voir la section 14.</li>
+<li><b>Nouvelles conditions non acceptées.</b> Tant qu’un compte n’a pas accepté une nouvelle version des conditions, son adresse IP et son navigateur ne sont plus enregistrés ni renouvelés. Les bannissements déjà en vigueur continuent de s’appliquer.</li>
 </ul>
 
 <h2 id="s4">4. Compte, âge et consentement des mineurs</h2>
@@ -177,7 +178,7 @@ table{border-collapse:collapse;width:100%;font-size:14px;margin:.6em 0}th,td{bor
 <h3>Durées de conservation</h3>
 <table>
 <tr><th>Donnée</th><th>Durée de conservation</th><th>Critère</th></tr>
-<tr><td>Adresses IP</td><td>12 mois</td><td>après la dernière vue de l’adresse</td></tr>
+<tr><td>Adresses IP</td><td>jusqu’à la suppression du compte</td><td>conservées tant que le compte existe ; lors d’un bannissement, les adresses concernées sont conservées tant que le bannissement dure</td></tr>
 <tr><td>Empreinte du navigateur (Scommunicookie)</td><td>24 mois</td><td>après la dernière activité du navigateur ; un blocage actif est conservé tant qu’il dure</td></tr>
 <tr><td>Messages et médias</td><td>tant que le compte et la discussion existent</td><td>jusqu’à suppression par vous ou par les autres membres, ou suppression du compte</td></tr>
 <tr><td>Journaux d’administration et alertes de journaux</td><td>24 mois</td><td>après l’inscription de l’action</td></tr>

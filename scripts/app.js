@@ -592,12 +592,13 @@ function subscribeAll(){
    .on('postgres_changes',{event:'UPDATE',schema:'public',table:'messages'},p=>onMsgUpd(p.new))
    .on('postgres_changes',{event:'UPDATE',schema:'public',table:'conversations'},p=>onConvUpd(p.new))
    .on('postgres_changes',{event:'*',schema:'public',table:'conversation_members'},p=>onMemberEv(p))
-   .on('postgres_changes',{event:'*',schema:'public',table:'friendships'},()=>loadFriends())
+   .on('postgres_changes',{event:'*',schema:'public',table:'friendships'},p=>{loadFriends();try{NT.friend(p)}catch(e){}})
    .subscribe();
   S.pres=sb.channel('presence-global',{config:{presence:{key:S.profile.username}}});
   S.pres.on('presence',{event:'sync'},()=>{{const _o=S.online||new Set();S.online=new Set(Object.keys(S.pres.presenceState()));_o.forEach(un=>{if(!S.online.has(un)){for(const p of S.profiles.values())if(p.username===un)p.last_seen=new Date().toISOString()}})}renderList();renderHeader();if(!$('#paneFriends').hidden)renderFriends()})
    .subscribe(async st=>{if(st==='SUBSCRIBED')await S.pres.track({t:Date.now()})});
   sb.channel('inbox-'+me).on('broadcast',{event:'signal'},({payload})=>onSignal(payload)).subscribe();
+  try{NT.start()}catch(e){}
   const beat=()=>sb.from('profiles').update({last_seen:new Date().toISOString()}).eq('id',me);beat();setInterval(beat,60000);
 }
 async function onMsg(row){
@@ -606,8 +607,8 @@ async function onMsg(row){
   await ensureProfiles([row.sender_id]);await decode(c,row);ephArm(row,true);if(row._d&&row._d.fx)botFx(c,row._d);
   c.last=row;c.last_message_at=row.created_at;
   if(list)list.push(row);
-  if(S.active===c.id){S.stick=$('#msgs').scrollHeight-$('#msgs').scrollTop-$('#msgs').clientHeight<200||row.sender_id===S.me.id;renderMsgs();if(row.sender_id!==S.me.id)markRead(c)}
-  else if(row.sender_id!==S.me.id){c.unread++;if(row.kind!=='system'){const pv=preview(c).replace(/^Vous : /,'');const mm=new RegExp('(^|[^\\w@])@'+String(S.profile.username).replace(/[.*+?^${}()|[\]\\]/g,'\\$&')+'(?![\\w])','i').test((c.last&&c.last._d&&c.last._d.t)||pv);if(mm)c.mention=true;toast(convTitle(c)+' : '+pv);if(mm){const t=document.querySelector('.toast:last-of-type');if(t)t.classList.add('men')}}}
+  if(S.active===c.id){S.stick=$('#msgs').scrollHeight-$('#msgs').scrollTop-$('#msgs').clientHeight<200||row.sender_id===S.me.id;renderMsgs();if(row.sender_id!==S.me.id){markRead(c);if(document.hidden)NT.msg(c,row,preview(c).replace(/^Vous : /,''),false)}}
+  else if(row.sender_id!==S.me.id){c.unread++;if(row.kind!=='system'){const pv=preview(c).replace(/^Vous : /,'');const mm=new RegExp('(^|[^\\w@])@'+String(S.profile.username).replace(/[.*+?^${}()|[\]\\]/g,'\\$&')+'(?![\\w])','i').test((c.last&&c.last._d&&c.last._d.t)||pv);if(mm)c.mention=true;NT.msg(c,row,pv,mm)}}
   renderList();
 }
 function onConvUpd(n){
@@ -1161,6 +1162,8 @@ function settingsModal(){
   <label>Couleur du site</label><div class="lkcol" id="lkCol"></div>
   <label>Utilisateurs bloqués</label><div id="lkBlk" class="muted">Chargement…</div>
   <label>Discussions publiques</label><div class="row"><button class="ghost" id="lkPub">Rejoindre la discussion publique</button></div>
+  <label>Notifications</label>
+  <div class="row"><label class="row" style="margin:0;color:var(--text)"><input type="checkbox" id="sNt" ${NT.on()?'checked':''}> Afficher les notifications (messages, demandes d’ami, invitations, système, jetons)</label></div>
   <label>Jeux hors ligne</label>
   <div class="row"><label class="row" style="margin:0;color:var(--text)"><input type="checkbox" id="sOff" ${localStorage.getItem('cm_offline')==='1'?'checked':''}> Télécharger les jeux et le programme de bots pour jouer sans connexion</label></div><div class="muted" id="sOffM" style="font-size:12px">Sans cette option, seule une page « hors ligne » est conservée. Avec elle, les jeux solo et les jeux en équipe contre des bots (dames, échecs, Uno, poker…) restent jouables. Les jeux en ligne et la messagerie restent indisponibles sans connexion.</div>
   <label>Courriel de récupération (facultatif)</label><div id="sMail" class="muted">Chargement…</div>
@@ -1219,6 +1222,7 @@ function settingsModal(){
     }catch(x){toast(errMsg(x))}};
   })();
   $('#sCas',m).onclick=async()=>{try{const d=await rpcd('casier_mine');const mm=modal(`<h3>Mon casier</h3>${d.length?d.map(x=>`<div class="cas-row"><b>${esc(({warn:'Avertissement',sanction:'Sanction',ban_temp:'Bannissement temporaire',ban_perm:'Bannissement permanent',ban_erase:'Ban supprimé',rights:'Droit retiré',profile:'Profil modifié'})[x.kind]||x.kind)} · ${esc(fmtDt(x.at))}</b>${esc(x.reason)}${x.message?'<br><span class="muted">'+esc(x.message)+'</span>':''}<br><span class="muted">par @${esc(x.by||'?')}</span></div>`).join(''):'<p class="muted">Casier vierge.</p>'}<div class="row end"><button class="ghost" data-x>Fermer</button></div>`,true)}catch(x){toast(errMsg(x))}};
+  $('#sNt',m).onchange=e=>{try{localStorage.setItem('cm_notif',e.target.checked?'1':'0')}catch(x){}if(e.target.checked){try{if('Notification' in window&&Notification.permission==='default')Notification.requestPermission()}catch(x){}}};
   $('#sOff',m).onchange=async e=>{const on=e.target.checked;const sw=navigator.serviceWorker;
     if(!sw||location.protocol!=='https:'){e.target.checked=false;return toast('Non disponible dans ce navigateur')}
     try{const reg=await sw.ready;localStorage.setItem('cm_offline',on?'1':'0');reg.active.postMessage({t:on?'games-on':'games-off'});$('#sOffM',m).textContent=on?'Téléchargement en cours…':'Cache des jeux supprimé.';
@@ -8580,7 +8584,9 @@ async function quizRun(kind,done){
     const ok=data.status==='passed';
     end(null,data.status==='violation'?'Test invalidé : '+(data.reason||''):ok?`Test réussi : ${data.score}/${data.total}.`:kind==='grad'?`Test échoué : ${data.score}/${data.total}. Vos pouvoirs ont été retirés.`:`Mini-test échoué : ${data.score}/${data.total}. Un avertissement a été donné ; au prochain échec avec un avertissement en cours, une demande de rétrogradation sera envoyée au chef.`)};
 }
+const laHidden=()=>{try{return localStorage.getItem('cm_hidela_'+S.me.id)==='1'}catch(e){return false}};
 async function logAlertCheck(){
+  if(laHidden()){const o=document.getElementById('logAlert');if(o)o.remove();return}
   try{const {data}=await sb.rpc('log_alert_list');const open=(data||[]).filter(a=>!a.ack);let b=document.getElementById('logAlert');
     if(!open.length){if(b)b.remove();return}
     if(!b){b=document.createElement('div');b.id='logAlert';b.onclick=logAlertOpen;document.body.appendChild(b)}
@@ -9118,7 +9124,9 @@ async function stTokens(m,box){
         <div class="row" style="flex-wrap:wrap;margin-top:6px"><label class="muted"><input type="checkbox" id="pcAll" checked> Tous les packs</label>${pk.map(k=>`<label class="muted"><input type="checkbox" class="pcI" value="${esc(k.code)}"> ${k.medals?nfmt(k.medals)+' coq.':nfmt(k.tokens)}</label>`).join('')}<button class="ghost lite" id="pcGo">Créer</button></div>
         <label>Codes</label>${L.map(c=>`<div class="shrow2"><div class="grow"><b>${esc(c.code)}</b> −${c.pct} %<small>${c.items.includes('*')?'tous les packs':c.items.map(x=>esc((pk.find(k=>k.code===x)||{}).tokens||x)).join(', ')} · ${c.uses} / ${c.max==null?'∞':c.max} utilisations${c.per_user?' · '+c.per_user+' par personne':''}${c.from?' · dès '+esc(fmtDt(c.from)):''}${c.until?' · jusqu’au '+esc(fmtDt(c.until)):''}${c.badge?' · badge '+esc(c.badge):''}${c.purchase?' · acheteurs':''}${c.active?'':' · désactivé'}</small></div><button class="ghost lite" data-t="${esc(c.code)}" data-a="${c.active?0:1}">${c.active?'Désactiver':'Activer'}</button></div>`).join('')||'<p class="muted">Aucun code.</p>'}
         <label>Journaux conservés (50 à 500 lignes ; les plus anciennes sont supprimées)</label><div class="row"><input id="lkN" type="number" min="50" max="500" class="grow" style="max-width:120px"><button class="ghost lite" id="lkS">Appliquer</button><button class="ghost lite" id="lkA">Voir les alertes</button></div>
+        <label class="muted" style="display:flex;gap:8px;align-items:center;margin-top:8px"><input type="checkbox" id="lkH"> Masquer la bannière rouge d’alerte de journaux (pour moi seulement, sur cet appareil)</label>
         <label>Lien de paiement (https, fournisseur de paiement)</label><div class="row"><input id="pcU" class="grow" placeholder="https://…"><button class="ghost lite" id="pcUS">Enregistrer</button></div>`;
+      {const h=$('#lkH',C);if(h){h.checked=laHidden();h.onchange=()=>{try{localStorage.setItem('cm_hidela_'+S.me.id,h.checked?'1':'0')}catch(e){}logAlertCheck();toast(h.checked?'Bannière d’alerte masquée':'Bannière d’alerte affichée')}}}
       rpcd('log_keep_get').then(n=>{const i=$('#lkN',C);if(i)i.value=n}).catch(()=>{});
       C.onclick=async e=>{const t=e.target;try{
         if(t.id==='pcGo'){const items=$('#pcAll',C).checked?['*']:$$('.pcI:checked',C).map(x=>x.value);const mx=$('#pcM',C).value;await rpcd('promo_create',{p_code:$('#pcC',C).value,p_pct:+$('#pcP',C).value,p_items:items,p_max:mx?+mx:null,p_from:$('#pcF',C).value?new Date($('#pcF',C).value).toISOString():null,p_until:$('#pcE',C).value?new Date($('#pcE',C).value).toISOString():null,p_per_user:$('#pcU1',C).value?+$('#pcU1',C).value:null,p_badge:$('#pcB',C).value.trim()||null,p_purchase:$('#pcPu',C).checked});toast('Code créé');views.p()}
@@ -11721,6 +11729,67 @@ window.SMK=(function(){
   devSettings=function(m){const r=_ds2.apply(this,arguments);try{const cr=m.querySelector('.credits');if(cr&&!m.querySelector('#fxOpen')){const d=document.createElement('div');d.innerHTML='<label>Mon personnage</label><div class="row"><span class="grow muted">Nom, cheveux, yeux, objets à fumer, dépendance et profil.</span><button class="ghost" id="fxOpen">Ouvrir</button></div>';cr.before(...d.childNodes);m.querySelector('#fxOpen').onclick=()=>charPanel()}}catch(e){}return r};
   if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',()=>FX.init());else FX.init();
 })();
+
+/* ================= Notifications ================= */
+const NT={
+  on:()=>{try{return localStorage.getItem('cm_notif')!=='0'}catch(e){return true}},
+  inv:null,tok:null,
+  box(){let b=document.getElementById('ntBox');if(!b){b=document.createElement('div');b.id='ntBox';document.body.appendChild(b)}return b},
+  clip:(s,n)=>{s=String(s||'').replace(/\s+/g,' ').trim();return s.length>n?s.slice(0,n-1)+'…':s},
+  push(n){
+    if(!NT.on())return;
+    if(document.hidden){try{if('Notification' in window&&Notification.permission==='granted'){const o=new Notification(n.title,{body:n.os!=null?n.os:n.text,tag:n.key||undefined});o.onclick=()=>{try{window.focus()}catch(e){}NT.open(n);o.close()}}}catch(e){}}
+    const b=NT.box();while(b.children.length>=3)b.firstChild.remove();
+    const el=document.createElement('div');el.className='ntItem'+(n.cls?' '+n.cls:'');el.setAttribute('role','button');
+    el.innerHTML='<b></b><span></span>';el.firstChild.textContent=n.title;el.lastChild.textContent=n.text;
+    const kill=()=>{if(el._k)return;el._k=1;el.classList.add('out');setTimeout(()=>el.remove(),260)};
+    el.onclick=()=>{kill();NT.open(n)};b.appendChild(el);setTimeout(kill,7000);
+  },
+  /* dialogue : détails, puis 3 secondes plus tard il se ferme et redirige */
+  open(n){
+    if(document.querySelector('.ntDlg'))document.querySelector('.ntDlg').close();
+    let s=3;const m=modal(`<h3 id="ntT"></h3><div id="ntD" style="white-space:pre-wrap;word-break:break-word"></div><p class="muted" style="margin:10px 0 0" id="ntC"></p><div class="row end" style="margin-top:10px"><button class="ghost" id="ntX">Fermer</button><button id="ntGo">Y aller</button></div>`);
+    m.classList.add('ntDlg');m.querySelector('#ntT').textContent=n.title;
+    if(n.html)m.querySelector('#ntD').innerHTML=n.html;else m.querySelector('#ntD').textContent=n.detail||n.text;
+    let done=false;const fin=go=>{if(done)return;done=true;clearInterval(iv);m.close();if(go){try{n.go&&n.go()}catch(e){}}};
+    const paint=()=>{const c=m.querySelector('#ntC');if(c)c.textContent='Redirection dans '+s+' s…'};paint();
+    const iv=setInterval(()=>{if(!m.isConnected){clearInterval(iv);return}s--;if(s<=0)fin(true);else paint()},1000);
+    m.querySelector('#ntX').onclick=()=>fin(false);m.querySelector('#ntGo').onclick=()=>fin(true);
+  },
+  msg(c,row,pv,mention){
+    const sys=c.hub==='system',jt=sys&&/jeton/i.test(pv||'');
+    const nm=sys?'Notification système':convTitle(c);
+    const d=row._d||{};const full=NT.clip(d.t||pv||'',500);
+    const who=(S.profiles.get(row.sender_id)||{}).username;
+    const txt=jt?'Vous avez reçu des jetons.':NT.clip(pv,90);
+    NT.push({key:'m'+row.id,title:nm,text:txt,os:c.mode==='e2e'?'Nouveau message':txt,cls:mention?'men':'',
+      html:'',detail:(who&&!sys&&c.kind==='group'?'@'+who+' : ':'')+(jt?full:full||pv),
+      go:()=>{const t=document.querySelector('#side .tabs [data-tab="chats"]');if(t)t.click();openConv(c.id)}});
+  },
+  friend(p){
+    const n=p.new||{};if(!n||!S.me)return;const me=S.me.id;
+    if(p.eventType==='INSERT'&&n.addressee===me&&n.status==='pending'){
+      ensureProfiles([n.requester]).then(()=>{const u=(S.profiles.get(n.requester)||{}).username||'quelqu’un';
+        NT.push({key:'f'+n.requester,title:'Demande d’ami',text:'@'+u+' souhaite devenir votre ami.',detail:'@'+u+' vous a envoyé une demande d’ami.',go:NT.toFriends})})}
+    else if(p.eventType==='UPDATE'&&n.requester===me&&n.status==='accepted'){
+      ensureProfiles([n.addressee]).then(()=>{const u=(S.profiles.get(n.addressee)||{}).username||'quelqu’un';
+        NT.push({key:'fa'+n.addressee,title:'Demande acceptée',text:'@'+u+' a accepté votre demande d’ami.',detail:'@'+u+' a accepté votre demande d’ami.',go:NT.toFriends})})}
+  },
+  toFriends(){const t=document.querySelector('#side .tabs [data-tab="friends"]');try{$('#app').classList.remove('inchat')}catch(e){}if(t)t.click()},
+  async poll(){
+    if(!NT.on()||!S.me)return;
+    try{const l=(await sb.rpc('invites_mine')).data||[];
+      if(NT.inv===null)NT.inv=new Set(l.map(x=>x.id));
+      else for(const x of l)if(!NT.inv.has(x.id)){NT.inv.add(x.id);
+        NT.push({key:'i'+x.id,title:'Invitation de groupe',text:'@'+(x.by||'?')+' vous invite dans un groupe.',detail:'@'+(x.by||'?')+' vous invite à rejoindre le groupe « '+(x.group||'')+' ».',go:()=>{try{invitesCheck()}catch(e){}}})}}catch(e){}
+    try{const r=(await sb.rpc('notif_tokens',{p_since:NT.tok})).data;
+      if(r){const first=NT.tok===null;NT.tok=r.last;
+        if(!first&&r.items&&r.items.length){const tot=r.items.reduce((a,x)=>a+Number(x.delta||0),0);
+          const lines=r.items.map(x=>'+ '+nfull(x.delta)+' jetons · '+x.reason).join('\n');
+          NT.push({key:'t'+r.last,title:'Jetons',text:'Vous avez reçu des jetons.',os:'Vous avez reçu des jetons.',detail:(r.items.length>1?'Total : '+nfull(tot)+' jetons\n':'')+lines,go:()=>{try{balOpen()}catch(e){}}})}}}catch(e){}
+  },
+  start(){if(NT._s)return;NT._s=1;NT.poll();setInterval(NT.poll,30000);document.addEventListener('visibilitychange',()=>{if(!document.hidden)NT.poll()})}
+};
 /* ================= Invitations de groupe ================= */
 async function invitesCheck(){
   let l=[];try{l=(await sb.rpc('invites_mine')).data||[]}catch(e){return}

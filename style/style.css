@@ -1269,3 +1269,11 @@ html[data-mode=dark] img,html[data-mode=dark] video,html[data-mode=dark] canvas,
 /* le nom a toujours priorité : les pastilles jetons/médaillons ne le recouvrent plus */
 #meBox .grow,#chatBox .hd .grow{min-width:0;flex:1 1 0}
 #meBox .balchip,#meBox .medchip{margin-left:0}
+
+/* notifications */
+#ntBox{position:fixed;left:50%;transform:translateX(-50%);top:calc(env(safe-area-inset-top,0px) + 8px);z-index:100001;display:flex;flex-direction:column;gap:6px;width:min(380px,calc(100vw - 16px));pointer-events:none}
+.ntItem{pointer-events:auto;cursor:pointer;display:flex;flex-direction:column;gap:2px;background:var(--card,#fff);color:var(--text,#1b1f2a);border:1px solid var(--line,#d9deea);border-left:4px solid var(--accent,#2f6df6);border-radius:12px;padding:9px 12px;box-shadow:0 8px 26px rgba(0,0,0,.22);animation:popin .35s var(--spring,ease)}
+.ntItem b{font-size:14px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.ntItem span{font-size:13px;opacity:.85;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.ntItem.men{border-left-color:#f97316}
+.ntItem.out{animation:popout .26s forwards}

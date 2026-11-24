@@ -917,7 +917,7 @@ begin
   if auth.uid() is not null and public.staff_rank_me() < 4 then raise exception 'Réservé au commandant'; end if;
   perform set_config('app.audit_skip', '1', true);
   r := public.purge_auto_run();
-  delete from public.user_ips where last_seen < now() - interval '12 months'; get diagnostics a = row_count;       -- adresses IP : 12 mois après la dernière connexion
+  -- adresses IP : conservées jusqu'à la suppression du compte (suppression en cascade) ; lors d'un bannissement, conservées tant qu'il dure
   delete from public.user_devices where last_seen < now() - interval '24 months'; get diagnostics b = row_count;   -- empreintes de navigateur : 24 mois après la dernière activité
   if to_regclass('public.rate_hits_ip') is not null then delete from public.rate_hits_ip where at < now() - interval '2 days'; get diagnostics c = row_count; end if;
   return r || jsonb_build_object('ips', a, 'devices', b, 'rate_ip', c);
@@ -930,6 +930,21 @@ do $$ begin
   end if;
 end $$;
 
+
+-- tant que les nouvelles conditions ne sont pas acceptées, l'adresse IP et l'appareil ne sont ni enregistrés ni renouvelés (les bannissements s'appliquent toujours)
+create or replace function public.register_ip() returns jsonb language plpgsql security definer set search_path = public as $$
+declare v_me uuid := auth.uid(); v_ip text := public.req_ip(); v_first boolean; v_pend boolean;
+begin
+  if v_me is null then raise exception 'Non connecté'; end if;
+  v_pend := coalesce((public.legal_pending() ->> 'pending')::boolean, false);
+  if v_ip is not null and not v_pend then
+    select not exists(select 1 from public.user_ips where user_id = v_me) into v_first;
+    insert into public.user_ips(user_id, ip, is_signup) values (v_me, v_ip, v_first)
+      on conflict (user_id, ip) do nothing;
+  end if;
+  return public.ban_state(v_me) || jsonb_build_object('dev', public.dev_check(v_me));
+end $$;
+
 -- l'activité d'un navigateur déjà connu est datée à chaque connexion (sert au calcul de la durée de conservation)
 create or replace function public.device_register(p_cookie text) returns jsonb language plpgsql security definer set search_path = public, extensions as $$
 declare parts text[]; h text; me uuid := auth.uid();
@@ -938,7 +953,9 @@ begin
   parts := string_to_array(coalesce(p_cookie, ''), '.');
   if array_length(parts, 1) <> 3 or parts[1] <> 'SC1' or parts[3] <> public._dev_sig(parts[2]) then return jsonb_build_object('ok', false); end if;
   h := public._dev_hash(p_cookie);
-  insert into public.user_devices(user_id, dev) values (me, h) on conflict (user_id, dev) do update set last_seen = now();
+  if not coalesce((public.legal_pending() ->> 'pending')::boolean, false) then
+    insert into public.user_devices(user_id, dev) values (me, h) on conflict (user_id, dev) do update set last_seen = now();
+  end if;
   return jsonb_build_object('ok', true, 'banned', exists(select 1 from public.device_bans where dev = h));
 end $$;
 

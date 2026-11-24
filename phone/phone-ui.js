@@ -69,12 +69,13 @@ var pad={el:null,btn:null,open:false,
   },
   refresh:function(){
     if(!pad.el)return;
-    var smoke=!!D.getElementById('fxHead'),game=!!D.querySelector('.full:not(#callScreen) canvas, .full:not(#callScreen) .cb, .gamebox canvas')||smoke||!!D.querySelector('.modal-back canvas');
+    var smoke=!!D.getElementById('fxHead'),game=smoke||!!(window.__phKeysWanted&&window.__phKeysWanted());
     pad.btn.hidden=!game;if(!game)pad.open=false;
     pad.el.hidden=!(game&&pad.open);pad.btn.classList.toggle('on',pad.open);
     pad.el.querySelector('.phSm').hidden=!smoke;
   }};
 function init(){
+  window.addEventListener('phkeys',function(){later()});
   pad.build();walk(D.body);hideDesktop(D.body);
   new MutationObserver(later).observe(D.body,{childList:true,subtree:true,characterData:true});
 }
