@@ -355,18 +355,21 @@ function closeCasino(){
   refreshBal();
 }
 
-/* ---------- entrées : bouton près de .balchip ---------- */
-function injectEntries(){
-  $$('.balchip').forEach(c=>{
-    const p=c.parentNode;if(!p||p.querySelector(':scope>.cz-entry'))return;
-    const b=D.createElement('button');b.type='button';b.className='cz-entry';b.title='Casino';b.innerHTML=`${LOGO}<span>Casino</span>`;
-    c.insertAdjacentElement('afterend',b);
-  });
+/* ---------- entrée : une « discussion » Casino dans la liste, sous les épinglées ---------- */
+const CZ_ICON=`<svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9.5"/><circle cx="12" cy="12" r="5"/><path d="M12 2.5v4M12 17.5v4M2.5 12h4M17.5 12h4"/></svg>`;
+function addCasinoItem(){
+  const l=$('#list');if(!l||typeof S==='undefined'||!S||!S.me)return;
+  $$('.cz-item',l).forEach(x=>x.remove());
+  const h=`<div class="item cz-item ${Z.open?'on':''}" data-cz="1"><span class="av cz-av2">${CZ_ICON}</span><div class="grow"><div class="tt"><b>Casino</b></div><div class="pv">Poker, 21, roulette, machines à sous, Lot-Au-MAX!</div></div></div>`;
+  const pins=$$('.item.pinned',l);
+  if(pins.length)pins[pins.length-1].insertAdjacentHTML('afterend',h);else l.insertAdjacentHTML('afterbegin',h);
 }
-let injQ=0;const injSoon=()=>{if(injQ)return;injQ=requestAnimationFrame(()=>{injQ=0;try{injectEntries()}catch(e){}})};
-D.addEventListener('click',e=>{const b=e.target.closest&&e.target.closest('.cz-entry');if(b){e.preventDefault();e.stopPropagation();openCasino()}},true);
-try{new MutationObserver(injSoon).observe(D.body||D.documentElement,{childList:true,subtree:true})}catch(e){}
-if(D.readyState==='loading')D.addEventListener('DOMContentLoaded',injSoon);else injSoon();
+try{
+  if(typeof renderList==='function'){const _rl=renderList;renderList=function(){const r=_rl.apply(this,arguments);try{addCasinoItem()}catch(e){}return r}}
+}catch(e){console.warn('casino: liste non liée',e)}
+D.addEventListener('click',e=>{const it=e.target.closest&&e.target.closest('#list .cz-item');if(!it)return;e.preventDefault();e.stopPropagation();e.stopImmediatePropagation();openCasino()},true);
+setInterval(()=>{try{const l=$('#list');if(l&&typeof S!=='undefined'&&S&&S.me&&!l.querySelector('.cz-item'))addCasinoItem()}catch(e){}},1500);
+try{addCasinoItem()}catch(e){}
 
 /* ---------- illustrations partagées ---------- */
 function wheelSvg(o){
@@ -389,16 +392,47 @@ const ILL={
 };
 
 /* ---------- le cochon Tanhgokrom ---------- */
+let pigUid=0;
 function pigSvg(fill,cls){
-  const lvl=clamp(fill,0,1),top=104-lvl*58;
-  let coins='';for(let i=0;i<22;i++){const x=54+(i*37%88),y=top+8+(i*53%(Math.max(1,104-top-8)));coins+=`<ellipse cx="${x}" cy="${y.toFixed(1)}" rx="7" ry="4.200" fill="url(#czg-gold)" stroke="#8d610a" stroke-width=".8"/>`}
-  return `<svg class="cz-pig ${cls||''}" viewBox="0 0 220 190"><defs><clipPath id="pigcl"><ellipse cx="108" cy="92" rx="76" ry="52"/></clipPath><radialGradient id="pigg" cx=".4" cy=".3" r=".8"><stop offset="0" stop-color="#ffc9dc"/><stop offset=".6" stop-color="#f48fb1"/><stop offset="1" stop-color="#b24a74"/></radialGradient></defs>
-  <path d="M84 0v54M132 0v54" stroke="#caa14a" stroke-width="3.500" stroke-dasharray="5 3"/><rect x="60" y="0" width="100" height="6" fill="#8d6a12"/>
-  <g class="cz-pig-b"><ellipse cx="66" cy="168" rx="12" ry="6" fill="#0006"/><rect x="62" y="130" width="18" height="30" rx="8" fill="#e27aa0"/><rect x="128" y="130" width="18" height="30" rx="8" fill="#e27aa0"/><path d="M178 78c18-4 24 8 14 14s-2 10-10 6" stroke="#e27aa0" stroke-width="5" fill="none" stroke-linecap="round"/>
-  <ellipse cx="108" cy="92" rx="78" ry="54" fill="#3b0f24"/><g clip-path="url(#pigcl)"><g class="cz-pig-c"><path d="M20 ${top}q22-8 44 0t44 0t44 0t44 0V160H20z" fill="#b8860b"/>${coins}</g></g>
-  <ellipse cx="108" cy="92" rx="76" ry="52" fill="url(#pigg)" opacity=".55" stroke="#8f3b60" stroke-width="3"/><path d="M60 62c20-18 56-24 88-14" stroke="#fff" stroke-width="5" stroke-linecap="round" fill="none" opacity=".55"/>
-  <path d="M138 44l8-28 20 24z" fill="#e27aa0" stroke="#8f3b60" stroke-width="2"/><ellipse cx="38" cy="92" rx="22" ry="20" fill="#f48fb1" stroke="#8f3b60" stroke-width="2.500"/><ellipse cx="32" cy="92" rx="3.500" ry="6" fill="#8f3b60"/><ellipse cx="44" cy="92" rx="3.500" ry="6" fill="#8f3b60"/><circle cx="62" cy="76" r="5" fill="#222"/><circle cx="63.500" cy="74.500" r="1.600" fill="#fff"/>
-  <rect x="86" y="40" width="44" height="7" rx="3.500" fill="#1a0508" stroke="#d4af37" stroke-width="1.600"/><g class="cz-pig-coin"><ellipse cx="108" cy="22" rx="9" ry="9" fill="url(#czg-gold)" stroke="#8d610a"/></g></g></svg>`;
+  const lvl=clamp(fill,0,1),id='pg'+(++pigUid);
+  /* tas de pièces vu à travers le hublot : lignes décalées, positions pseudo-aléatoires fixes */
+  const rnd2=mulberry(77);let coins='';
+  for(let r=0;r<11;r++){const y=160-r*6.4,n=r%2?6:7;for(let i=0;i<n;i++){const x=(r%2?100:94)+i*10.8+(rnd2()-.5)*3,yy=y+(rnd2()-.5)*2.4,rot=(rnd2()-.5)*26;
+    coins+=`<g transform="translate(${x.toFixed(1)} ${yy.toFixed(1)}) rotate(${rot.toFixed(0)})"><ellipse rx="8.6" ry="4.8" fill="#7a520a"/><ellipse ry="4.4" rx="8.4" cy="-.9" fill="url(#${id}c)" stroke="#9a6a0b" stroke-width=".5"/><ellipse ry="2.4" rx="5.2" cy="-.9" fill="none" stroke="#b9871a" stroke-width=".5"/><path d="M-4.5 -2.2q3-1.8 7-.6" stroke="#fffbe0" stroke-width=".9" fill="none" stroke-linecap="round" opacity=".85"/></g>`}}
+  const off=((1-lvl)*72).toFixed(1);
+  return `<svg class="cz-pig ${cls||''}" viewBox="0 0 270 230" aria-label="Cochon Tanhgokrom">
+<defs>
+<radialGradient id="${id}b" cx=".32" cy=".26" r=".95"><stop offset="0" stop-color="#ffe3ec"/><stop offset=".28" stop-color="#ffb3cc"/><stop offset=".68" stop-color="#ee7ba4"/><stop offset="1" stop-color="#b9457a"/></radialGradient>
+<radialGradient id="${id}s" cx=".4" cy=".35" r=".8"><stop offset="0" stop-color="#ffc4d8"/><stop offset=".7" stop-color="#f08fb0"/><stop offset="1" stop-color="#c8567f"/></radialGradient>
+<radialGradient id="${id}c" cx=".35" cy=".3" r=".9"><stop offset="0" stop-color="#fff6b8"/><stop offset=".5" stop-color="#f5c542"/><stop offset="1" stop-color="#b57d0d"/></radialGradient>
+<linearGradient id="${id}g" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#fff3b0"/><stop offset=".45" stop-color="#e5b02c"/><stop offset="1" stop-color="#8d610a"/></linearGradient>
+<radialGradient id="${id}w" cx=".5" cy=".4" r=".7"><stop offset="0" stop-color="#4a1a2e"/><stop offset="1" stop-color="#1a0610"/></radialGradient>
+<linearGradient id="${id}r" x1="0" x2="0" y1="0" y2="1"><stop offset="0" stop-color="#c9a15a"/><stop offset="1" stop-color="#7a5a22"/></linearGradient>
+<clipPath id="${id}p"><circle cx="132" cy="128" r="35"/></clipPath>
+<clipPath id="${id}body"><path d="M52 126C48 84 92 62 136 62c48 0 86 24 82 66-3 36-38 58-84 58S56 164 52 126z"/></clipPath>
+</defs>
+<ellipse cx="136" cy="214" rx="86" ry="9" fill="#000" opacity=".28"/>
+<g class="cz-pig-rope"><path d="M135 0V26" stroke="#b8924a" stroke-width="6" stroke-dasharray="4 2.2"/><path d="M135 26L96 70M135 26L176 70" stroke="#b8924a" stroke-width="4.5" stroke-linecap="round" stroke-dasharray="4 2.2"/><circle cx="135" cy="24" r="8" fill="none" stroke="url(#${id}g)" stroke-width="4"/><circle cx="96" cy="70" r="4.5" fill="url(#${id}g)" stroke="#6e4c05" stroke-width="1"/><circle cx="176" cy="70" r="4.5" fill="url(#${id}g)" stroke="#6e4c05" stroke-width="1"/></g>
+<g class="cz-pig-tail"><path d="M216 112c20-8 34 6 22 16s-22-6-8-10" fill="none" stroke="#c8567f" stroke-width="7" stroke-linecap="round"/><path d="M216 112c20-8 34 6 22 16s-22-6-8-10" fill="none" stroke="#ff9fc0" stroke-width="3.4" stroke-linecap="round"/></g>
+<g><path d="M92 176h30v26q0 7-7 7h-16q-7 0-7-7z" fill="url(#${id}s)" stroke="#a63b6a" stroke-width="2"/><path d="M92 198h30v4q0 7-7 7h-16q-7 0-7-7z" fill="#5a2a3f"/><path d="M164 176h30v26q0 7-7 7h-16q-7 0-7-7z" fill="url(#${id}s)" stroke="#a63b6a" stroke-width="2"/><path d="M164 198h30v4q0 7-7 7h-16q-7 0-7-7z" fill="#5a2a3f"/></g>
+<path d="M52 126C48 84 92 62 136 62c48 0 86 24 82 66-3 36-38 58-84 58S56 164 52 126z" fill="url(#${id}b)" stroke="#a63b6a" stroke-width="3"/>
+<g clip-path="url(#${id}body)"><path d="M40 168C80 196 190 200 230 160V200H40z" fill="#8a2c58" opacity=".35"/><path d="M70 92C96 70 160 64 206 84" stroke="#fff" stroke-width="9" stroke-linecap="round" fill="none" opacity=".4"/><ellipse cx="186" cy="150" rx="22" ry="30" fill="#ffd0e0" opacity=".16"/></g>
+<g class="cz-pig-ear"><path d="M92 74C84 44 112 34 128 60z" fill="url(#${id}s)" stroke="#a63b6a" stroke-width="2.4" stroke-linejoin="round"/><path d="M98 68C94 52 108 48 117 62z" fill="#ff8fb4" opacity=".85"/></g>
+<g><path d="M118 63C140 56 168 58 182 66l-3 8C165 68 142 66 122 72z" fill="#1d0812" stroke="url(#${id}g)" stroke-width="2.2" stroke-linejoin="round"/><path d="M121 66c20-5 42-4 58 1" stroke="#ffd24a" stroke-width="1.2" fill="none" opacity=".7"/></g>
+<g class="cz-pig-slotcoin"><g transform="translate(150 20) rotate(-14)"><ellipse rx="14" ry="14" fill="url(#${id}c)" stroke="#8d610a" stroke-width="1.6"/><ellipse rx="9.6" ry="9.6" fill="none" stroke="#b9871a" stroke-width="1.2"/><path d="M-3 -6.5v13M3.2 -4.4c0-1.8-2-2.4-3.2-2.4s-3.2.9-3.2 2.4c0 3.4 6.4 1.6 6.4 5 0 1.6-1.8 2.4-3.2 2.4s-3.2-.8-3.2-2.4" stroke="#8d610a" stroke-width="1.6" fill="none" stroke-linecap="round"/><path d="M-8 -8q5-6 12-5" stroke="#fffbe0" stroke-width="2" fill="none" stroke-linecap="round" opacity=".8"/></g></g>
+<g><circle cx="132" cy="128" r="41" fill="url(#${id}g)" stroke="#6e4c05" stroke-width="2"/><circle cx="132" cy="128" r="36" fill="url(#${id}w)"/><g clip-path="url(#${id}p)"><g class="cz-pile" style="transform:translateY(${off}px)">${coins}</g></g><circle cx="132" cy="128" r="35" fill="none" stroke="#000" stroke-opacity=".5" stroke-width="3"/><path d="M104 114c8-14 26-20 40-17" stroke="#fff" stroke-width="4" stroke-linecap="round" fill="none" opacity=".55"/><circle cx="132" cy="128" r="41" fill="none" stroke="#fff" stroke-opacity=".35" stroke-width="1"/>${[0,60,120,180,240,300].map(a=>`<circle cx="${(132+41*Math.cos(a*Math.PI/180)).toFixed(1)}" cy="${(128+41*Math.sin(a*Math.PI/180)).toFixed(1)}" r="2" fill="#6e4c05"/>`).join('')}</g>
+<g><ellipse cx="42" cy="124" rx="24" ry="21" fill="url(#${id}s)" stroke="#a63b6a" stroke-width="2.6"/><ellipse cx="30" cy="124" rx="11" ry="16" fill="#f07da6" stroke="#a63b6a" stroke-width="2"/><ellipse cx="29" cy="117" rx="3.2" ry="5.2" fill="#6b1d3f"/><ellipse cx="29" cy="132" rx="3.2" ry="5.2" fill="#6b1d3f"/><path d="M26 112c4-4 9-3 11 1" stroke="#fff" stroke-width="2" fill="none" stroke-linecap="round" opacity=".6"/></g>
+<g class="cz-pig-eye"><ellipse cx="78" cy="102" rx="7.2" ry="8.4" fill="#1b0b12"/><ellipse cx="80" cy="99" rx="2.8" ry="3.2" fill="#fff"/><circle cx="76" cy="106" r="1.3" fill="#fff" opacity=".8"/><path d="M68 94q8-7 16-2" stroke="#6b1d3f" stroke-width="2.4" fill="none" stroke-linecap="round"/></g>
+<ellipse cx="80" cy="130" rx="11" ry="7" fill="#ff6f9f" opacity=".42"/>
+<path d="M66 150q10 6 22 2" stroke="#a63b6a" stroke-width="2.2" fill="none" stroke-linecap="round" opacity=".7"/>
+<path d="M104 70C100 54 112 48 124 52" stroke="#fff" stroke-width="2" fill="none" opacity=".45" stroke-linecap="round"/>
+</svg>`;
+}
+/* met à jour le niveau de pièces sans recréer le dessin (l'animation ne redémarre pas) */
+function pigMount(host,fill){
+  if(!host)return;const s=host.querySelector('svg.cz-pig');
+  if(!s){host.innerHTML=pigSvg(fill);return}
+  const p=s.querySelector('.cz-pile');if(p)p.style.transform='translateY('+((1-clamp(fill,0,1))*72).toFixed(1)+'px)';
 }
 const pigFill=pot=>{pot=num(pot);return pot<=0?0:clamp(Math.log10(1+pot)/6,.07,1)};
 function nextMonthMs(){const n=new Date();return Date.UTC(n.getUTCFullYear(),n.getUTCMonth()+1,1,0,0,0)}
@@ -438,7 +472,7 @@ V.hall=function(ctx){
     g.innerHTML=(L.games||[]).map(gm=>`<div class="cz-game"><div class="cz-gill">${ILL[gm.game]||''}</div><div class="cz-ginfo"><h5>${E(GN[gm.game]||gm.label)}</h5><div class="cz-tlist">${(gm.tables||[]).map(t=>`<button class="cz-tb" type="button" data-go="${E(gm.game)}" data-id="${t.id}" data-n="${E(t.name)}"><b>${E(t.name)}</b><span class="cz-tm">${ico('user',13)}${t.humans||0} ${ico('bot',13)}${t.bots||0}</span><span class="cz-tp">${E(phName(t.phase))}</span><span class="cz-tmin">${nf(t.min_bet)}${t.max_bet?' à '+nf(t.max_bet):''}</span></button>`).join('')||'<span class="cz-muted">Aucune table</span>'}</div></div></div>`).join('');
     $('.cz-slotrow',el).innerHTML=(L.slots||[]).map(m=>`<button class="cz-mach" type="button" data-go="slots" data-id="${m.id}" data-n="${E(m.name)}" style="--h:${hashStr(m.theme||m.name)%360}">${ILL.slots}<b>${E(m.name)}</b><span>${nf(m.min_bet)} - ${nf(m.max_bet)}</span></button>`).join('');
     const lot=L.lot||{};const f=pigFill(lot.pot);
-    if(Math.abs(f-lastFill)>.005){lastFill=f;pigW.innerHTML=pigSvg(f)}
+    if(Math.abs(f-lastFill)>.005){lastFill=f;pigMount(pigW,f)}
     potE.textContent=nfl(lot.pot||0);$('.gprice',el).textContent='Billet : '+nf(lot.price||0)+' jetons';
     const wb=$('.ntk',el);wb.textContent=lot.pending_win?'Gain à réclamer !':'Sac et grattage';
   };
@@ -1078,12 +1112,12 @@ V.tv=function(ctx){
 /* ---- cochon Tanhgokrom ---- */
 V.pig=function(ctx){
   const {el,sc}=ctx;ctx.title='Tanhgokrom';
-  el.innerHTML=`<div class="cz-lotv"><div class="cz-pigv"><div class="cz-beam"></div><div class="cz-rope"></div><div class="cz-pigbig"></div><div class="cz-pigsign"><h3>Cagnotte Tanhgokrom</h3><div class="cz-potn">${symbolCoin}<b>…</b></div><div class="cz-cd2"><span>Prochain tirage dans</span><b>…</b></div><p>70 % du prix de chaque billet vendu remplit le cochon. Tirage le 1er de chaque mois à 00:00 GMT : le billet gagnant empoche toute la cagnotte, réclamable à la banque de ticket. Si personne ne gagne, la cagnotte est reportée.</p></div></div></div>`;
+  el.innerHTML=`<div class="cz-lotv"><div class="cz-pigv"><div class="cz-beam"></div><div class="cz-pigbig"></div><div class="cz-pigsign"><h3>Cagnotte Tanhgokrom</h3><div class="cz-potn">${symbolCoin}<b>…</b></div><div class="cz-cd2"><span>Prochain tirage dans</span><b>…</b></div><p>70 % du prix de chaque billet vendu remplit le cochon. Tirage le 1er de chaque mois à 00:00 GMT : le billet gagnant empoche toute la cagnotte, réclamable à la banque de ticket. Si personne ne gagne, la cagnotte est reportée.</p></div></div></div>`;
   const pot=$('.cz-potn b',el),cd=$('.cz-cd2 b',el),pg=$('.cz-pigbig',el);let info=null,shown=-1;
-  const load=async()=>{try{info=await RPC('lot_info');if(sc.dead)return;pot.textContent=nfl(info.pot);const f=pigFill(info.pot);if(f!==shown){shown=f;pg.innerHTML=pigSvg(f,'big');if(info.pot>0)AU.coin&&AU.coin()}}catch(e){lotErr(e)}};
+  const load=async()=>{try{info=await RPC('lot_info');if(sc.dead)return;pot.textContent=nfl(info.pot);const f=pigFill(info.pot);if(f!==shown){shown=f;pigMount(pg,f);if(info.pot>0)AU.coin&&AU.coin()}}catch(e){lotErr(e)}};
   load();sc.iv(load,8000);
   sc.iv(()=>{const e=info?Date.parse(info.period_end):NaN;const end=isFinite(e)&&e>Date.now()?e:nextMonthMs();cd.textContent=fmtLong(end-Date.now())},500);
-  pg.addEventListener('click',()=>{pg.classList.remove('shake');void pg.offsetWidth;pg.classList.add('shake');AU.coin&&AU.coin();FX.burst(pg,8,'#ffd24a')});
+  pg.addEventListener('click',()=>{pg.classList.remove('shake');void pg.offsetWidth;pg.classList.add('shake');sc.to(()=>pg.classList.remove('shake'),650);AU.coin&&AU.coin();FX.burst(pg,8,'#ffd24a')});
 };
 
 /* ---- inventaire du site : section Lot-Au-MAX! ---- */
