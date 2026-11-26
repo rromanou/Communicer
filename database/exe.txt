@@ -42,6 +42,7 @@ sql/patch_boutique.sql
 sql/patch_fume.sql
 sql/patch_bots_officiels.sql
 sql/patch_vlafi_web.sql
+sql/patch_casino.sql
 sql/patch_lot20.sql
 sql/patch_lot21.sql
 sql/patch_lot22.sql
