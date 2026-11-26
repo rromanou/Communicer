@@ -355,21 +355,20 @@ function closeCasino(){
   refreshBal();
 }
 
-/* ---------- entrée : une « discussion » Casino dans la liste, sous les épinglées ---------- */
-const CZ_ICON=`<svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9.5"/><circle cx="12" cy="12" r="5"/><path d="M12 2.5v4M12 17.5v4M2.5 12h4M17.5 12h4"/></svg>`;
-function addCasinoItem(){
-  const l=$('#list');if(!l||typeof S==='undefined'||!S||!S.me)return;
-  $$('.cz-item',l).forEach(x=>x.remove());
-  const h=`<div class="item cz-item ${Z.open?'on':''}" data-cz="1"><span class="av cz-av2">${CZ_ICON}</span><div class="grow"><div class="tt"><b>Casino</b></div><div class="pv">Poker, 21, roulette, machines à sous, Lot-Au-MAX!</div></div></div>`;
-  const pins=$$('.item.pinned',l);
-  if(pins.length)pins[pins.length-1].insertAdjacentHTML('afterend',h);else l.insertAdjacentHTML('afterbegin',h);
+/* ---------- entrée : petite icône à côté de la pastille de solde / médaillons (en haut, dans #meBox) ---------- */
+const CZ_ICON=`<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9.5"/><circle cx="12" cy="12" r="5"/><path d="M12 2.5v4M12 17.5v4M2.5 12h4M17.5 12h4"/></svg>`;
+function injectEntry(){
+  const c=$('#meBox .balchip');if(!c||typeof S==='undefined'||!S||!S.me)return;
+  let anchor=c;const n=c.nextElementSibling;if(n&&n.classList.contains('medchip'))anchor=n;
+  let b=$('#meBox .cz-entry');
+  if(b){if(b.previousElementSibling===anchor)return;b.remove()}
+  b=D.createElement('button');b.type='button';b.className='cz-entry';b.title='Casino';b.setAttribute('aria-label','Casino');b.innerHTML=CZ_ICON;
+  anchor.insertAdjacentElement('afterend',b);
 }
-try{
-  if(typeof renderList==='function'){const _rl=renderList;renderList=function(){const r=_rl.apply(this,arguments);try{addCasinoItem()}catch(e){}return r}}
-}catch(e){console.warn('casino: liste non liée',e)}
-D.addEventListener('click',e=>{const it=e.target.closest&&e.target.closest('#list .cz-item');if(!it)return;e.preventDefault();e.stopPropagation();e.stopImmediatePropagation();openCasino()},true);
-setInterval(()=>{try{const l=$('#list');if(l&&typeof S!=='undefined'&&S&&S.me&&!l.querySelector('.cz-item'))addCasinoItem()}catch(e){}},1500);
-try{addCasinoItem()}catch(e){}
+let injQ=0;const injSoon=()=>{if(injQ)return;injQ=requestAnimationFrame(()=>{injQ=0;try{injectEntry()}catch(e){}})};
+D.addEventListener('click',e=>{const b=e.target.closest&&e.target.closest('.cz-entry');if(b){e.preventDefault();e.stopPropagation();e.stopImmediatePropagation();openCasino()}},true);
+try{new MutationObserver(injSoon).observe(D.body||D.documentElement,{childList:true,subtree:true})}catch(e){}
+if(D.readyState==='loading')D.addEventListener('DOMContentLoaded',injSoon);else injSoon();
 
 /* ---------- illustrations partagées ---------- */
 function wheelSvg(o){
