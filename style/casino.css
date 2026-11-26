@@ -167,7 +167,7 @@ body.cz-lock{overflow:hidden}
 .cz-zslots{grid-area:slots}
 .cz-zlot{grid-area:lot}
 .cz-zone{position:relative;background:linear-gradient(#1a060bcc,#0e0306cc);border:1px solid #8d6a1288;border-radius:18px;padding:14px;box-shadow:0 10px 30px #000a,inset 0 0 30px #0008}
-.cz-zone>h4{position:absolute;top:-12px;left:18px;margin:0;padding:3px 14px;border-radius:7px;font:italic 800 14px Georgia,serif;letter-spacing:.5px;color:#2a1a00;background:linear-gradient(#ffe48a,#b88a1a);border:1px solid #5b3f04;box-shadow:0 2px 6px #000a}
+.cz-zone>h4{z-index:6;position:absolute;top:-12px;left:18px;margin:0;padding:3px 14px;border-radius:7px;font:italic 800 14px Georgia,serif;letter-spacing:.5px;color:#2a1a00;background:linear-gradient(#ffe48a,#b88a1a);border:1px solid #5b3f04;box-shadow:0 2px 6px #000a}
 .cz-zpig,.cz-ztv{padding-top:18px}
 .cz-zpig{overflow:visible;display:flex;gap:6px;align-items:center;justify-content:space-around;flex-wrap:wrap}
 .cz-root .cz-pigbtn{width:min(190px,48%);flex:1 1 130px;transform-origin:50% 0;animation:czsway 5s ease-in-out infinite}
@@ -625,3 +625,6 @@ body.cz-lock{overflow:hidden}
 .cz-fab{position:fixed;right:14px;bottom:14px;z-index:8000;padding:8px 14px 8px 10px;font-size:14px;box-shadow:0 6px 18px #000a}
 .cz-fab span{display:inline!important}
 .cz-item .cz-av2{display:inline-flex;align-items:center;justify-content:center;background:linear-gradient(135deg,#5a0f1c,#2a0610);color:#ffd24a;border:1.5px solid #d4af37;box-shadow:0 0 10px #d4af3755}
+button.cz-entry{display:inline-flex;align-items:center;justify-content:center;flex:0 0 auto;width:26px;height:26px;min-width:0;padding:0;margin:0 0 0 4px;border-radius:50%;line-height:1;color:#ffe9a3;background:linear-gradient(135deg,#5a0f1c,#2a0610);border:1px solid #d4af37;cursor:pointer;box-shadow:0 0 8px #d4af3744;vertical-align:middle}
+button.cz-entry svg{width:16px;height:16px;display:block}
+button.cz-entry:hover{filter:brightness(1.3)}
