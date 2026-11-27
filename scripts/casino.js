@@ -257,9 +257,7 @@ const fmtMs=ms=>{ms=Math.max(0,Math.ceil(ms/1000));const m=Math.floor(ms/60),s=m
 const fmtLong=ms=>{ms=Math.max(0,Math.floor(ms/1000));const d=Math.floor(ms/86400),h=Math.floor(ms%86400/3600),m=Math.floor(ms%3600/60),s=ms%60,p=x=>String(x).padStart(2,'0');return (d?d+' j ':'')+p(h)+':'+p(m)+':'+p(s)};
 const symbolCoin=`<svg class="cz-ic" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="5.500" stroke-dasharray="2 2"/></svg>`;
 
-function syncApp(b,m){
-  try{if(typeof TK!=='undefined'&&TK){if(b!=null)TK.bal=b;if(m!=null)TK.med=m;if(typeof balRender==='function')balRender()}}catch(e){}
-}
+function syncApp(b,m){/* les jetons de casino sont séparés du solde du compte : rien à synchroniser */}
 function setBal(b,m){
   if(b==null||!isFinite(+b))return;b=+b;
   const old=Z.bal;Z.bal=b;if(m!=null&&isFinite(+m))Z.med=+m;
@@ -270,7 +268,16 @@ function setBal(b,m){
   syncApp(b,Z.med);
 }
 async function refreshBal(){
-  try{if(typeof balRefresh==='function')await balRefresh();if(typeof TK!=='undefined'&&TK&&TK.bal!=null)setBal(TK.bal,TK.med)}catch(e){}
+  try{const r=await RPC('casino_chips_me');setBal(r.chips,TK&&TK.med!=null?TK.med:null);Z.tok=r.tokens}catch(e){}
+}
+/* échange entre le compte (jetons du compte) et le casino (jetons de casino), 1 pour 1 */
+async function xchg(){
+  let r;try{r=await RPC('casino_chips_me')}catch(e){return say(EM(e))}
+  const d=dlg(`<h3>Échanger des jetons</h3><p>Compte : <b>${nfl(r.tokens)}</b> jetons du compte<br>Casino : <b>${nfl(r.chips)}</b> jetons de casino<br><span class="cz-muted">Taux : 1 pour 1. Il faut d’abord convertir vos jetons du compte pour jouer ; vous pouvez ensuite les reconvertir.</span></p>
+    <div class="cz-buy"><select id="czXd"><option value="in">Du compte vers le casino</option><option value="out">Du casino vers le compte</option></select> <input id="czXn" type="number" min="1" step="1" value="${Math.max(1,Math.min(1000,Math.floor(r.tokens)))}"></div>
+    <div class="cz-dlg-btn"><button class="cz-btn ghost" data-x type="button">Fermer</button><button class="cz-btn gold" data-ok type="button">Échanger</button></div>`);
+  if(!d)return;
+  d.querySelector('[data-ok]').onclick=()=>act('xchg',async()=>{const n=Math.floor(+d.querySelector('#czXn').value);const x=await RPC('casino_exchange',{p_dir:d.querySelector('#czXd').value,p_amount:n});setBal(x.chips);Z.tok=x.tokens;try{if(typeof balRefresh==='function')balRefresh()}catch(e){}AU.chips&&AU.chips(3);say('Échange effectué');d.close()});
 }
 const getLobby=async()=>{const l=await RPC('casino_lobby');if(l){Z.lobby=l;setBal(l.balance,l.medals)}return l};
 
@@ -333,12 +340,13 @@ function openCasino(arg){
   const r=D.createElement('div');r.className='cz-root';r.id='czRoot';
   r.innerHTML=`<div class="cz-top"><button class="cz-ib cz-back" type="button" hidden title="Retour au hall">${ico('back',20)}</button><div class="cz-brand">${LOGO}<span>Casino</span></div><div class="cz-title"></div><span class="cz-sp"></span>
    <div class="cz-medal" hidden title="Médaillons">${ico('star',16)}<b>0</b></div>
-   <div class="cz-bal" title="Vos jetons">${symbolCoin}<span class="cz-balnum">${Z.bal==null?'…':nfl(Z.bal)}</span></div>
+   <button class="cz-ib cz-xchg" type="button" title="Échanger des jetons">${ico('coin',18)||'Échange'}</button>
+   <div class="cz-bal" title="Vos jetons de casino">${symbolCoin}<span class="cz-balnum">${Z.bal==null?'…':nfl(Z.bal)}</span></div>
    <button class="cz-ib cz-mutebtn" type="button" title="Son">${ico(AU.isMuted()?'mute':'sound',20)}</button>
    <button class="cz-ib cz-closebtn" type="button" title="Fermer">${ico('close',20)}</button></div>
    <div class="cz-main"></div><div class="cz-fxl"></div>${SPRITE}`;
   D.body.appendChild(r);Z.root=r;Z.main=$('.cz-main',r);Z.fx=$('.cz-fxl',r);Z.sc=scope();
-  if(typeof TK!=='undefined'&&TK&&TK.bal!=null)setBal(TK.bal,TK.med);
+  $('.cz-xchg',r).onclick=()=>{AU.click();xchg()};
   $('.cz-back',r).onclick=()=>{AU.click();back()};
   $('.cz-closebtn',r).onclick=closeCasino;
   $('.cz-mutebtn',r).onclick=()=>{AU.mute(!AU.isMuted());AU.unlock();$('.cz-mutebtn',r).innerHTML=ico(AU.isMuted()?'mute':'sound',20);if(!AU.isMuted()){AU.ambient(true);AU.pop()}};
@@ -498,6 +506,12 @@ function seatXY(rel,wide){const a=(90+rel*36)*Math.PI/180;const rx=wide?41:39,ry
 function betXY(rel,wide){const [x,y]=seatXY(rel,wide);return [x+(50-x)*.40,y+(52-y)*.40]}
 const avatar=(look,name,cls)=>`<div class="cz-av ${cls||''}">${charSvg(look,{name})}</div>`;
 
+/* ne réécrit le DOM d'une zone que si son contenu change : sinon les boutons bougent et les clics se perdent à chaque rafraîchissement */
+function guardTbl(el){
+  const d=Object.getOwnPropertyDescriptor(Element.prototype,'innerHTML');
+  ['.cz-seats','.cz-center','.cz-ctl','.cz-sidew','.cz-logw','.cz-rbets'].forEach(q=>{const e=el.querySelector(q);if(!e||e.__g)return;e.__g=1;
+    Object.defineProperty(e,'innerHTML',{configurable:true,get(){return d.get.call(this)},set(v){if(this.__h===v)return;this.__h=v;d.set.call(this,v)}})});
+}
 /* Poll + rendu d'une table. hooks.render(st,prev) est appelé à chaque nouvel état ; hooks.light(st) quand rien n'a changé. */
 function tableBase(ctx,game,hooks){
   const {el,sc}=ctx;const id=ctx.arg&&ctx.arg.id;
@@ -552,12 +566,13 @@ function bindSide(T,root){
     const l=e.target.closest('[data-leave]');if(l){T.leave()}
   });
 }
-const logHtml=st=>`<div class="cz-log">${(st.log||[]).slice(-6).map(l=>`<div>${E(l.msg)}</div>`).join('')}</div>`;
+const logHtml=st=>'';   /* journal sous la table désactivé */
 
 /* ================= POKER ================= */
 V.poker=function(ctx){
   const {el,sc}=ctx;
   el.innerHTML=`<div class="cz-tview"><div class="cz-tinfo"><span class="ph"></span><span class="tm"></span></div><div class="cz-tbl cz-poker"><div class="cz-rail"></div><div class="cz-felt"></div><div class="cz-seats"></div><div class="cz-center"></div><div class="cz-alarmL"></div></div><div class="cz-ctl"></div><div class="cz-tfoot"><div class="cz-hint">${ico('eye',15)} Astuce : cliquez en rafale sur un joueur en main pour l’observer discrètement.</div><div class="cz-sidew"></div></div><div class="cz-logw"></div></div>`;
+  guardTbl(el);
   const seatsE=$('.cz-seats',el),centerE=$('.cz-center',el),ctlE=$('.cz-ctl',el),alE=$('.cz-alarmL',el),phE=$('.ph',el),tmE=$('.tm',el),sideE=$('.cz-sidew',el),logE=$('.cz-logw',el);
   let seen=new Set(),lastHand=-1,lastWin=null,cheat=null,lastComm=0,lastTurn=false,raiseV=0,alarmIds='';
   const cardsH=(arr,key,cw,peek)=>{
@@ -567,7 +582,7 @@ V.poker=function(ctx){
   let T=null;
   const cheatBar=(s)=>cheat&&cheat.seat===s?`<div class="cz-chbar"><i style="width:${Math.min(100,cheat.clicks/cheat.need*100)}%"></i><span>Clic clic clic !</span></div>`:'';
   const render=(st)=>{
-    const me=st.me||{},base=me.seat!=null?me.seat:0,wide=T.wide,hand=st.hand_no;
+    const me=st.me||{},base=0,wide=T.wide,hand=st.hand_no;
     if(hand!==lastHand){seen=new Set();lastHand=hand}
     phE.textContent=PHN[st.phase]||st.phase;
     const bb=st.table.min_bet;
@@ -588,8 +603,8 @@ V.poker=function(ctx){
     }
     // croupier
     const d=st.dealer||{};const dTurn=sp==='dealer';
-    h+=`<div class="cz-seat dealer ${dTurn?'turn':''} ${d.winner?'win':''} ${d.status==='folded'?'folded':''} ${inHand&&(d.status==='active'||d.status==='allin')?'watch':''}" style="left:50%;top:${wide?9:8}%" data-seat="10">
-      ${d.last?`<div class="cz-bub">${E(d.last)}</div>`:''}${d.button?'<i class="cz-btnD">D</i>':''}<div class="cz-hole">${cardsH(d.cards,'d',wide?34:28,peeks[10])}</div>${avatar(st.dealer.look,st.dealer.name)}${cheatBar(10)}
+    h+=`<div class="cz-seat dealer ${dTurn?'turn':''} ${d.winner?'win':''} ${d.status==='folded'?'folded':''} " style="left:50%;top:${wide?9:8}%" data-seat="10">
+      ${d.last?`<div class="cz-bub">${E(d.last)}</div>`:''}${d.button?'<i class="cz-btnD">D</i>':''}<div class="cz-hole">${cardsH(d.cards,'d',wide?34:28,null)}</div>${avatar(st.dealer.look,st.dealer.name)}${cheatBar(10)}
       <div class="cz-nm">${E(d.name||'Croupier')} <em>croupier</em></div><div class="cz-stk">${symbolCoin}${nf(d.stack||0)}</div>${d.hand&&st.phase==='showdown'?`<div class="cz-hn">${E(d.hand)}</div>`:''}</div>
       ${d.bet>0?`<div class="cz-betspot" style="left:50%;top:${wide?27:24}%">${chipStack(d.bet,2)}<b>${nf(d.bet)}</b></div>`:''}`;
     seatsE.innerHTML=h;
@@ -676,7 +691,7 @@ V.poker=function(ctx){
     if(key===alarmIds){al.forEach(a=>{const e=$('[data-al="'+a.attempt+'"]',alE);if(e)e.style.setProperty('--left',Math.max(0,a.left_ms)/1000)});return}
     alarmIds=key;
     if(!al.length){alE.innerHTML='';if(T.siren){try{T.siren.stop()}catch(e){}T.siren=null}return}
-    const base=st.me.seat!=null?st.me.seat:0,wide=T.wide;
+    const base=0,wide=T.wide;
     alE.innerHTML=al.map(a=>{const [x,y]=a.seat>=0?seatXY(((a.seat-base)+10)%10,wide):[50,18];
       return `<button class="cz-dot" type="button" data-al="${a.attempt}" style="left:${x}%;top:${Math.max(4,y-12)}%" title="Cliquez pour l’arrêter"><i></i><span>${E(a.username)} vous observe !</span></button>`}).join('')+`<div class="cz-alarmbn">ALARME — quelqu’un regarde vos cartes. Cliquez le point rouge !</div>`;
     if(!T.siren)T.siren=AU.sirenStart();
@@ -699,12 +714,13 @@ const chipValues=(mn,mx)=>[1,5,10,25,50,100,500,1000,5000].filter(v=>v>=Math.min
 V.blackjack=function(ctx){
   const {el,sc}=ctx;
   el.innerHTML=`<div class="cz-tview"><div class="cz-tinfo"><span class="ph"></span><span class="tm"></span></div><div class="cz-tbl cz-bj"><div class="cz-rail"></div><div class="cz-felt"></div><div class="cz-arc">Le croupier tire sous 17 — Blackjack paie 3 pour 2</div><div class="cz-seats"></div></div><div class="cz-ctl"></div><div class="cz-tfoot"><div class="cz-hint"></div><div class="cz-sidew"></div></div><div class="cz-logw"></div></div>`;
+  guardTbl(el);
   const seatsE=$('.cz-seats',el),ctlE=$('.cz-ctl',el),phE=$('.ph',el),tmE=$('.tm',el),sideE=$('.cz-sidew',el),logE=$('.cz-logw',el);
   let seen=new Set(),lastRound='',lastPh='',chipSel=0,T=null,lastTurn=false;
   const cardsH=(arr,key,cw)=>(arr||[]).map((c,i)=>{const k=key+i+':'+c;const f=!seen.has(k);seen.add(k);if(f)AU.card();return cardHtml(c,f?'fresh':'').replace('class="cz-card','style="--cw:'+cw+'px" class="cz-card')}).join('');
   const handH=(h,key,cw)=>{if(!h)return '';return `<div class="cz-hand">${cardsH(h.cards,key,cw)}</div>${h.total!=null&&h.cards&&h.cards.length?`<div class="cz-tot ${h.total>21?'bust':''}">${h.total>21?'Bust ':''}${h.total}</div>`:''}`};
   const render=(st)=>{
-    const me=st.me||{},base=me.seat!=null?me.seat:0,wide=T.wide;
+    const me=st.me||{},base=0,wide=T.wide;
     const round=st.hand_no+':'+(st.round||'');if(st.phase==='betting'&&lastPh!=='betting'){seen=new Set()}
     if(lastPh!==st.phase){if(st.phase==='dealer')AU.flip();lastPh=st.phase}
     phE.textContent=PHN[st.phase]||st.phase;
@@ -764,6 +780,7 @@ V.roulette=function(ctx){
      <button type="button" class="cz-rn out" data-k="low" style="grid-column:2/span 2;grid-row:5"><span>1-18</span></button><button type="button" class="cz-rn out" data-k="even" style="grid-column:4/span 2;grid-row:5"><span>Pair</span></button><button type="button" class="cz-rn out red" data-k="red" style="grid-column:6/span 2;grid-row:5"><span>Rouge</span></button><button type="button" class="cz-rn out blk" data-k="black" style="grid-column:8/span 2;grid-row:5"><span>Noir</span></button><button type="button" class="cz-rn out" data-k="odd" style="grid-column:10/span 2;grid-row:5"><span>Impair</span></button><button type="button" class="cz-rn out" data-k="high" style="grid-column:12/span 2;grid-row:5"><span>19-36</span></button>
      </div><div class="cz-rbets"></div></div></div>
    <div class="cz-ctl"></div><div class="cz-tfoot"><div class="cz-hint"></div><div class="cz-sidew"></div></div><div class="cz-logw"></div></div>`;
+  guardTbl(el);
   const ctlE=$('.cz-ctl',el),phE=$('.ph',el),tmE=$('.tm',el),sideE=$('.cz-sidew',el),logE=$('.cz-logw',el),resE=$('.cz-rlres',el),histE=$('.cz-rlhist',el),boxE=$('.cz-wheelbox',el),ballE=$('.cz-ball',el),rotE=$('.cz-wh-rot',el),betsE=$('.cz-rbets',el),boardE=$('.cz-rlboard',el);
   let T=null,chipSel=0,split=null,splitMode=false,lastSpin=0,anim=null,lastPay='',idleRot=0,lastPh='';
   const rotSet=a=>rotE&&rotE.setAttribute('transform','rotate('+a.toFixed(2)+')');

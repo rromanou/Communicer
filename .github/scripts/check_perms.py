@@ -8,7 +8,7 @@ for f in sorted(glob.glob(R+'/.github/workflows/*.yml')):
     if 'pull_request_target' in s:print(f'::error file={n}::pull_request_target interdit');bad+=1
     if re.search(r'echo\s+.*\$\{\{\s*secrets\.',s):print(f'::error file={n}::secret passé à echo');bad+=1
     if re.search(r'uses:\s*[\w./-]+@(main|master)\b',s):print(f'::error file={n}::action non épinglée (@main/@master)');bad+=1
-OK={'INTERNET','ACCESS_NETWORK_STATE','CAMERA','RECORD_AUDIO','MODIFY_AUDIO_SETTINGS','ACCESS_FINE_LOCATION','ACCESS_COARSE_LOCATION','READ_MEDIA_IMAGES','READ_MEDIA_VIDEO','READ_MEDIA_AUDIO','READ_EXTERNAL_STORAGE','WRITE_EXTERNAL_STORAGE','WAKE_LOCK','VIBRATE','POST_NOTIFICATIONS'}
+OK={'INTERNET','ACCESS_NETWORK_STATE','CAMERA','RECORD_AUDIO','MODIFY_AUDIO_SETTINGS','ACCESS_FINE_LOCATION','ACCESS_COARSE_LOCATION','READ_MEDIA_IMAGES','READ_MEDIA_VIDEO','READ_MEDIA_AUDIO','READ_EXTERNAL_STORAGE','WRITE_EXTERNAL_STORAGE','WAKE_LOCK','VIBRATE','POST_NOTIFICATIONS','RECEIVE_BOOT_COMPLETED'}
 m=R+'/android/app/src/main/AndroidManifest.xml'
 if os.path.exists(m):
     for p in re.findall(r'uses-permission[^>]*android:name="android\.permission\.(\w+)"',open(m).read()):

@@ -1295,3 +1295,12 @@ html[data-mode=dark] img,html[data-mode=dark] video,html[data-mode=dark] canvas,
 .lcard a b{font-size:13px}.lcard a span{font-size:11.5px;opacity:.7;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .lcard button{margin-top:6px}.lemb{display:block;margin-top:6px;width:100%;max-width:320px;border:0;border-radius:8px}iframe.lemb{aspect-ratio:16/9}
 .ntItem{touch-action:pan-y;user-select:none}
+.shpass{border:1px solid #8884;border-radius:12px;padding:12px 14px;margin:4px 0 14px}.shpass ul{padding-left:18px}.shpass li{margin:2px 0}.shpass h4{margin:12px 0 4px}.shpass .row{gap:8px;margin-top:6px}
+
+.setblk{padding:10px 0;border-bottom:1px solid #8882}
+.setchk{display:flex;align-items:flex-start;gap:12px;margin:0;color:var(--text);cursor:pointer}
+.setchk input{margin-top:4px;flex:none}
+.setchk span,.setrow span{display:flex;flex-direction:column;gap:3px;min-width:0}
+.setchk b,.setrow b{font-weight:600}
+.setchk small,.setrow small{color:var(--muted);font-size:12px;line-height:1.35}
+.setrow{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap}

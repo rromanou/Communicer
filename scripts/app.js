@@ -358,7 +358,7 @@ function renderHeader(){
   const c=cur();if(!c)return;const dm=c.kind==='direct';const o=dm?S.profiles.get(other(c)?.user_id):null;
   $('#hAv').innerHTML=convAv(c);
   $('#hName').innerHTML=esc(convTitle(c))+(c.mode==='e2e'?` <span class="tag">${ic('lock',12)} Chiffré</span>`:'');
-  $('#hSt').textContent=c.kind==='self'?'Notes personnelles':dm?(isOn(o)?'En ligne':(o&&o.last_seen?'Vu '+ago(o.last_seen):'')):`${c.members.length} membres · ${c.members.filter(m=>isOn(S.profiles.get(m.user_id))).length} en ligne`;
+  $('#hSt').textContent=c.kind==='self'?'Notes personnelles':dm?(isOn(o)?'En ligne':(o&&o.last_seen?'Vu '+ago(o.last_seen):'')):`${c.members.filter(m=>!(window.VANH&&VANH(c.id,m.user_id))).length} membres · ${c.members.filter(m=>!(window.VANH&&VANH(c.id,m.user_id))&&isOn(S.profiles.get(m.user_id))).length} en ligne`;
   $('#bCall').hidden=!(dm||c.kind==='group');if(dm&&o)seenRefresh([o.id]);liveRefresh();
 }
 const FONTS=[['Système','system-ui,-apple-system,"Segoe UI",Roboto,sans-serif'],['Serif','Georgia,"Times New Roman",serif'],['Machine','"Courier New",monospace'],['Arrondie','"Trebuchet MS","Comic Sans MS",sans-serif'],['Manuscrite','"Brush Script MT","Segoe Script",cursive'],['Large','Verdana,Geneva,sans-serif']];
@@ -441,7 +441,7 @@ async function sendPayload(c,pl,ttl){
   let kind,body,media=null;
   if(c.mode==='clear'&&pl.k==='call'){kind='text';body=CALLSENT+JSON.stringify(pl.c)}
   else if(c.mode==='clear'){kind=pl.k;body=kind==='game'?JSON.stringify(pl.g):(kind==='image'&&pl.u)?pl.u:(pl.t||null);media=pl.p||null;if(pl.bot||pl.fx)body=BOTSENT+JSON.stringify({bot:pl.bot,fx:pl.fx,t:pl.t||'',n:pl.n})}
-  else{kind='text';body=await encText(c.id,JSON.stringify(pl))}
+  else{kind='text';body=await encText(c.id,JSON.stringify(pl));media=(typeof pl.p==='string'&&/^[0-9a-f-]{36}\/m_[A-Za-z0-9_.-]+$/i.test(pl.p))?pl.p:null}   /* chiffré : le fichier l’est déjà ; le chemin seul permet aux membres de le lire */
   let r=await sb.rpc('send_message',ttl?{p_conv:c.id,p_kind:kind,p_body:body,p_media:media,p_ttl:ttl}:{p_conv:c.id,p_kind:kind,p_body:body,p_media:media});
   if(r.error&&(r.error.code==='PGRST202'||/schema cache|could not find the function/i.test(r.error.message||''))){
     r=ttl?{error:new Error('Appliquez d’abord le patch SQL n°3 (messages éphémères)')}:await sb.from('messages').insert({conversation_id:c.id,sender_id:S.me.id,kind,body,media_path:media}).select().single();
@@ -617,7 +617,9 @@ function subscribeAll(){
    .subscribe(async st=>{if(st==='SUBSCRIBED')await S.pres.track({t:Date.now()})});
   sb.channel('inbox-'+me).on('broadcast',{event:'signal'},({payload})=>onSignal(payload)).subscribe();
   try{NT.start()}catch(e){}
-  const beat=()=>sb.from('profiles').update({last_seen:new Date().toISOString()}).eq('id',me);beat();setInterval(beat,60000);
+  const beat=()=>{if(document.hidden)return;sb.from('profiles').update({last_seen:new Date().toISOString()}).eq('id',me).then(()=>{})};beat();setInterval(beat,60000);
+  /* application en arrière-plan (ex. notifications Android) : on n'est plus « en ligne » */
+  document.addEventListener('visibilitychange',()=>{try{if(document.hidden)S.pres.untrack();else{S.pres.track({t:Date.now()});beat()}}catch(e){}});
 }
 async function onMsg(row){
   const c=S.convs.get(row.conversation_id);if(!c){scheduleRefresh();return}
@@ -771,11 +773,11 @@ $('#btnGroup').onclick=()=>{
 /* ---------- détails ---------- */
 function infoModal(){
   const c=cur();if(!c)return;const grp=c.kind==='group';const amAdm=grp&&c.members.some(x=>x.user_id===S.me.id&&x.role==='admin');
-  const rows=c.members.map(mb=>{const p=S.profiles.get(mb.user_id);return `<div class="row" style="padding:6px 0">${av(p?.avatar_url,p?.username,'xs')}<span class="grow">${esc(gdn(c,p))}${mb.role==='admin'?' <span class="tag">admin</span>':''}</span>${grp&&amAdm&&mb.user_id!==S.me.id&&mb.role!=='admin'?`<button class="ghost lite" data-rg="${esc(p&&p.username||'')}">Droits</button>`:''}${isOn(p)?'<i class="dot on"></i>':'<i class="dot"></i>'}</div>`}).join('');
+  const rows=c.members.filter(mb=>!(window.VANH&&VANH(c.id,mb.user_id))).map(mb=>{const p=S.profiles.get(mb.user_id);return `<div class="row" style="padding:6px 0">${av(p?.avatar_url,p?.username,'xs')}<span class="grow">${esc(gdn(c,p))}${mb.role==='admin'?' <span class="tag">admin</span>':''}</span>${grp&&amAdm&&mb.user_id!==S.me.id&&mb.role!=='admin'?`<button class="ghost lite" data-rg="${esc(p&&p.username||'')}">Droits</button>`:''}${isOn(p)?'<i class="dot on"></i>':'<i class="dot"></i>'}</div>`}).join('');
   const m=modal(`<h3>${grp?'Détails du groupe':'Détails'}</h3>
    <div class="row" style="margin:10px 0">${convAv(c,'lg')}<div><b>${esc(convTitle(c))}</b><div class="muted">Conversation ${trk(c.num)}</div><div class="muted">${c.mode==='e2e'?'Bout en bout (AES-256)':'Clair'}</div></div></div>
    ${grp?`<label>Nom du groupe</label><div class="row"><input id="iN" value="${esc(c.name||'')}" maxlength="40"><button id="iNs">Renommer</button></div><label>Photo du groupe</label><input type="file" id="iA" accept="image/*">`:''}
-   <label>Membres (${c.members.length})</label>${rows}
+   <label>Membres (${c.members.filter(mb=>!(window.VANH&&VANH(c.id,mb.user_id))).length})</label>${rows}
    ${grp?`<label>Ajouter un membre</label><div class="row"><input id="iU" placeholder="nom d'utilisateur" autocapitalize="off"><button id="iAdd">Ajouter</button></div>`:''}
    <div id="iLink"></div><div id="iBots"></div><div class="row end"><button class="ghost" id="iRep">Signaler</button>${grp?'<button class="danger" id="iLeave">Quitter le groupe</button>':''}<button class="ghost" data-x>Fermer</button></div>`);
   $('#iRep',m).onclick=()=>{m.close();reportModal(c,0)};
@@ -1182,8 +1184,9 @@ function settingsModal(){
   <label>Couleur du site</label><div class="lkcol" id="lkCol"></div>
   <label>Utilisateurs bloqués</label><div id="lkBlk" class="muted">Chargement…</div>
   <label>Discussions publiques</label><div class="row"><button class="ghost" id="lkPub">Rejoindre la discussion publique</button></div>
-  <label>Notifications</label>
-  <div class="row"><label class="row" style="margin:0;color:var(--text)"><input type="checkbox" id="sNt" ${NT.on()?'checked':''}> Afficher les notifications (messages, demandes d’ami, invitations, système, jetons)</label></div>
+  <label>Notifications et panneau</label>
+  <div class="setblk"><label class="setchk"><input type="checkbox" id="sNt" ${NT.on()?'checked':''}><span><b>Afficher les notifications</b><small>Messages, demandes d’ami, invitations, système et jetons.</small></span></label></div>
+  <div id="pnlSlot"></div>
   <label>Jeux hors ligne</label>
   <div class="row"><label class="row" style="margin:0;color:var(--text)"><input type="checkbox" id="sOff" ${localStorage.getItem('cm_offline')==='1'?'checked':''}> Télécharger les jeux et le programme de bots pour jouer sans connexion</label></div><div class="muted" id="sOffM" style="font-size:12px">Sans cette option, seule une page « hors ligne » est conservée. Avec elle, les jeux solo et les jeux en équipe contre des bots (dames, échecs, Uno, poker…) restent jouables. Les jeux en ligne et la messagerie restent indisponibles sans connexion.</div>
   <label>Courriel de récupération (facultatif)</label><div id="sMail" class="muted">Chargement…</div>
@@ -6380,7 +6383,7 @@ async function openProfile(un,push=true){
   const since=p.created_at?new Date(p.created_at).toLocaleDateString('fr-CA',{year:'numeric',month:'long',day:'numeric'}):'';
   const status=isOn(p)||mine?'En ligne':(p.last_seen?'Vu '+ago(p.last_seen):'');
   const m=modal(`<div class="pf-modal">
-    <div class="pf-hd"><span class="pf-av">${av(p.avatar_url,p.username)}</span><div class="grow"><h3>${esc(p.nickname||p.username)}</h3><div class="muted pf-un" id="pfUn" style="cursor:help;display:inline-block">@${esc(p.username)}</div><div class="pf-on ${isOn(p)||mine?'on':''}">${esc(status)}</div></div></div>
+    <div class="pf-hd"><span class="pf-av">${av(p.avatar_url,p.username)}</span><div class="grow"><h3><span id="pfNm">${esc(p.nickname||p.username)}</span><span id="pfPass" title="Communicer Pass">${window.PASSIDS&&window.PASSIDS.has(p.id)?' ✦':''}</span></h3><div class="muted pf-un" id="pfUn" style="cursor:help;display:inline-block">@${esc(p.username)}</div><div class="pf-on ${isOn(p)||mine?'on':''}">${esc(status)}</div></div></div>
     <label>Description</label>
     ${mine?`<textarea id="pfBio" maxlength="300" rows="3" placeholder="Parlez de vous en quelques mots">${esc(p.bio||'')}</textarea><div class="row end" style="margin-top:6px"><span class="muted" id="pfCnt" style="margin-right:auto;font-size:12px">${(p.bio||'').length}/300</span><button id="pfSave">Enregistrer</button></div>`
       :`<p class="pf-bio">${p.bio?esc(p.bio):'<span class="muted">Aucune description.</span>'}</p>`}
@@ -6391,6 +6394,7 @@ async function openProfile(un,push=true){
     <div class="row end" style="margin-top:14px;flex-wrap:wrap"><button class="ghost" id="pfCopy">Copier le lien</button>${mine?'':fr?`<button id="pfMsg">Envoyer un message</button>`:`<button id="pfAdd">Ajouter en ami</button>`}<button class="ghost" data-x>Fermer</button></div>
   </div>`,true);
   try{smokeProfileInto(m,p)}catch(e){}
+  try{if(window.PASSFETCH&&!mine)window.PASSFETCH([p.id],true).then(()=>{const e=m.querySelector('#pfPass');if(e)e.textContent=window.PASSIDS.has(p.id)?' ✦':''})}catch(e){}
   if(push)try{history.pushState({u:p.username},'',PBASE+'/@'+p.username)}catch(e){}
   {const un=$('#pfUn',m);if(un){let tip=null,tm=null,cache=null;
     const hide=()=>{clearTimeout(tm);if(tip){tip.remove();tip=null}};
@@ -7972,6 +7976,7 @@ async function devInit(){
   try{const {data:ip}=await sb.rpc('register_ip');if(ip&&ip.banned){const u=ip.until?' jusqu’au '+fmtDt(ip.until):' (définitif)';await sb.auth.signOut();alert('Compte suspendu'+u+'\nRaison : '+(ip.reason||'—'));location.reload();return}}catch(e){}
   try{const {data}=await sb.rpc('dev_info');if(data){S.dev=!!data.enabled;S.devBlocked=data.blocked||null;S.staff=data.staff||null}}catch(e){}
   try{const cu=await rpcd('casier_unseen');if(cu.length){const mm=modal(`<h3>Avis de l’équipe</h3>${cu.map(x=>`<div class="cas-row"><b>${esc(CAS_N[x.kind]||x.kind)} · ${esc(fmtDt(x.at))}</b>${esc(x.reason)}${x.message?'<br><span class="muted">'+esc(x.message)+'</span>':''}<br><span class="muted">par @${esc(x.by||'?')}</span></div>`).join('')}<div class="row end"><button data-x>J’ai pris connaissance</button></div>`,true);mm.addEventListener('click',e=>{if(e.target.hasAttribute&&e.target.hasAttribute('data-x'))sb.rpc('casier_mark_seen').then(()=>{},()=>{})})}}catch(e){}
+  if(!window.__banPoll){window.__banPoll=setInterval(async()=>{try{const {data:b}=await sb.rpc('ban_me');if(b&&b.banned){clearInterval(window.__banPoll);try{await sb.auth.signOut()}catch(e){}alert('Compte suspendu'+(b.until?' jusqu’au '+fmtDt(b.until):' (définitif)')+(b.reason?'\nRaison : '+b.reason:''));location.reload()}}catch(e){}},12000)}   /* un compte banni est déconnecté sans attendre */
   try{blocksLoad();framesLoad();sb.rpc('ban_sweep').then(()=>{},()=>{});const {data:bi}=await sb.rpc('banned_ids');if(Array.isArray(bi)){S.banned=new Set(bi);S.remask();renderList();renderHeader()}}catch(e){}
   try{const r=await sb.from('ciffron_rules').select('id,pat,fl,files,reason');if(r.data&&r.data.length)Ciffron.setRules(r.data)}catch(e){}
   try{const r=await sb.from('ciffron_exceptions').select('id,code');if(r.data)Ciffron.setExceptions(r.data)}catch(e){}
@@ -8845,19 +8850,21 @@ async function bmBuy(box,bal,show){
 
 /* ---------- boutique ---------- */
 async function bmShop(box,bal,show){
-  const sh=await rpcd('shop_list');TK.shop=sh;bal(sh.balance);
+  const sh=await rpcd('shop_list');try{if(window.PASSLOAD)await window.PASSLOAD()}catch(e){}const PX=window.PASS||{};const PLUS=new Set(['credits_name','tournaments','vaze_pp','esport','krypto_plus']);TK.shop=sh;bal(sh.balance);
   let own=sh.badges.filter(b=>b.owned).map(b=>b.code);try{const iv=await rpcd('inventory_me');own=[...new Set(own.concat((iv.badges||[]).map(b=>b.code)))];S.owned=new Set(iv.items||[])}catch(e){}
-  const grp=[['Customize+',['customize_plus']],['Fonctions',['lite','pin','name_color','profile_color','profile_bg','badge_slot5','send_tokens']],['Cadres',['frame_photo','frame_photo_anim','frame_profile','frame_profile_anim']],['Nom',['rename','credits_name']],['Emojis',['pack_emoji']],['Outils',['personal_tools','absence','export_stats','group_tools','tournaments','esport','krypto_plus','vaze_plus']]];
+  const grp=[['Customize+',['customize_plus']],['Fonctions',['lite','pin','name_color','profile_color','profile_bg','badge_slot5','send_tokens']],['Cadres',['frame_photo','frame_photo_anim','frame_profile','frame_profile_anim']],['Nom',['rename']],['Emojis',['pack_emoji']],['Outils',['personal_tools','absence','export_stats','group_tools','vaze_plus']],['Réservé au Pass+',['credits_name','tournaments','vaze_pp','esport','krypto_plus']]];
   const cpOwn=!!(sh.items.find(i=>i.code==='customize_plus')||{}).owned,CPC=['name_color','profile_color','profile_bg','badge_slot5','frame_photo','frame_photo_anim','frame_profile','frame_profile_anim','rename'];
-  const row=(name,desc,price,owned,code,extra)=>`<div class="shrow2"><div class="grow"><b>${name}</b><small>${desc}</small></div>${extra||''}${cpOwn&&CPC.includes(code)&&code!=='rename'&&(sh.items.find(i=>i.code===code)||{}).via?`<button class="lite incl" disabled title="Inclus dans Customize+">${nfmt(price)}</button>`:owned?'<span class="tag">possédé</span>':`<button class="lite" data-b="${esc(code)}" ${sh.balance<price?'disabled':''}>${nfmt(price)}</button>`}</div>`;
-  let h='';
+  const pn=(base,code)=>{const it=sh.items.find(i=>i.code===code);if(it&&it.price_now!=null)return it.price_now;if(PLUS.has(code))return base;return PX.plus?Math.round(base*8)/10:PX.pass?Math.round(base*9.5)/10:base};
+  const row=(name,desc,price0,owned,code,extra)=>{const price=pn(price0,code),lock=PLUS.has(code)&&!PX.plus&&!owned,off=price<price0?`<s class="muted" style="font-size:12px">${nfmt(price0)}</s> `:'';return `<div class="shrow2"><div class="grow"><b>${name}</b><small>${desc}</small></div>${extra||''}${cpOwn&&CPC.includes(code)&&code!=='rename'&&(sh.items.find(i=>i.code===code)||{}).via?`<button class="lite incl" disabled title="Inclus dans Customize+">${nfmt(price)}</button>`:owned?'<span class="tag">possédé</span>':lock?'<span class="tag">Pass+ requis</span>':`${off}<button class="lite" data-b="${esc(code)}" ${sh.balance<price?'disabled':''}>${nfmt(price)}</button>`}</div>`};
+  let h='<div id="shPass" class="shpass"></div>';
   grp.forEach(([t,codes])=>{h+=`<label>${t}</label>`+codes.map(c=>sh.items.find(i=>i.code===c)).filter(Boolean).map(i=>row(esc(i.name),esc(i.descr),i.price,i.owned,i.code)).join('')});
   h+='<label>Badges</label>'+sh.badges.map(b=>row(`${medal(b,20)} ${esc(b.name)} <span class="tag t-${esc(b.tier)}">${esc(TIERN[b.tier])}</span>`,esc(b.descr),b.price,b.owned,b.code)).join('');
   {const hv=own.includes('grand_mecene')&&own.includes('mecene');h+=`<label>Union</label><div class="shrow2"><div class="grow"><b>Légende du mécène</b><small>Fusionne le Grand mécène et le Mécène en un seul badge.${hv?'':' Nécessite les badges Grand mécène et Mécène.'}</small></div><button class="lite unionbtn" data-u="1" ${(!hv||sh.balance<2750)?'disabled':''}>Fusionner · 2 750</button></div>`}
   box.innerHTML=h;
+  if(window.passShop){const pe=box.querySelector('#shPass');if(pe)window.passShop(pe,()=>show('s'))}
   box.onclick=async e=>{
     const d=e.target.dataset;if(!d)return;
-    if(d.b){const it=sh.items.find(i=>i.code===d.b)||sh.badges.find(i=>i.code===d.b);if(!confirm('Acheter « '+it.name+' » pour '+nfmt(it.price)+' jetons ?'))return;
+    if(d.b){const it=sh.items.find(i=>i.code===d.b)||sh.badges.find(i=>i.code===d.b);if(PLUS.has(d.b)&&!PX.plus)return toast('Cet article demande un abonnement Communicer Pass+ actif');if(!confirm('Acheter « '+it.name+' » pour '+nfmt(pn(it.price,d.b))+' jetons ?'))return;
       try{const b=await rpcd('shop_buy',{p_code:d.b});toast('Achat effectué');TK.pe=null;await peLoad();cosReset();bal(b);show('s')}catch(x){toast(errMsg(x))}}
     if(d.u){if(!confirm('Fusionner pour 2 750 jetons ? Les deux badges seront remplacés.'))return;try{await rpcd('badge_union');toast('Badge fusionné');await balRefresh();show('s')}catch(x){toast(errMsg(x))}}};
 }

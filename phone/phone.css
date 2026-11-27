@@ -83,3 +83,5 @@ body::before{content:"";position:fixed;left:0;right:0;top:0;height:env(safe-area
 #logAlert{top:env(safe-area-inset-top,0px)}
 /* zone de saisie un peu relevée pour ne pas coller aux touches de navigation */
 #chatBox .comp{padding-bottom:calc(10px + env(safe-area-inset-bottom,0px));margin-bottom:4px}
+/* discussion en plein écran : on réserve la place de l'horloge (barre d'état) et des encoches */
+@media (max-width:760px){#chat{top:calc(env(safe-area-inset-top,0px) + var(--lah,0px));left:env(safe-area-inset-left,0px);right:env(safe-area-inset-right,0px)}}

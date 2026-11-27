@@ -628,3 +628,7 @@ body.cz-lock{overflow:hidden}
 button.cz-entry{display:inline-flex;align-items:center;justify-content:center;flex:0 0 auto;width:26px;height:26px;min-width:0;padding:0;margin:0 0 0 4px;border-radius:50%;line-height:1;color:#ffe9a3;background:linear-gradient(135deg,#5a0f1c,#2a0610);border:1px solid #d4af37;cursor:pointer;box-shadow:0 0 8px #d4af3744;vertical-align:middle}
 button.cz-entry svg{width:16px;height:16px;display:block}
 button.cz-entry:hover{filter:brightness(1.3)}
+/* téléphone : le logo du casino ne doit jamais être écrasé */
+.cz-brand{flex:none}.cz-brand svg{flex:none;width:22px;height:22px;min-width:22px}
+/* le bouton « S’asseoir » ne bouge plus au survol (le style global des boutons écrasait son centrage) */
+.cz-root .cz-seat.empty,.cz-root .cz-seat.empty:hover,.cz-root .cz-seat.empty:active,.cz-root .cz-seat.empty:focus{transform:translate(-50%,-50%)!important;translate:none!important;margin:0!important}
