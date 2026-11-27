@@ -48,3 +48,4 @@ sql/patch_lot21.sql
 sql/patch_lot22.sql
 sql/patch_lot23.sql
 sql/patch_lot24.sql
+sql/patch_lot25.sql

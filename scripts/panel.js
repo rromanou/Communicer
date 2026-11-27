@@ -12,6 +12,7 @@ const LSset=(k,v)=>{try{localStorage.setItem(k,JSON.stringify(v))}catch(e){}};
 const BAD=/pass|pwd|secret|token|priv|jwt|apikey|api_key|cookie|session|email|phone|salt|hash|pin\b|ciffron|wrapped|cipher|key/i;
 const esc2=s=>String(s==null?'':s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
 const ready=()=>typeof S!=='undefined'&&S&&S.me&&S.me.id&&typeof sb!=='undefined';
+const blocked=()=>{try{return !!(S.sess&&S.sess.cfg&&+S.sess.cfg.nopanel)}catch(e){return false}};   // le créateur de la partie a interdit le panneau
 
 /* ---------- 1) espion réseau local (ce que ce client envoie au serveur) ---------- */
 function installSpy(){
@@ -27,7 +28,8 @@ function mask(a){try{return JSON.stringify(a||{},(k,v)=>BAD.test(k)?'***':(typeo
 function onKey(e){
   if(!ready()||busy||st.banned)return;
   const k=KM[e.key];if(!k)return;
-  if(!(S.sess&&document.getElementById('room')))return;       // seulement pendant un jeu ou un appel
+  const t=e.target;if(t&&(/^(INPUT|TEXTAREA|SELECT)$/.test(t.tagName)||t.isContentEditable))return;   // pas pendant la saisie de texte
+  if(blocked())return;
   buf=(buf+k).slice(-64);clearTimeout(tmr);
   if(buf.length>=Math.max(4,st.len||4))tmr=setTimeout(tryCode,900);
 }
@@ -37,13 +39,14 @@ async function tryCode(){
   busy=false;
 }
 function askPin(){
-  const m=modal(`<h3>Code d’accès</h3><p class="muted">Entrez le NIP de 8 lettres.</p><input id="pnPin" maxlength="8" autocomplete="off" autocapitalize="off" spellcheck="false" style="letter-spacing:4px;text-transform:uppercase"><div class="row end"><button class="ghost" id="pnX">Annuler</button><button id="pnGo">Valider</button></div>`);
+  const m=modal(`<h3>Code d’accès</h3><p class="muted">Entrez le NIP de 8 lettres. Si aucun NIP n’existe encore, le commandant crée le sien ici.</p><input id="pnPin" maxlength="8" autocomplete="off" autocapitalize="off" spellcheck="false" style="letter-spacing:4px;text-transform:uppercase"><div class="row end"><button class="ghost" id="pnX">Annuler</button><button id="pnGo">Valider</button></div>`);
   const inp=m.querySelector('#pnPin');setTimeout(()=>inp.focus(),50);
   const go=async()=>{const v=inp.value.trim();if(!/^[A-Za-z]{8}$/.test(v))return toast('8 lettres exactement');
     try{const r=await rpcd('panel_pin',{p_pin:v});
       if(r.ok){m.close();await refresh();toast('Panneau débloqué : activez-le dans les paramètres');openPanel();return}
       if(r.banned){m.close();st.banned=true;return toast('Accès au panneau bloqué')}
       if(r.why==='seq'){m.close();return}
+      if(r.why==='nopin'){m.close();return toast('Aucun NIP n’est encore défini : seul le commandant peut en créer un')}
       toast('NIP incorrect : '+r.left+' essai'+(r.left>1?'s':'')+' restant'+(r.left>1?'s':''));inp.value=''}catch(e){toast(errMsg(e))}};
   m.querySelector('#pnGo').onclick=go;m.querySelector('#pnX').onclick=()=>m.close();inp.onkeydown=ev=>{if(ev.key==='Enter')go()};
 }
@@ -53,10 +56,13 @@ async function refresh(){try{const s=await rpcd('panel_state');st=Object.assign(
 function hookSettings(){
   new MutationObserver(()=>{
     const m=document.querySelector('.modal #sNt');if(!m||document.querySelector('.modal #pnlRow'))return;
-    if(!st.unlocked)return;
-    const row=document.createElement('div');row.id='pnlRow';row.innerHTML='<label>Panneau</label><div class="row"><button class="ghost" id="pnlOpen">Afficher le panneau sur l’écran</button></div>';
-    const lbl=m.closest('.row').previousElementSibling;(lbl||m.closest('.row')).before(row);
-    row.querySelector('#pnlOpen').onclick=()=>{openPanel();const mm=row.closest('.modal-back');if(mm&&mm.close)mm.close()};
+    const row=document.createElement('div');row.id='pnlRow';
+    row.innerHTML=(st.unlocked?'<label>Panneau</label><div class="row"><button class="ghost" id="pnlOpen">Afficher le panneau sur l’écran</button></div>':'')+
+      '<div class="row"><label class="row" style="margin:0;color:var(--text)"><input type="checkbox" id="pnlVol"> Autoriser les administrateurs à écrire en mon nom, pour une raison justifiée (le message est étiqueté)</label></div>';
+    (m.closest('.row')||m).before(row);
+    const vb=row.querySelector('#pnlVol');rpcd('speak_vol_me').then(v=>{vb.checked=!!v}).catch(()=>{});
+    vb.onchange=()=>rpcd('speak_vol_set',{p_on:vb.checked}).then(()=>toast(vb.checked?'Vous vous êtes porté volontaire':'Volontariat retiré')).catch(e=>{vb.checked=!vb.checked;toast(errMsg(e))});
+    const ob=row.querySelector('#pnlOpen');if(ob)ob.onclick=()=>{openPanel();const mm=row.closest('.modal-back');if(mm&&mm.close)mm.close()};
   }).observe(document.body,{childList:true,subtree:true});
 }
 
@@ -130,7 +136,7 @@ function flat(o,out,path,depth,seen){
   for(const k of ks.slice(0,300)){if(BAD.test(String(k)))continue;let v;try{v=o[k]}catch(e){continue}flat(v,out,path+'.'+k,depth+1,seen)}
 }
 function roots(){
-  const r={'S.sess (jeu en cours)':()=>S.sess,'S.profile':()=>S.profile,'S.profiles':()=>S.profiles,'S.convs':()=>S.convs,'TK (jetons)':()=>TK,'S.friends':()=>S.friends};
+  const r={'S.sess (jeu en cours)':()=>{const x=S.sess;if(!x)return null;return {jeu:x.game,phase:x.phase,cfg:x.cfg,joueurs:x.players,observateurs:x.specs?[...x.specs]:[],etat:x.state,secret_hote:x.hp,ma_main:x.mypriv,mains_de_tous:x.pall}},'S.profile':()=>S.profile,'S.profiles':()=>S.profiles,'S.convs':()=>S.convs,'TK (jetons)':()=>TK,'S.friends':()=>S.friends};
   document.querySelectorAll('iframe').forEach((f,i)=>{r['iframe '+(i+1)+(f.title?' · '+f.title:'')]=()=>{try{const w=f.contentWindow,o={};for(const k of Object.keys(w)){if(/^(on|webkit|chrome|\d)/.test(k))continue;try{if(typeof w[k]!=='function')o[k]=w[k]}catch(e){}}return o}catch(e){return {erreur:'iframe non lisible'}}}});
   return r;
 }
@@ -163,7 +169,8 @@ pre,.mono{background:#05070f;border:1px solid #20263f;border-radius:6px;padding:
 `;
 function openPanel(){
   if(!st.unlocked)return;
-  if(host){host.style.display='';return}
+  if(host){host.style.display='';LSset('cm_pnl_open',true);return}
+  LSset('cm_pnl_open',true);
   host=document.createElement('div');host.id='pnlHost';document.body.appendChild(host);
   root=host.attachShadow({mode:'closed'});
   const tabs=[['loc','Joueur'],['jeu','Jeux'],['net','Réseau']];
@@ -174,7 +181,7 @@ function openPanel(){
   let dr=null;hd.addEventListener('pointerdown',e=>{if(e.target.closest('button'))return;const r=w.getBoundingClientRect();dr={x:e.clientX-r.left,y:e.clientY-r.top};hd.setPointerCapture(e.pointerId)});
   hd.addEventListener('pointermove',e=>{if(!dr)return;w.style.left=Math.max(0,Math.min(innerWidth-60,e.clientX-dr.x))+'px';w.style.top=Math.max(0,Math.min(innerHeight-30,e.clientY-dr.y))+'px'});
   hd.addEventListener('pointerup',()=>{dr=null});
-  root.getElementById('bx').onclick=()=>{host.style.display='none'};
+  root.getElementById('bx').onclick=()=>{host.style.display='none';LSset('cm_pnl_open',false)};
   root.getElementById('bm').onclick=()=>w.classList.toggle('min');
   root.getElementById('tb').onclick=e=>{const b=e.target.closest('[data-t]');if(b)show(b.dataset.t)};
   show('loc');
@@ -225,8 +232,10 @@ const VIEWS={
       if(who)L=L.filter(([p])=>p.includes(who)||p.toLowerCase().includes(((S.profiles.get(who)||{}).username||'§').toLowerCase()));
       out.innerHTML=L.slice(0,500).map(([p,v])=>`<div class="kv"><i>${esc2(p)}</i><span>${esc2(v)}</span></div>`).join('')||'Aucun résultat';};
     $r(bd,'#vGo').onclick=()=>run('');
-    $r(bd,'#jSt').onclick=()=>{if(!ss||!ss.state){out.textContent='Pas d’état de jeu (partie non commencée ou jeu entre pairs).';return}$r(bd,'#vR').value='S.sess (jeu en cours)';$r(bd,'#vQ').value='';run($r(bd,'#jWho').value)};
+    $r(bd,'#jSt').onclick=()=>{if(blocked()){out.textContent='Le panneau est interdit dans cette partie.';return}if(!ss||!ss.state){out.textContent='Pas d’état de jeu (partie non commencée ou jeu entre pairs).';return}$r(bd,'#vR').value='S.sess (jeu en cours)';$r(bd,'#vQ').value='';run($r(bd,'#jWho').value)};
     $r(bd,'#jPv').onclick=()=>$r(bd,'#jSt').click();
+    const bq=document.createElement('button');bq.textContent='Demander les mains privées (observateur)';bq.onclick=()=>{if(!S.sess)return toast('Aucun jeu en cours');if(blocked())return toast('Le panneau est interdit dans cette partie');try{rsend('privq',{u:S.me.id},S.sess);toast('Demande envoyée à l’hôte');setTimeout(()=>{$r(bd,'#vR').value='S.sess (jeu en cours)';$r(bd,'#vQ').value='pall';run('')},1800)}catch(e){toast(errMsg(e))}};
+    $r(bd,'#jPv').parentNode.appendChild(bq);
     $r(bd,'#jWho').onchange=()=>$r(bd,'#jSt').click();
   },
   net(bd){
@@ -235,34 +244,68 @@ const VIEWS={
   },
   adm(bd){
     const TPL=['{u} a quitté le groupe','{u} a été retiré du groupe','{u} a été banni','{u} a rejoint le groupe','Erreur : action impossible pour le moment','Maintenance en cours : certaines fonctions sont temporairement indisponibles'];
-    bd.innerHTML=`<h4>Message système dans la discussion ouverte</h4>
+    bd.innerHTML=`<div class="m">Le panneau sert au divertissement et à l’animation, jamais à nuire. Chaque action est consignée.</div>
+      <h4>Message système (discussion ouverte)</h4>
       <div class="r"><select id="aT">${TPL.map(t=>`<option>${esc2(t)}</option>`).join('')}</select></div>
-      <div class="r"><input id="aU" placeholder="nom d’utilisateur ({u})"><button id="aSend">Publier pour tout le monde</button></div>
-      <h4>Discussion ouverte</h4>
-      <div class="r"><input id="mU" placeholder="nom d’utilisateur"><button id="mAdd">Ajouter</button><button id="mAdm">Promouvoir</button><button id="mMem">Rétrograder</button><button id="mKick">Exclure de l’appel</button></div>
-      <h4>Écrire à un compte (motif justifié, consigné)</h4>
-      <div class="r"><input id="dU" placeholder="nom d’utilisateur"><input id="dR" placeholder="motif (10 caractères minimum)"><button id="dGo">Ouvrir</button></div>
-      <h4>Jetons</h4><div class="r"><input id="kU" placeholder="nom"><input id="kN" type="number" placeholder="montant (+/-)" style="max-width:110px"><input id="kR" placeholder="raison"><button id="kGo">Appliquer</button></div>
+      <div class="r"><input id="aU" placeholder="nom d’utilisateur ({u})"><button id="aSend">Publier</button><input id="aFree" placeholder="ou texte libre"><button id="aFreeGo">Publier</button></div>
+      <h4>Discussion ouverte : membres</h4>
+      <div class="r"><input id="mU" placeholder="nom d’utilisateur"></div>
+      <div class="r"><button id="mAdd">Ajouter</button><button id="mRem">Retirer du groupe</button><button id="mAdm">Promouvoir</button><button id="mMem">Rétrograder</button></div>
+      <div class="r"><button id="mBan">Bannir</button><button id="mUnb">Lever le ban</button><button id="mRt">Donner les commandes des bots</button><button id="mRt0">Retirer ce droit</button><button id="mKick">Exclure de l’appel</button></div>
+      <h4>Écrire à la place de quelqu’un (motif obligatoire, message étiqueté)</h4>
+      <div class="r"><input id="sU" placeholder="nom d’utilisateur"></div><div class="r"><input id="sT" placeholder="message"></div><div class="r"><input id="sR" placeholder="motif justifié (10 caractères minimum)"><button id="sGo">Envoyer</button></div>
+      <h4>Écrire à un compte (nouvelle discussion, motif consigné)</h4>
+      <div class="r"><input id="dU" placeholder="nom d’utilisateur"><input id="dR" placeholder="motif"><button id="dGo">Ouvrir</button></div>
       <h4>Commande de bot dans la discussion ouverte</h4><div class="r"><input id="cC" placeholder="!kick utilisateur"><button id="cGo">Envoyer</button></div>
-      <h4>Invisibilité</h4><div class="r"><button id="vN" class="${st.vanish?'on':''}">${st.vanish?'Invisible : activé':'Mode invisible'}</button></div><div class="m">Vous n’apparaissez plus dans les listes et les appels ; dans un appel vous pouvez parler mais rien ne le montre ; dans un jeu vous ne pouvez pas jouer.</div>
-      <h4>Compte bidon / classe / biome</h4><div class="r"><input id="qU" placeholder="nom d’utilisateur"><button id="qGo">Évaluer</button></div><div id="qO" class="mono" style="display:none"></div>
-      <div class="r"><label class="m"><input type="checkbox" id="oD"> Point orange sur les messages des comptes bidon (affichage local)</label></div>`;
+      <h4>Jetons, badges, objets</h4>
+      <div class="r"><input id="kU" placeholder="nom"><input id="kN" type="number" placeholder="montant (+/-)" style="max-width:110px"><input id="kR" placeholder="raison"><button id="kGo">Jetons</button></div>
+      <div class="r"><input id="bC" placeholder="code du badge ou de l’objet"><button id="bG">Donner badge</button><button id="bR">Retirer badge</button><button id="iG">Donner objet</button><button id="iR">Retirer objet</button></div>
+      <div class="r"><button id="wV">Voir le portefeuille</button></div>
+      <h4>Sanctions du site</h4>
+      <div class="r"><input id="xU" placeholder="nom d’utilisateur"><input id="xS" type="number" placeholder="secondes (0 = définitif)" style="max-width:120px"><input id="xR" placeholder="motif"></div>
+      <div class="r"><button id="xB">Bannir</button><button id="xW">Avertir</button><button id="xI">Qui est-ce ?</button><button id="xL">Liste des bannis</button></div>
+      <h4>Invisibilité</h4><div class="r"><button id="vG" class="${st.vanish?'on':''}">${st.vanish?'Invisible partout : activé':'Invisible partout'}</button><button id="vC">Invisible dans cette discussion</button><button id="vC0">Visible dans cette discussion</button></div>
+      <div class="m">Invisible : vous disparaissez des listes de membres et des appels pour les autres ; dans un appel vous pouvez parler, et dans un jeu vous ne pouvez pas jouer.</div>
+      <h4>Compte bidon / classe / biome</h4><div class="r"><input id="qU" placeholder="nom d’utilisateur"><button id="qGo">Évaluer</button></div>
+      <div class="r"><label class="m"><input type="checkbox" id="oD"> Point orange sur les messages des comptes bidon (affichage local)</label></div>
+      <div id="qO" class="mono" style="display:none"></div>`;
     const c=()=>{const x=cur();if(!x)throw new Error('Ouvrez une discussion');return x};
+    const val=i=>$r(bd,i).value.trim();
     const go=(id,fn)=>{$r(bd,id).onclick=async()=>{try{await fn();}catch(e){toast(errMsg(e))}}};
-    go('#aSend',async()=>{let t=$r(bd,'#aT').value;const u=$r(bd,'#aU').value.trim().replace(/^@/,'');if(t.includes('{u}')){if(!u)throw new Error('Indiquez un nom');t=t.replace('{u}','@'+u)}await rpcd('panel_sysmsg',{p_conv:c().id,p_text:t});toast('Message publié')});
-    go('#mAdd',async()=>{await rpcd('panel_add',{p_conv:c().id,p_username:$r(bd,'#mU').value});toast('Ajouté');loadConvs().then(()=>renderList())});
-    go('#mAdm',async()=>{await rpcd('panel_rank',{p_conv:c().id,p_username:$r(bd,'#mU').value,p_admin:true});toast('Promu');loadConvs()});
-    go('#mMem',async()=>{await rpcd('panel_rank',{p_conv:c().id,p_username:$r(bd,'#mU').value,p_admin:false});toast('Rétrogradé');loadConvs()});
-    go('#mKick',async()=>{const t=$r(bd,'#mU').value.trim().replace(/^@/,'').toLowerCase();if(!t)throw new Error('Indiquez un nom');const cv=c();
+    const out=t=>{const o=$r(bd,'#qO');o.style.display='';o.textContent=typeof t==='string'?t:JSON.stringify(t,null,1)};
+    const reload=async()=>{try{const x=cur();if(x){await loadMsgs(x);renderMsgs(true)}}catch(e){}};
+    go('#aSend',async()=>{let t=$r(bd,'#aT').value;const u=val('#aU').replace(/^@/,'');if(t.includes('{u}')){if(!u)throw new Error('Indiquez un nom');t=t.replace('{u}','@'+u)}await rpcd('panel_sysmsg',{p_conv:c().id,p_text:t});toast('Message publié');reload()});
+    go('#aFreeGo',async()=>{const t=val('#aFree');if(!t)return;await rpcd('panel_sysmsg',{p_conv:c().id,p_text:t});$r(bd,'#aFree').value='';toast('Message publié');reload()});
+    go('#mAdd',async()=>{await rpcd('panel_add',{p_conv:c().id,p_username:val('#mU')});toast('Ajouté');await loadConvs();renderList();reload()});
+    go('#mRem',async()=>{await rpcd('panel_remove',{p_conv:c().id,p_username:val('#mU')});toast('Retiré du groupe');await loadConvs();renderList();reload()});
+    go('#mAdm',async()=>{await rpcd('panel_rank',{p_conv:c().id,p_username:val('#mU'),p_admin:true});toast('Promu');loadConvs()});
+    go('#mMem',async()=>{await rpcd('panel_rank',{p_conv:c().id,p_username:val('#mU'),p_admin:false});toast('Rétrogradé');loadConvs()});
+    go('#mBan',async()=>{await rpcd('panel_cban',{p_conv:c().id,p_username:val('#mU'),p_secs:0});toast('Banni du groupe');await loadConvs();renderList();reload()});
+    go('#mUnb',async()=>{await rpcd('panel_cunban',{p_conv:c().id,p_username:val('#mU')});toast('Ban levé')});
+    go('#mRt',async()=>{await rpcd('panel_right',{p_conv:c().id,p_username:val('#mU'),p_on:true});toast('Droit accordé : la personne peut utiliser les commandes des bots ici')});
+    go('#mRt0',async()=>{await rpcd('panel_right',{p_conv:c().id,p_username:val('#mU'),p_on:false});toast('Droit retiré')});
+    go('#mKick',async()=>{const t=val('#mU').replace(/^@/,'').toLowerCase();if(!t)throw new Error('Indiquez un nom');const cv=c();
       const lv=await rpcd('live_list',{p_conv:cv.id});const l=lv.find(x=>x.kind==='call')||lv[0];if(!l)throw new Error('Aucun appel en cours dans ce groupe');
       const ch=sb.channel('room-'+l.session,{config:{broadcast:{self:false}}});
       await new Promise((res,rej)=>{const to=setTimeout(()=>rej(new Error('Connexion à l’appel impossible')),6000);ch.subscribe(s=>{if(s==='SUBSCRIBED'){clearTimeout(to);res()}})});
       await bcast(ch,'bot',cv,{b:'panel',k:'$kick',d:{u:t},f:S.profile.username});setTimeout(()=>{try{sb.removeChannel(ch)}catch(e){}},1500);toast('Exclusion envoyée')});
-    go('#dGo',async()=>{const id=await rpcd('panel_dm',{p_username:$r(bd,'#dU').value,p_reason:$r(bd,'#dR').value});await loadConvs();renderList();openConv(id)});
-    go('#kGo',async()=>{await rpcd('admin_tokens',{p_username:$r(bd,'#kU').value,p_amount:+$r(bd,'#kN').value,p_reason:$r(bd,'#kR').value||'panneau'});toast('Jetons modifiés')});
-    go('#cGo',async()=>{const t=$r(bd,'#cC').value.trim();if(!t)return;await sendPayload(c(),{k:'text',t});$r(bd,'#cC').value=''});
-    go('#vN',async()=>{const on=!st.vanish;await rpcd('panel_vanish',{p_on:on});st.vanish=on;vanRefresh();show('adm')});
-    go('#qGo',async()=>{const r=await rpcd('acct_class',{p_username:$r(bd,'#qU').value});const o=$r(bd,'#qO');o.style.display='';o.textContent=r.class.toUpperCase()+'  (bidon '+r.bad+' · classe '+r.good+')\n'+(r.details||[]).join('\n')});
+    go('#sGo',async()=>{await rpcd('speak_as',{p_conv:c().id,p_username:val('#sU'),p_text:val('#sT'),p_reason:val('#sR')});$r(bd,'#sT').value='';toast('Message envoyé');reload()});
+    go('#dGo',async()=>{const id=await rpcd('panel_dm',{p_username:val('#dU'),p_reason:val('#dR')});await loadConvs();renderList();openConv(id)});
+    go('#cGo',async()=>{const t=val('#cC');if(!t)return;await sendPayload(c(),{k:'text',t});$r(bd,'#cC').value=''});
+    go('#kGo',async()=>{await rpcd('admin_tokens',{p_username:val('#kU'),p_amount:+$r(bd,'#kN').value,p_reason:val('#kR')||'panneau'});toast('Jetons modifiés')});
+    go('#bG',async()=>{await rpcd('admin_badge',{p_username:val('#kU'),p_code:val('#bC'),p_give:true});toast('Badge donné')});
+    go('#bR',async()=>{await rpcd('admin_badge',{p_username:val('#kU'),p_code:val('#bC'),p_give:false});toast('Badge retiré')});
+    go('#iG',async()=>{await rpcd('admin_item',{p_username:val('#kU'),p_code:val('#bC'),p_give:true});toast('Objet donné')});
+    go('#iR',async()=>{await rpcd('admin_item',{p_username:val('#kU'),p_code:val('#bC'),p_give:false});toast('Objet retiré')});
+    go('#wV',async()=>out(await rpcd('admin_wallet',{p_username:val('#kU')})));
+    go('#xB',async()=>{await rpcd('staff_ban_user_ips',{p_username:val('#xU'),p_secs:+$r(bd,'#xS').value||0,p_reason:val('#xR')||'panneau'});toast('Sanction appliquée')});
+    go('#xW',async()=>{await rpcd('staff_warn',{p_username:val('#xU'),p_reason:val('#xR')||'avertissement'});toast('Avertissement envoyé')});
+    go('#xI',async()=>out(await rpcd('staff_who',{p_username:val('#xU')})));
+    go('#xL',async()=>out(await rpcd('staff_ban_list')));
+    go('#vG',async()=>{const on=!st.vanish;await rpcd('panel_vanish',{p_on:on});st.vanish=on;show('adm')});
+    go('#vC',async()=>{await rpcd('panel_vanish',{p_on:true,p_conv:c().id});toast('Invisible dans cette discussion')});
+    go('#vC0',async()=>{await rpcd('panel_vanish',{p_on:false,p_conv:c().id});toast('Visible dans cette discussion')});
+    go('#qGo',async()=>{const r=await rpcd('acct_class',{p_username:val('#qU')});out(r.class.toUpperCase()+'  (bidon '+r.bad+' · classe '+r.good+')\n'+(r.details||[]).join('\n'))});
     const od=$r(bd,'#oD');od.checked=rules.some(r=>r.w==='bidon'&&r.a==='dot'&&r.v==='#f97316');
     od.onchange=()=>{rules=rules.filter(r=>!(r.w==='bidon'&&r.a==='dot'&&r.v==='#f97316'));if(od.checked)rules.push({w:'bidon',a:'dot',v:'#f97316'});LSset('cm_pnl_rules',rules);clsCache={};rulesSoon()};
   },
@@ -275,7 +318,7 @@ const VIEWS={
     bd.innerHTML=`<h4>Code de flèches et NIP</h4><div class="m">Le code (U haut, D bas, L gauche, R droite, 4 à 24) et le NIP (8 lettres) sont gardés par le serveur. Laissez le NIP vide pour le conserver.</div>
       <div class="r"><input id="cS" placeholder="Code"><input id="cP" placeholder="NIP (8 lettres)" maxlength="8"><button id="cSet">Enregistrer</button></div>
       <h4>Accès au panneau</h4><div class="r"><input id="cU" placeholder="nom d’utilisateur"><button id="cG">Donner</button><button id="cR">Retirer</button><button id="cX">Débloquer</button></div>
-      <div class="r"><button id="cA">Retirer à tout le monde (sauf administrateurs)</button><button id="cL">Liste</button></div><div id="cO" class="mono" style="display:none"></div>`;
+      <div class="r"><button id="cA">Retirer à tout le monde (sauf administrateurs)</button><button id="cL">Liste</button><button id="cV">Qui utilise le panneau maintenant</button></div><div id="cO" class="mono" style="display:none"></div>`;
     rpcd('panel_cfg_info').then(i=>{$r(bd,'#cS').value=i.seq;$r(bd,'#cP').placeholder=i.pin?'NIP défini (vide = inchangé)':'NIP (8 lettres)'}).catch(()=>{});
     const go=(id,fn)=>{$r(bd,id).onclick=async()=>{try{await fn()}catch(e){toast(errMsg(e))}}};
     go('#cSet',async()=>{await rpcd('panel_cfg_set',{p_seq:$r(bd,'#cS').value.trim().toUpperCase(),p_pin:$r(bd,'#cP').value.trim()||null});$r(bd,'#cP').value='';toast('Enregistré');refresh()});
@@ -283,26 +326,40 @@ const VIEWS={
     go('#cR',async()=>{await rpcd('panel_admin',{p_username:$r(bd,'#cU').value,p_action:'revoke'});toast('Accès retiré')});
     go('#cX',async()=>{await rpcd('panel_admin',{p_username:$r(bd,'#cU').value,p_action:'reset'});toast('Blocage levé')});
     go('#cA',async()=>{if(!confirm('Retirer l’accès à tous les non-administrateurs ?'))return;await rpcd('panel_admin',{p_username:null,p_action:'revoke_all'});toast('Accès retiré')});
+    go('#cV',async()=>{const l=await rpcd('panel_active');const o=$r(bd,'#cO');o.style.display='';o.textContent=l.length?l.map(x=>`@${x.username} · rang ${x.rank} · il y a ${x.secs} s`).join('\n'):'Personne n’utilise le panneau en ce moment.'});
     go('#cL',async()=>{const l=await rpcd('panel_users_list');const o=$r(bd,'#cO');o.style.display='';o.textContent=l.map(x=>`@${x.username} · ${x.banned?'BLOQUÉ':x.revoked?'retiré':x.unlocked?'actif':'-'} · échecs ${x.fails} · rang ${x.rank}`).join('\n')||'Personne.'});
   }
 };
 
 /* ---------- 8) invisibilité : masque les comptes invisibles dans les listes et les appels ---------- */
+function vanApply(){
+  const c=(typeof cur==='function'&&cur())||null,ss=S.sess;
+  const here=new Set([...vanList].filter(v=>!v.conv||(c&&v.conv===c.id)||(ss&&v.conv===ss.conv)).map(v=>v.id));
+  const nm=new Set([...here].map(id=>(S.profiles.get(id)||{}).username).filter(Boolean));
+  document.querySelectorAll('[data-u]').forEach(el=>{if(here.has(el.dataset.u)&&(el.classList.contains('tile')||el.classList.contains('lb-p')||el.classList.contains('mem')||el.closest('#rmTiles')))el.style.display='none'});
+  document.querySelectorAll('.modal .row,.modal .mrow,.chips .chip,.members .row,#paneFriends .row,.lb-p').forEach(el=>{
+    const a=el.querySelector('[data-un]');if(a&&nm.has(a.dataset.un)&&!el.querySelector('input,textarea'))el.style.display='none'});
+  try{if(S.online)nm.forEach(n=>{if(S.profile&&n!==S.profile.username)S.online.delete(n)})}catch(e){}
+}
+let vanList=[];
 async function vanRefresh(){
-  try{const ids=await rpcd('panel_vanished');vanished=new Set(ids)}catch(e){return}
-  let t=document.getElementById('pnlVan');if(!t){t=document.createElement('style');t.id='pnlVan';document.head.appendChild(t)}
-  const names=[...vanished].map(id=>(S.profiles.get(id)||{}).username).filter(n=>n&&/^[a-z0-9_]{3,20}$/.test(n));
-  t.textContent=names.map(n=>`.tile[data-un="${n}"],#room [data-un="${n}"],.mem[data-un="${n}"]`).join(',')+(names.length?'{display:none!important}':'');
-  try{if(S.online&&S.profile)names.forEach(n=>{if(n!==S.profile.username)S.online.delete(n)})}catch(e){}
+  try{vanList=await rpcd('panel_vanished')}catch(e){return}
+  vanApply();
 }
 
+function panelGate(){if(!host)return;if(blocked()){if(host.style.display!=='none'){host.dataset.gate='1';host.style.display='none'}}else if(host.dataset.gate){delete host.dataset.gate;host.style.display=''}}
+function viaMark(){
+  const mark=()=>{const c=(typeof cur==='function'&&cur())||null;if(!c||!S.msgs)return;const arr=S.msgs[c.id]||[];
+    document.querySelectorAll('#msgs [data-mid]').forEach(r=>{if(r.dataset.via!=null)return;const m=arr.find(x=>String(x.id)===r.dataset.mid);if(m&&m.via)r.dataset.via=m.via==='A'?'panel-A':'volontaire-V'});};
+  setInterval(mark,1500);
+}
 /* ---------- 9) démarrage ---------- */
 function boot(){
   installSpy();
   document.addEventListener('keydown',onKey,true);
   document.addEventListener('contextmenu',e=>{if(window.__pnlRc)e.stopImmediatePropagation()},true);
   hookSettings();
-  let tries=0;const iv=setInterval(async()=>{if(!ready()||busy)return;busy=true;const ok=await refresh();busy=false;if(!ok&&++tries<40)return;clearInterval(iv);layLoad();vanRefresh();setInterval(()=>{vanRefresh();layLoad()},60000);
+  let tries=0;const iv=setInterval(async()=>{if(!ready()||busy)return;busy=true;const ok=await refresh();busy=false;if(!ok&&++tries<40)return;clearInterval(iv);layLoad();vanRefresh();setInterval(()=>{vanRefresh();layLoad()},60000);setInterval(()=>{vanApply();panelGate()},1200);setInterval(()=>{if(st.unlocked&&host&&host.style.display!=='none')sb.rpc('panel_ping')},45000);viaMark();
     if(st.unlocked&&LS('cm_pnl_open',false))openPanel();
     const msgs=document.getElementById('msgs');if(msgs)new MutationObserver(rulesSoon).observe(msgs,{childList:true,subtree:true});},1500);
   window.addEventListener('pnlstate',()=>{});

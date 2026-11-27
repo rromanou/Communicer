@@ -1288,3 +1288,10 @@ html[data-mode=dark] img,html[data-mode=dark] video,html[data-mode=dark] canvas,
 /* la bannière d'alerte pousse l'application vers le bas au lieu de la recouvrir */
 #app{margin-top:var(--lah,0px);height:calc(100% - var(--lah,0px))}
 #logAlert{font-size:14px;line-height:1.3;padding:8px 12px}
+
+.lnk{color:var(--accent,#2f6df6);text-decoration:underline;word-break:break-all}
+.lcard{margin-top:6px;border:1px solid var(--line,#d9deea);border-radius:10px;padding:6px 10px;background:rgba(127,127,127,.08);max-width:320px}
+.lcard a{display:flex;flex-direction:column;text-decoration:none;color:inherit}
+.lcard a b{font-size:13px}.lcard a span{font-size:11.5px;opacity:.7;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.lcard button{margin-top:6px}.lemb{display:block;margin-top:6px;width:100%;max-width:320px;border:0;border-radius:8px}iframe.lemb{aspect-ratio:16/9}
+.ntItem{touch-action:pan-y;user-select:none}

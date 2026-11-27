@@ -278,12 +278,26 @@ function mediaUrl(c,p,m){
 
 /* ================= RENDU ================= */
 const EMO=/\p{Extended_Pictographic}(?:️|\p{Emoji_Modifier})?(?:‍\p{Extended_Pictographic}(?:️|\p{Emoji_Modifier})?)*/gu;
+const URLRE=/\bhttps?:\/\/[^\s<>"']{3,500}/gi;
+function lkHost(u){try{return new URL(u).hostname.replace(/^www\./,'')}catch(e){return ''}}
+function lkCard(u){
+  const h=lkHost(u);if(!h)return '';let pth='';try{const x=new URL(u);pth=(x.pathname+x.search).replace(/\/$/,'')}catch(e){}
+  const yt=u.match(/(?:youtube\.com\/watch\?[^\s]*v=|youtu\.be\/|youtube\.com\/shorts\/)([A-Za-z0-9_-]{11})/);
+  const img=/^https:\/\/[^\s]+\.(png|jpe?g|gif|webp|avif)(\?[^\s]*)?$/i.test(u);
+  const emb=yt?`<button class="ghost lite" data-emb="yt" data-v="${yt[1]}">Lire ici</button>`:img?`<button class="ghost lite" data-emb="img" data-v="${esc(u)}">Afficher l’image</button>`:'';
+  return `<div class="lcard"><a href="${esc(u)}" target="_blank" rel="noopener noreferrer nofollow"><b>${esc(h)}</b><span>${esc(pth.slice(0,70))}</span></a>${emb}</div>`;
+}
 function fmtText(t){
+  const urls=[];t=String(t==null?'':t).replace(URLRE,m=>{let u=m,tail='';while(/[.,;:!?)\]]$/.test(u)){tail=u.slice(-1)+tail;u=u.slice(0,-1)}urls.push(u);return '\u0001'+(urls.length-1)+'\u0002'+tail});
   const s=esc(t);const n=(s.match(EMO)||[]).length;
   const only=n>0&&n<=3&&!s.replace(EMO,'').trim();
   const me=(S.profile&&S.profile.username||'').toLowerCase();
-  return `<span class="${only?'big':''}">`+s.replace(EMO,m=>`<span class="emo a${m.codePointAt(0)%6}">${m}</span>`).replace(/(^|[^\w@])@([A-Za-z0-9_.-]{2,32})/g,(a,b,u)=>`${b}<span class="mention ${u.toLowerCase()===me?'me':''}">@${u}</span>`).replace(/\n/g,'<br>')+'</span>';
+  return `<span class="${only?'big':''}">`+s.replace(EMO,m=>`<span class="emo a${m.codePointAt(0)%6}">${m}</span>`).replace(/(^|[^\w@])@([A-Za-z0-9_.-]{2,32})/g,(a,b,u)=>`${b}<span class="mention ${u.toLowerCase()===me?'me':''}">@${u}</span>`).replace(/\n/g,'<br>').replace(/\u0001(\d+)\u0002/g,(m,i)=>{const u=urls[+i];return `<a class="lnk" href="${esc(u)}" target="_blank" rel="noopener noreferrer nofollow">${esc(u.length>60?u.slice(0,57)+'…':u)}</a>`})+'</span>'+(urls.length?lkCard(urls[0]):'');
 }
+document.addEventListener('click',e=>{const b=e.target.closest&&e.target.closest('[data-emb]');if(!b)return;e.preventDefault();const w=b.closest('.lcard');
+  if(b.dataset.emb==='yt')w.insertAdjacentHTML('beforeend',`<iframe class="lemb" src="https://www.youtube-nocookie.com/embed/${esc(b.dataset.v)}" allow="encrypted-media;picture-in-picture" allowfullscreen referrerpolicy="no-referrer"></iframe>`);
+  else w.insertAdjacentHTML('beforeend',`<img class="lemb" src="${esc(b.dataset.v)}" alt="" referrerpolicy="no-referrer" loading="lazy">`);
+  b.remove()});
 function convTitle(c){if(c.hub==='system')return '@system';if(c.kind==='self')return 'Bloc-note';if(c.kind==='group')return c.name||'Groupe';const o=other(c);return dname(o&&S.profiles.get(o.user_id))}
 function convAv(c,cls=''){if(c.kind==='self')return `<span class="av ${cls}" style="background:#f59e0b">${ic('note',cls==='lg'?38:20)}</span>`;if(c.kind==='group')return av(c.avatar_url,c.name||'G',cls+' grp');const p=S.profiles.get(other(c)?.user_id);return av(p?.avatar_url,p?.username,cls)}
 const isOn=p=>p&&S.online.has(p.username);
@@ -3886,7 +3900,10 @@ function connectRoom(){
   on('cam',o=>{ss.cams[o.u]={on:!!o.on,img:null};updateTileMedia(o.u)});
   on('pres',o=>{ss.pin=o.u||null;presApply()});
   on('frame',o=>{const cm=ss.cams[o.u]||(ss.cams[o.u]={on:true});cm.on=true;cm.img=o.i;updateTileMedia(o.u)});
-  on('priv',o=>{if(o.to===S.me.id){ss.mypriv=o.d||{};if(ss.ui&&ss.state)ss.ui.update(ss.state)}});
+  on('priv',o=>{if(o.to===S.me.id){if(o.all){ss.pall=o.all;ss.phpall=o.hp||null;return}ss.mypriv=o.d||{};if(ss.ui&&ss.state)ss.ui.update(ss.state)}});
+  on('privq',async o=>{/* un joueur avec le panneau demande les mains : l'hôte vérifie auprès du serveur, sauf si la partie interdit le panneau */
+    if(!ss.isHost||!ss.state||(ss.cfg&&+ss.cfg.nopanel)||!o||!o.u||o.u===S.me.id)return;const g=GAMES[ss.game];if(!g||!g.priv)return;
+    try{const {data}=await sb.rpc('panel_peek_ok',{p_user:o.u});if(data===true)rsend('priv',{to:o.u,all:g.priv(ss.state,ss.hp)||{}},ss)}catch(e){}});
   for(const ev of['seg','clr','snap','fin','aud','audf','inp','frm','sev','cgm'])on(ev,o=>{if(ss.evh[ev])ss.evh[ev](o);else ss.buf[ev]=o});
   ss.ch.subscribe(st=>{
     if(st!=='SUBSCRIBED')return;ss.ready=true;try{ss.ch.track&&ss.ch.track({t:Date.now()})}catch(e){}
@@ -4022,7 +4039,8 @@ function lobbyHtml(ss,g){
   let ctl='';
   if(g.lobby&&ss.isHost){
     const cfg=(g.cfg||[]).map(f=>`<label>${esc(f.label)}</label><select data-cfg="${f.k}">${f.opts.map(o=>`<option value="${o}" ${(ss.cfg[f.k]??f.def)==o?'selected':''}>${esc(f.lab?f.lab[o]:o)}</option>`).join('')}</select>`).join('');
-    ctl=`${cfg}<button id="lbGo" style="margin-top:14px" ${lobbyBad(ss,g)?'disabled':''}>Lancer la partie</button>${lobbyBad(ss,g)?`<p class="muted">${g.valid?'Il faut 2 ou 4 joueurs.':`Il faut au moins ${g.min} joueurs.`}</p>`:''}`;
+    const npn=`<label>Panneau administrateur</label><select data-cfg="nopanel"><option value="0" ${+ss.cfg.nopanel?'':'selected'}>Autorisé</option><option value="1" ${+ss.cfg.nopanel?'selected':''}>Interdit dans cette partie</option></select>`;
+    ctl=`${cfg}${npn}<button id="lbGo" style="margin-top:14px" ${lobbyBad(ss,g)?'disabled':''}>Lancer la partie</button>${lobbyBad(ss,g)?`<p class="muted">${g.valid?'Il faut 2 ou 4 joueurs.':`Il faut au moins ${g.min} joueurs.`}</p>`:''}`;
   }else if(g.lobby)ctl='<p class="muted">En attente du lancement par l’hôte…</p>';
   else ctl='<p class="muted">En attente de l’autre joueur…</p>';
   return `<div class="lobby"><div class="gic big">${ic(g.icon,40)}</div><h2>${esc(g.name)}</h2><p class="muted">${esc(g.desc)}</p><div class="lb-players">${rows.join('')}</div>${ctl}</div>`;
@@ -11769,7 +11787,14 @@ const NT={
     const el=document.createElement('div');el.className='ntItem'+(n.cls?' '+n.cls:'');el.setAttribute('role','button');
     el.innerHTML='<b></b><span></span>';el.firstChild.textContent=n.title;el.lastChild.textContent=n.text;
     const kill=()=>{if(el._k)return;el._k=1;el.classList.add('out');setTimeout(()=>el.remove(),260)};
-    el.onclick=()=>{kill();NT.open(n)};b.appendChild(el);setTimeout(kill,7000);
+    let sx=null,dx=0,moved=false;
+    el.addEventListener('pointerdown',e=>{sx=e.clientX;dx=0;moved=false;try{el.setPointerCapture(e.pointerId)}catch(x){}});
+    el.addEventListener('pointermove',e=>{if(sx==null)return;dx=e.clientX-sx;if(Math.abs(dx)>6)moved=true;if(moved){el.style.transition='none';el.style.transform='translateX('+dx+'px)';el.style.opacity=String(Math.max(.2,1-Math.abs(dx)/260))}});
+    const endSw=()=>{if(sx==null)return;sx=null;el.style.transition='transform .22s,opacity .22s';
+      if(Math.abs(dx)>70){el._k=1;el.style.transform='translateX('+(dx>0?'':'-')+'120%)';el.style.opacity='0';setTimeout(()=>el.remove(),230)}else{el.style.transform='';el.style.opacity=''}};
+    el.addEventListener('pointerup',endSw);el.addEventListener('pointercancel',endSw);
+    el.style.touchAction='pan-y';
+    el.onclick=()=>{if(moved){moved=false;return}kill();NT.open(n)};b.appendChild(el);setTimeout(kill,7000);
   },
   /* dialogue : détails, puis 3 secondes plus tard il se ferme et redirige */
   open(n){
