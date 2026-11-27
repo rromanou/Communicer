@@ -81,3 +81,5 @@ body::before{content:"";position:fixed;left:0;right:0;top:0;height:env(safe-area
 @media (max-width:430px){#chatBox .hd .balchip{display:none}}
 #app{margin-top:0;top:calc(env(safe-area-inset-top,0px) + var(--lah,0px));height:auto}
 #logAlert{top:env(safe-area-inset-top,0px)}
+/* zone de saisie un peu relevée pour ne pas coller aux touches de navigation */
+#chatBox .comp{padding-bottom:calc(10px + env(safe-area-inset-bottom,0px));margin-bottom:4px}
