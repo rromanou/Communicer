@@ -11858,7 +11858,8 @@ const NT={
   offer(){
     let n=0;try{n=(+localStorage.getItem('cm_opens')||0)+1;localStorage.setItem('cm_opens',String(n))}catch(e){return}
     if(NT.enabled()||document.querySelector('.ntOffer'))return;
-    if(!(n===1||n%10===0))return;
+    const mob=!!(window.__PHONE||window.CMApp);   // ordinateur : une seule fois ; téléphone : à la 1re ouverture puis toutes les 10
+    if(mob?!(n===1||n%10===0):n!==1)return;
     setTimeout(()=>{if(NT.enabled()||document.querySelector('.modal-back'))return;
       const m=modal(`<h3>Restez au courant</h3><p>Les notifications vous avertissent des nouveaux messages, des demandes d’ami, des invitations et des jetons reçus, même quand l’application est fermée. Rien de ce qui est écrit n’y apparaît quand la discussion est chiffrée de bout en bout.</p><ul style="margin:6px 0 10px 18px"><li>Répondez plus vite à vos amis</li><li>Ne ratez plus une invitation ou une partie</li><li>Réglable à tout moment dans les paramètres</li></ul><div class="row end"><button class="ghost" id="nfNo">NON MERCI!</button><button id="nfYes">OUI!!!1!</button></div>`);
       m.classList.add('ntOffer');m.querySelector('#nfNo').onclick=()=>m.close();m.querySelector('#nfYes').onclick=async()=>{await NT.accept();m.close();toast('Notifications activées')};
