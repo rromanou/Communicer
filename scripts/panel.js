@@ -173,7 +173,7 @@ function openPanel(){
   LSset('cm_pnl_open',true);
   host=document.createElement('div');host.id='pnlHost';document.body.appendChild(host);
   root=host.attachShadow({mode:'closed'});
-  const tabs=[['loc','Joueur'],['jeu','Jeux'],['net','Réseau']];
+  const tabs=[['loc','Joueur'],['out','Outils'],['jeu','Jeux'],['net','Réseau']];
   if(st.rank>=2)tabs.push(['adm','Admin'],['srv','Serveur']);
   if(st.rank>=4)tabs.push(['cmd','Commandant']);
   root.innerHTML=`<style>${CSS}</style><div class="w" id="w"><div class="hd" id="hd"><b>PANNEAU</b><button id="bm" title="Réduire">_</button><button id="bx" title="Fermer">x</button></div><div class="tb" id="tb">${tabs.map(t=>`<button data-t="${t[0]}">${t[1]}</button>`).join('')}</div><div class="bd" id="bd"></div></div>`;
@@ -220,6 +220,54 @@ const VIEWS={
       if(/^(bidon|classe|biome)$/.test(w)&&st.rank<2)return toast('Réservé aux administrateurs');
       rules.push({w,a:$r(bd,'#rA').value,v:$r(bd,'#rV').value.trim().slice(0,30)});LSset('cm_pnl_rules',rules);list();clsCache={};rulesSoon()};
   },
+  out(bd){
+    const css=(id,t)=>{let x=document.getElementById(id);if(!t){if(x)x.remove();return}if(!x){x=document.createElement('style');x.id=id;document.head.appendChild(x)}x.textContent=t};
+    const tg=(k,on,off)=>{const b=document.createElement('button');b.textContent=k[0];let st2=!!window['__pt_'+k[1]];b.className=st2?'on':'';b.onclick=()=>{st2=!st2;window['__pt_'+k[1]]=st2;b.classList.toggle('on',st2);try{st2?on():off()}catch(e){toast(errMsg(e))}};return b};
+    const add=(title,items)=>{const h=document.createElement('h4');h.textContent=title;bd.appendChild(h);const r=document.createElement('div');r.className='r';items.forEach(i=>r.appendChild(i));bd.appendChild(r);return r};
+    const act=(label,fn)=>{const b=document.createElement('button');b.textContent=label;b.onclick=()=>{try{fn()}catch(e){toast(errMsg(e))}};return b};
+    bd.innerHTML='<div class="m">Outils locaux : ils ne changent que votre écran et ne sont pas enregistrés.</div>';
+    add('Apparence',[
+      tg(['Sombre','dk'],()=>css('pnlDk','html{filter:invert(1) hue-rotate(180deg)}img,video,canvas,iframe{filter:invert(1) hue-rotate(180deg)}'),()=>css('pnlDk')),
+      tg(['Niveaux de gris','gr'],()=>css('pnlGr','html{filter:grayscale(1)}'),()=>css('pnlGr')),
+      tg(['Contraste élevé','hc'],()=>css('pnlHc','html{filter:contrast(1.4) saturate(1.3)}'),()=>css('pnlHc')),
+      tg(['Flou','bl'],()=>css('pnlBl','#msgs,#list{filter:blur(4px)}'),()=>css('pnlBl')),
+      tg(['Sans animations','na'],()=>css('pnlNa','*{animation:none!important;transition:none!important}'),()=>css('pnlNa')),
+      tg(['Animations lentes','sl'],()=>css('pnlSl','*{animation-duration:3s!important;transition-duration:1.2s!important}'),()=>css('pnlSl')),
+      tg(['Cacher les images','hi'],()=>css('pnlHi','img,video{visibility:hidden!important}'),()=>css('pnlHi')),
+      tg(['Contours des éléments','ol'],()=>css('pnlOl','*{outline:1px solid rgba(217,75,95,.45)!important}'),()=>css('pnlOl')),
+      tg(['Majuscules','up'],()=>css('pnlUp','#msgs{text-transform:uppercase}'),()=>css('pnlUp')),
+      tg(['Texte retourné','fl'],()=>css('pnlFl','#msgs{transform:scaleX(-1)}'),()=>css('pnlFl')),
+      tg(['Écran retourné','fv'],()=>css('pnlFv','body{transform:rotate(180deg)}'),()=>css('pnlFv'))]);
+    const z=document.createElement('input');z.type='range';z.min=50;z.max=200;z.value=100;z.oninput=()=>{document.documentElement.style.zoom=(z.value/100)};
+    const f=document.createElement('input');f.type='range';f.min=10;f.max=26;f.value=15;f.oninput=()=>css('pnlFs','body{font-size:'+f.value+'px!important}');
+    const h=document.createElement('input');h.type='range';h.min=0;h.max=360;h.value=0;h.oninput=()=>css('pnlHue','html{filter:hue-rotate('+h.value+'deg)}');
+    add('Curseurs : zoom, police, teinte',[z,f,h]);
+    const cs=document.createElement('textarea');cs.rows=3;cs.placeholder='CSS à appliquer sur la page (local)';cs.oninput=()=>{const t=cs.value.replace(/@import|url\s*\(\s*['"]?\s*(https?:)?\/\//gi,'');css('pnlCss',t)};
+    add('CSS libre',[cs]);
+    add('Discussion ouverte',[
+      tg(['Afficher les heures exactes','ts'],()=>{window.__pt_tsI=setInterval(()=>document.querySelectorAll('#msgs [data-mid]').forEach(r=>{if(r.querySelector('.pnl-ts'))return;const c=cur(),m=c&&(S.msgs[c.id]||[]).find(x=>String(x.id)===r.dataset.mid);if(!m)return;const t=document.createElement('small');t.className='pnl-ts';t.style.cssText='opacity:.6;margin:0 6px;font-size:10px';t.textContent=new Date(m.created_at).toLocaleString('fr-CA');r.appendChild(t)}),800)},()=>{clearInterval(window.__pt_tsI);document.querySelectorAll('.pnl-ts').forEach(x=>x.remove())}),
+      tg(['Cacher les messages système','sy'],()=>css('pnlSy','.sys{display:none!important}'),()=>css('pnlSy')),
+      tg(['Surligner les mentions','mn'],()=>css('pnlMn','.mention{background:#f59e0b!important;color:#000!important;padding:0 3px;border-radius:4px}'),()=>css('pnlMn')),
+      act('Copier la discussion (texte)',()=>{const c=cur();if(!c)throw new Error('Ouvrez une discussion');const t=(S.msgs[c.id]||[]).map(m=>{const p=S.profiles.get(m.sender_id);return '['+new Date(m.created_at).toLocaleString('fr-CA')+'] '+((p&&p.username)||'?')+' : '+(((m._d&&m._d.t)||m.body)||'['+m.kind+']')}).join('\n');navigator.clipboard.writeText(t).then(()=>toast('Copié'),()=>toast('Copie refusée'))}),
+      act('Exporter en fichier',()=>{const c=cur();if(!c)throw new Error('Ouvrez une discussion');const t=(S.msgs[c.id]||[]).map(m=>{const p=S.profiles.get(m.sender_id);return '['+new Date(m.created_at).toLocaleString('fr-CA')+'] '+((p&&p.username)||'?')+' : '+(((m._d&&m._d.t)||m.body)||'['+m.kind+']')}).join('\n');const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([t],{type:'text/plain'}));a.download='discussion.txt';a.click()}),
+      act('Défiler en bas',()=>{const b=document.getElementById('msgs');if(b)b.scrollTop=b.scrollHeight}),
+      act('Défiler en haut',()=>{const b=document.getElementById('msgs');if(b)b.scrollTop=0})]);
+    add('Test d’affichage',[
+      act('Fausse notification',()=>NT.push({title:'Test',text:'Notification de démonstration',detail:'Notification de démonstration'})),
+      act('Message à l’écran',()=>toast('Message de démonstration')),
+      act('Confettis',()=>{if(typeof confetti==='function')confetti(document.body)}),
+      act('Afficher la taille de l’écran',()=>toast(innerWidth+' x '+innerHeight+' · ratio '+devicePixelRatio)),
+      act('Fréquence d’images',()=>{let n=0,t0=performance.now();const f=()=>{n++;if(performance.now()-t0<1000)requestAnimationFrame(f);else toast(n+' images par seconde')};requestAnimationFrame(f)})]);
+    add('Page',[
+      tg(['Gomme (cliquer pour retirer)','gm'],()=>{window.__pt_gmH=e=>{if(e.target.closest('#pnlHost'))return;e.preventDefault();e.stopPropagation();e.target.remove()};document.addEventListener('click',window.__pt_gmH,true)},()=>document.removeEventListener('click',window.__pt_gmH,true)),
+      tg(['Afficher les sélecteurs','sel'],()=>{window.__pt_selH=e=>{if(e.target.closest('#pnlHost'))return;const n=e.target;toast((n.id?'#'+n.id:'')+(n.className&&typeof n.className==='string'?'.'+n.className.trim().split(/\s+/).join('.'):'')+' <'+n.tagName.toLowerCase()+'>')};document.addEventListener('mouseover',window.__pt_selH,true)},()=>document.removeEventListener('mouseover',window.__pt_selH,true)),
+      act('Recharger sans cache',()=>{try{caches.keys().then(k=>k.forEach(x=>caches.delete(x)))}catch(e){}location.reload()}),
+      act('Vider mon cache local',()=>{if(!confirm('Vider le cache de ce navigateur pour le site ?'))return;try{caches.keys().then(k=>k.forEach(x=>caches.delete(x)))}catch(e){}toast('Cache vidé')}),
+      act('Plein écran',()=>{document.documentElement.requestFullscreen&&document.documentElement.requestFullscreen()})]);
+    const keys=Object.keys(localStorage).filter(k=>!BAD.test(k));
+    add('Stockage local (sans les données sensibles)',[]);
+    const pre=document.createElement('div');pre.className='mono';pre.textContent=keys.map(k=>k+' = '+String(localStorage.getItem(k)).slice(0,60)).join('\n')||'Vide';bd.appendChild(pre);
+  },
   jeu(bd){
     const ss=S.sess;
     bd.innerHTML=`<h4>Jeu en cours</h4>${ss?`<div class="m">${esc2(ss.game)} · phase ${esc2(ss.phase)} · ${ss.players.length} joueur(s)</div>`:'<div class="m">Aucun jeu ou appel en cours.</div>'}
@@ -264,6 +312,11 @@ const VIEWS={
       <h4>Sanctions du site</h4>
       <div class="r"><input id="xU" placeholder="nom d’utilisateur"><input id="xS" type="number" placeholder="secondes (0 = définitif)" style="max-width:120px"><input id="xR" placeholder="motif"></div>
       <div class="r"><button id="xB">Bannir</button><button id="xW">Avertir</button><button id="xI">Qui est-ce ?</button><button id="xL">Liste des bannis</button></div>
+      <h4>Annonces et groupes</h4>
+      <div class="r"><input id="nT" placeholder="annonce pour tous (chefs)"><button id="nGo">Annoncer</button></div>
+      <div class="r"><input id="gQ" placeholder="chercher un groupe"><button id="gL">Lister</button></div>
+      <div class="r"><input id="gN" type="number" placeholder="n° du groupe" style="max-width:110px"><input id="gUk" placeholder="nom"><button id="gK">Retirer du groupe</button><button id="gC">Vider le groupe</button></div>
+      <div class="r"><input id="yU" placeholder="nom d’utilisateur"><button id="yI">IP</button><button id="yD">Appareils</button></div>
       <h4>Invisibilité</h4><div class="r"><button id="vG" class="${st.vanish?'on':''}">${st.vanish?'Invisible partout : activé':'Invisible partout'}</button><button id="vC">Invisible dans cette discussion</button><button id="vC0">Visible dans cette discussion</button></div>
       <div class="m">Invisible : vous disparaissez des listes de membres et des appels pour les autres ; dans un appel vous pouvez parler, et dans un jeu vous ne pouvez pas jouer.</div>
       <h4>Compte bidon / classe / biome</h4><div class="r"><input id="qU" placeholder="nom d’utilisateur"><button id="qGo">Évaluer</button></div>
@@ -302,6 +355,12 @@ const VIEWS={
     go('#xW',async()=>{await rpcd('staff_warn',{p_username:val('#xU'),p_reason:val('#xR')||'avertissement'});toast('Avertissement envoyé')});
     go('#xI',async()=>out(await rpcd('staff_who',{p_username:val('#xU')})));
     go('#xL',async()=>out(await rpcd('staff_ban_list')));
+    go('#nGo',async()=>{const t=val('#nT');if(!t)return;await rpcd('world_post',{p_users:null,p_body:t});toast('Annonce envoyée');$r(bd,'#nT').value=''});
+    go('#gL',async()=>out(await rpcd('staff_group_list',{p_q:val('#gQ')||null})));
+    go('#gK',async()=>{await rpcd('staff_group_kick',{p_num:+$r(bd,'#gN').value,p_username:val('#gUk')});toast('Retiré')});
+    go('#gC',async()=>{if(!confirm('Vider ce groupe ?'))return;await rpcd('staff_group_clear',{p_num:+$r(bd,'#gN').value});toast('Groupe vidé')});
+    go('#yI',async()=>out(await rpcd('staff_user_ips',{p_username:val('#yU')})));
+    go('#yD',async()=>out(await rpcd('staff_user_devices',{p_username:val('#yU')})));
     go('#vG',async()=>{const on=!st.vanish;await rpcd('panel_vanish',{p_on:on});st.vanish=on;show('adm')});
     go('#vC',async()=>{await rpcd('panel_vanish',{p_on:true,p_conv:c().id});toast('Invisible dans cette discussion')});
     go('#vC0',async()=>{await rpcd('panel_vanish',{p_on:false,p_conv:c().id});toast('Visible dans cette discussion')});

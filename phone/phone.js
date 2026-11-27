@@ -68,7 +68,9 @@ async function setAwake(on){
 }
 var lastBg='';
 setInterval(function(){setAwake(!!need());
-  try{if(APP&&APP.theme){var c=getComputedStyle(D.body).backgroundColor;if(c&&c!==lastBg){lastBg=c;var m=c.match(/\d+/g);if(m)APP.theme('#'+m.slice(0,3).map(function(x){return('0'+(+x).toString(16)).slice(-2)}).join(''))}}}catch(e){}
+  try{if(APP&&APP.theme){var c='',qs=['.room','#chatBox .hd','#side .hd','#side','#app','body','html'];
+    for(var i=0;i<qs.length&&!c;i++){var el=D.querySelector(qs[i]);if(!el)continue;var v=getComputedStyle(el).backgroundColor,mm=v&&v.match(/[\d.]+/g);if(mm&&(mm.length<4||+mm[3]>0.5))c=v}
+    if(c&&c!==lastBg){lastBg=c;var m=c.match(/\d+/g);if(m)APP.theme('#'+m.slice(0,3).map(function(x){return('0'+(+x).toString(16)).slice(-2)}).join(''))}}}catch(e){}
 },1500);
 D.addEventListener('visibilitychange',function(){if(!D.hidden&&awake){awake=null;setAwake(!!need())}});
 /* 6) plein écran vidéo (la barre système se masque côté application) */

@@ -64,7 +64,9 @@ import javax.crypto.spec.GCMParameterSpec;
  * caméra / micro / GPS / fichiers, Scommunicookie conservé dans l'application.
  */
 public class MainActivity extends Activity {
-    private static final int RQ_PERMS = 41, RQ_FILE = 42, RQ_WEB = 43, RQ_GEO = 44;
+    private static final int RQ_PERMS = 41, RQ_FILE = 42, RQ_WEB = 43, RQ_GEO = 44, RQ_NOTIF = 45;
+    static volatile boolean visible = false;   // l'application est au premier plan
+    private boolean darkBarIcons = false;      // icônes sombres des barres (fond clair)
     private static final String PREFS = "communicer", KEYSTORE = "AndroidKeyStore", KEY_ALIAS = "cm_sc_key";
 
     private FrameLayout root;
@@ -129,7 +131,7 @@ public class MainActivity extends Activity {
         applyPadding();
         buildSplash();
         setupWebView();
-        requestAllPermissions();
+        Notifs.ensureChannel(this);   // les permissions sont demandées au moment du besoin (caméra, micro, position, notifications)
 
         if (b != null) web.restoreState(b);
         else web.loadUrl(targetFor(getIntent()));
@@ -400,6 +402,26 @@ public class MainActivity extends Activity {
         } else {
             int f = View.SYSTEM_UI_FLAG_LAYOUT_STABLE | View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN | View.SYSTEM_UI_FLAG_LAYOUT_HIDE_NAVIGATION;
             if (on) f |= View.SYSTEM_UI_FLAG_HIDE_NAVIGATION | View.SYSTEM_UI_FLAG_FULLSCREEN | View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY;
+            if (darkBarIcons && Build.VERSION.SDK_INT >= 23) f |= View.SYSTEM_UI_FLAG_LIGHT_STATUS_BAR;
+            if (darkBarIcons && Build.VERSION.SDK_INT >= 26) f |= View.SYSTEM_UI_FLAG_LIGHT_NAVIGATION_BAR;
+            dv.setSystemUiVisibility(f);
+        }
+    }
+
+    /** Icônes des barres système : sombres sur fond clair, claires sur fond sombre (l'heure reste lisible). */
+    private void setBarIcons(boolean dark) {
+        darkBarIcons = dark;
+        if (Build.VERSION.SDK_INT >= 30) {
+            android.view.WindowInsetsController c = getWindow().getInsetsController();
+            if (c != null) {
+                int m = android.view.WindowInsetsController.APPEARANCE_LIGHT_STATUS_BARS | android.view.WindowInsetsController.APPEARANCE_LIGHT_NAVIGATION_BARS;
+                c.setSystemBarsAppearance(dark ? m : 0, m);
+            }
+        } else if (Build.VERSION.SDK_INT >= 23) {
+            View dv = getWindow().getDecorView();
+            int f = dv.getSystemUiVisibility();
+            if (dark) f |= View.SYSTEM_UI_FLAG_LIGHT_STATUS_BAR; else f &= ~View.SYSTEM_UI_FLAG_LIGHT_STATUS_BAR;
+            if (Build.VERSION.SDK_INT >= 26) { if (dark) f |= View.SYSTEM_UI_FLAG_LIGHT_NAVIGATION_BAR; else f &= ~View.SYSTEM_UI_FLAG_LIGHT_NAVIGATION_BAR; }
             dv.setSystemUiVisibility(f);
         }
     }
@@ -427,7 +449,8 @@ public class MainActivity extends Activity {
     }
 
     @Override protected void onSaveInstanceState(Bundle b) { super.onSaveInstanceState(b); web.saveState(b); }
-    @Override protected void onResume() { super.onResume(); web.onResume(); }
+    @Override protected void onResume() { super.onResume(); visible = true; web.onResume(); }
+    @Override protected void onPause() { visible = false; super.onPause(); }
     @Override protected void onDestroy() { try { web.destroy(); } catch (Exception e) { } super.onDestroy(); }
 
     private void toast(String m) { runOnUiThread(() -> Toast.makeText(this, m, Toast.LENGTH_SHORT).show()); }
@@ -482,7 +505,45 @@ public class MainActivity extends Activity {
         @JavascriptInterface public void fullscreen(boolean on) { /* la vidéo plein écran passe par onShowCustomView */ }
         @JavascriptInterface public void theme(String color) {
             if (!trusted) return;
-            try { final int c = Color.parseColor(color); runOnUiThread(() -> root.setBackgroundColor(c)); } catch (Exception e) { }
+            try {
+                final int c = Color.parseColor(color);
+                final boolean light = (0.299 * Color.red(c) + 0.587 * Color.green(c) + 0.114 * Color.blue(c)) / 255.0 > 0.6;
+                runOnUiThread(() -> { root.setBackgroundColor(c); setBarIcons(light); });
+            } catch (Exception e) { }
+        }
+        /** Notification locale (application ouverte mais en arrière-plan). */
+        @JavascriptInterface public void notify(String title, String text, int id) {
+            if (!trusted) return;
+            if (title == null) title = "Communicer!";
+            if (text == null) text = "";
+            Notifs.post(MainActivity.this, 100 + Math.abs(id % 900), title.length() > 80 ? title.substring(0, 80) : title, text.length() > 200 ? text.substring(0, 200) : text);
+        }
+        /** Demande de la permission de notifier (Android 13 et plus), au moment où la personne accepte. */
+        @JavascriptInterface public void askNotif() {
+            if (!trusted) return;
+            runOnUiThread(() -> { if (Build.VERSION.SDK_INT >= 33 && !has(Manifest.permission.POST_NOTIFICATIONS)) requestPermissions(new String[]{Manifest.permission.POST_NOTIFICATIONS}, RQ_NOTIF); });
+        }
+        @JavascriptInterface public boolean notifOk() {
+            if (Build.VERSION.SDK_INT < 33) return true;
+            return has(Manifest.permission.POST_NOTIFICATIONS);
+        }
+        /** Active la vérification périodique des nouveautés quand l'application est fermée (jeton d'appareil fourni par le serveur). */
+        @JavascriptInterface public void setPush(String url, String key, String token) {
+            if (!trusted || url == null || key == null || token == null) return;
+            if (!url.matches("^https://[a-z0-9]+\\.supabase\\.co$") || !token.matches("^[0-9a-f]{64}$") || key.length() > 600) return;
+            getSharedPreferences("cm_push", MODE_PRIVATE).edit().putString("url", url).putString("key", key).putString("tok", token).putInt("msgs", 0).putInt("friends", 0).putInt("invites", 0).apply();
+            try {
+                android.app.job.JobScheduler js = (android.app.job.JobScheduler) getSystemService(Context.JOB_SCHEDULER_SERVICE);
+                if (js == null) return;
+                android.app.job.JobInfo.Builder jb = new android.app.job.JobInfo.Builder(4711, new android.content.ComponentName(MainActivity.this, PeekJob.class))
+                        .setRequiredNetworkType(android.app.job.JobInfo.NETWORK_TYPE_ANY).setPeriodic(15 * 60 * 1000L).setPersisted(true);
+                js.schedule(jb.build());
+            } catch (Throwable t) { }
+        }
+        @JavascriptInterface public void clearPush() {
+            if (!trusted) return;
+            getSharedPreferences("cm_push", MODE_PRIVATE).edit().clear().apply();
+            try { android.app.job.JobScheduler js = (android.app.job.JobScheduler) getSystemService(Context.JOB_SCHEDULER_SERVICE); if (js != null) js.cancel(4711); } catch (Throwable t) { }
         }
         @JavascriptInterface public void vibrate(int ms) {
             if (!trusted) return;

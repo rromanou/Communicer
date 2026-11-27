@@ -35,7 +35,7 @@ gear:'<circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1
 const ic=(n,s=20)=>`<svg viewBox="0 0 24 24" width="${s}" height="${s}" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">${P[n]}</svg>`;
 const hue=s=>{let h=0;for(const c of String(s||'?'))h=(h*31+c.charCodeAt(0))%360;return h};
 function av(url,label,cls=''){const un=/\bgrp\b/.test(cls)||!label?'':` data-un="${esc(String(label).replace(/^@/,''))}"`;return url?`<span class="av ${cls}"${un}><img src="${esc(url)}" alt=""></span>`:`<span class="av ${cls}"${un} style="background:hsl(${hue(label)} 55% 48%)">${esc(String(label||'?').replace(/^@/,'')[0]?.toUpperCase()||'?')}</span>`}
-const dname=p=>p?(p.nickname?`${p.nickname} (@${p.username})`:`@${p.username}`)+(p._sanc?' · sanctionné':''):'Inconnu';
+const dname=p=>p?(p.nickname?`${p.nickname} (@${p.username})`:`@${p.username}`)+(window.PASSIDS&&window.PASSIDS.has(p.id)?' ✦':'')+(p._sanc?' · sanctionné':''):'Inconnu';
 const pubUrl=p=>sb.storage.from(BUCKET).getPublicUrl(p).data.publicUrl;
 const BUCKET_P='communicer-private',isPriv=p=>/\/m_[^/]+$/.test(String(p||''));
 const signedUrl=async p=>{const {data,error}=await sb.storage.from(BUCKET_P).createSignedUrl(p,21600);if(error||!data)throw error||new Error('média');return data.signedUrl};
@@ -210,6 +210,7 @@ $('#authForm').onsubmit=async e=>{
   $('#authGo').disabled=false;
 };
 async function logout(){
+  try{await NT.unreg()}catch(e){}
   const id=S.me&&S.me.id;
   try{await sb.removeAllChannels()}catch(e){}
   await sb.auth.signOut();if(id)await idbDel('priv:'+id);
@@ -455,6 +456,7 @@ async function sendPayload(c,pl,ttl){
   renderList();
 }
 async function cmpImage(blob,max=1280,q=.78){
+  if(window.PASS&&window.PASS.pass)return blob;   // Communicer Pass : photos en qualité d’origine
   try{if(!/^image\/(png|jpeg|webp)$/.test(blob.type))return blob;
     const url=URL.createObjectURL(blob);let i;try{i=await loadImg(url)}finally{URL.revokeObjectURL(url)}
     const r=Math.min(1,max/Math.max(i.width,i.height)),cv=document.createElement('canvas');cv.width=Math.max(1,Math.round(i.width*r));cv.height=Math.max(1,Math.round(i.height*r));
@@ -524,7 +526,7 @@ async function sendImageBlob(blob,kind='image'){
   try{const u=await uploadMedia(c,blob,blob.type||'image/jpeg');await sendPayload(c,u.k==='video'?{k:'video',p:u.p,m:u.m,...(u.loop?{loop:1}:{})}:{k:kind,p:u.p,m:u.m})}catch(e){toast('Envoi impossible : '+errMsg(e))}
 }
 const RECENT=[];
-const msgLim=c=>(!c||c.hub||c.kind==='self')?0:100;
+const msgLim=c=>(!c||c.hub||c.kind==='self')?0:(window.PASS&&window.PASS.pass?200:100);
 const normMsg=s=>String(s||'').replace(/\s+/g,' ').trim().toLowerCase();
 async function sendText(){
   const c=cur(),ta=$('#in'),t=ta.value.trim();if(!c||!t)return;const ttl=EPH.ttl;
@@ -1240,7 +1242,7 @@ function settingsModal(){
     }catch(x){toast(errMsg(x))}};
   })();
   $('#sCas',m).onclick=async()=>{try{const d=await rpcd('casier_mine');const mm=modal(`<h3>Mon casier</h3>${d.length?d.map(x=>`<div class="cas-row"><b>${esc(({warn:'Avertissement',sanction:'Sanction',ban_temp:'Bannissement temporaire',ban_perm:'Bannissement permanent',ban_erase:'Ban supprimé',rights:'Droit retiré',profile:'Profil modifié'})[x.kind]||x.kind)} · ${esc(fmtDt(x.at))}</b>${esc(x.reason)}${x.message?'<br><span class="muted">'+esc(x.message)+'</span>':''}<br><span class="muted">par @${esc(x.by||'?')}</span></div>`).join(''):'<p class="muted">Casier vierge.</p>'}<div class="row end"><button class="ghost" data-x>Fermer</button></div>`,true)}catch(x){toast(errMsg(x))}};
-  $('#sNt',m).onchange=e=>{try{localStorage.setItem('cm_notif',e.target.checked?'1':'0')}catch(x){}if(e.target.checked){try{if('Notification' in window&&Notification.permission==='default')Notification.requestPermission()}catch(x){}}};
+  $('#sNt',m).onchange=e=>{try{localStorage.setItem('cm_notif',e.target.checked?'1':'0')}catch(x){}if(e.target.checked)NT.accept();else NT.unreg()};
   $('#sOff',m).onchange=async e=>{const on=e.target.checked;const sw=navigator.serviceWorker;
     if(!sw||location.protocol!=='https:'){e.target.checked=false;return toast('Non disponible dans ce navigateur')}
     try{const reg=await sw.ready;localStorage.setItem('cm_offline',on?'1':'0');reg.active.postMessage({t:on?'games-on':'games-off'});$('#sOffM',m).textContent=on?'Téléchargement en cours…':'Cache des jeux supprimé.';
@@ -11782,6 +11784,7 @@ const NT={
   clip:(s,n)=>{s=String(s||'').replace(/\s+/g,' ').trim();return s.length>n?s.slice(0,n-1)+'…':s},
   push(n){
     if(!NT.on())return;
+    if(document.hidden&&window.CMApp&&CMApp.notify){try{CMApp.notify(n.title,n.os!=null?n.os:n.text,Math.abs(String(n.key||n.title).split('').reduce((h,c)=>(h*31+c.charCodeAt(0))|0,7)))}catch(e){}return}
     if(document.hidden){try{if('Notification' in window&&Notification.permission==='granted'){const o=new Notification(n.title,{body:n.os!=null?n.os:n.text,tag:n.key||undefined});o.onclick=()=>{try{window.focus()}catch(e){}NT.open(n);o.close()}}}catch(e){}}
     const b=NT.box();while(b.children.length>=3)b.firstChild.remove();
     const el=document.createElement('div');el.className='ntItem'+(n.cls?' '+n.cls:'');el.setAttribute('role','button');
@@ -11839,7 +11842,29 @@ const NT={
           const lines=r.items.map(x=>'+ '+nfull(x.delta)+' jetons · '+x.reason).join('\n');
           NT.push({key:'t'+r.last,title:'Jetons',text:'Vous avez reçu des jetons.',os:'Vous avez reçu des jetons.',detail:(r.items.length>1?'Total : '+nfull(tot)+' jetons\n':'')+lines,go:()=>{try{balOpen()}catch(e){}}})}}}catch(e){}
   },
-  start(){if(NT._s)return;NT._s=1;NT.poll();setInterval(NT.poll,30000);document.addEventListener('visibilitychange',()=>{if(!document.hidden)NT.poll()})}
+  enabled(){try{if(window.CMApp&&CMApp.notifOk)return NT.on()&&CMApp.notifOk();return NT.on()&&('Notification' in window)&&Notification.permission==='granted'}catch(e){return false}},
+  /* appareil Android : jeton aléatoire, vérification périodique quand l'application est fermée */
+  async reg(){
+    if(!(window.CMApp&&CMApp.setPush)||!NT.on())return;
+    try{let t=localStorage.getItem('cm_pushtok');if(!/^[0-9a-f]{64}$/.test(t||'')){t=await rpcd('notif_device_new');localStorage.setItem('cm_pushtok',t)}CMApp.setPush(SUPABASE_URL,SUPABASE_KEY,t)}catch(e){}
+  },
+  async unreg(){try{const t=localStorage.getItem('cm_pushtok');if(window.CMApp&&CMApp.clearPush)CMApp.clearPush();if(t){localStorage.removeItem('cm_pushtok');await sb.rpc('notif_device_drop',{p_token:t})}}catch(e){}},
+  async accept(){
+    try{localStorage.setItem('cm_notif','1')}catch(e){}
+    try{if(window.CMApp&&CMApp.askNotif)CMApp.askNotif();else if('Notification' in window&&Notification.permission==='default')await Notification.requestPermission()}catch(e){}
+    NT.reg();
+  },
+  /* proposition d'activer les notifications : à la 1re ouverture, puis toutes les 10 ouvertures tant que ce n'est pas activé */
+  offer(){
+    let n=0;try{n=(+localStorage.getItem('cm_opens')||0)+1;localStorage.setItem('cm_opens',String(n))}catch(e){return}
+    if(NT.enabled()||document.querySelector('.ntOffer'))return;
+    if(!(n===1||n%10===0))return;
+    setTimeout(()=>{if(NT.enabled()||document.querySelector('.modal-back'))return;
+      const m=modal(`<h3>Restez au courant</h3><p>Les notifications vous avertissent des nouveaux messages, des demandes d’ami, des invitations et des jetons reçus, même quand l’application est fermée. Rien de ce qui est écrit n’y apparaît quand la discussion est chiffrée de bout en bout.</p><ul style="margin:6px 0 10px 18px"><li>Répondez plus vite à vos amis</li><li>Ne ratez plus une invitation ou une partie</li><li>Réglable à tout moment dans les paramètres</li></ul><div class="row end"><button class="ghost" id="nfNo">NON MERCI!</button><button id="nfYes">OUI!!!1!</button></div>`);
+      m.classList.add('ntOffer');m.querySelector('#nfNo').onclick=()=>m.close();m.querySelector('#nfYes').onclick=async()=>{await NT.accept();m.close();toast('Notifications activées')};
+    },2500)
+  },
+  start(){if(NT._s)return;NT._s=1;NT.offer();NT.reg();NT.poll();setInterval(NT.poll,30000);document.addEventListener('visibilitychange',()=>{if(!document.hidden)NT.poll()})}
 };
 /* ================= Invitations de groupe ================= */
 async function invitesCheck(){

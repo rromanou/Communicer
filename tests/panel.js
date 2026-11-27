@@ -10,7 +10,7 @@ await pg.goto('http://localhost:'+srv.address().port+'/index.html');await pg.wai
 console.log('loaded',await pg.evaluate(()=>[window.__pnlLoaded,!!document.querySelector('script[src*=panel]')]));const r=await pg.evaluate(async()=>{
  window.S=window.S||{};try{S.me={id:'u1'};S.profile={username:'x'};S.profiles=new Map();}catch(e){return 'S: '+e.message}
   setInterval(()=>{S.me={id:'u1'};S.profile={username:'x'}},50);await new Promise(r=>setTimeout(r,3500));
- const h=document.getElementById('pnlHost');if(!h)return 'no host'+JSON.stringify(window.__c);const R=h.shadowRoot,out=[];for(const t of ['loc','jeu','net','adm','srv','cmd']){R.querySelector('[data-t='+t+']').click();await new Promise(r=>setTimeout(r,200));out.push(t+':'+R.getElementById('bd').innerText.length)}
+ const h=document.getElementById('pnlHost');if(!h)return 'no host'+JSON.stringify(window.__c);const R=h.shadowRoot,out=[];for(const t of ['loc','out','jeu','net','adm','srv','cmd']){R.querySelector('[data-t='+t+']').click();await new Promise(r=>setTimeout(r,200));out.push(t+':'+R.getElementById('bd').innerText.length)}
  R.querySelector('[data-t=loc]').click();R.getElementById('tEd').click();R.getElementById('rAdd').click();const rl=R.getElementById('rL').innerText;document.designMode='off';
  return out.join(' ')+' | '+rl.slice(0,60)});
 console.log(r,errs);await b.close();srv.close()});
