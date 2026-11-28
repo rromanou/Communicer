@@ -308,7 +308,7 @@ const VIEWS={
       <div class="r"><input id="dU" placeholder="nom d’utilisateur"><input id="dR" placeholder="motif"><button id="dGo">Ouvrir</button></div>
       <h4>Commande de bot dans la discussion ouverte</h4><div class="r"><input id="cC" placeholder="!kick utilisateur"><button id="cGo">Envoyer</button></div>
       <h4>Jetons, badges, objets</h4>
-      <div class="r"><input id="kU" placeholder="nom"><input id="kN" type="number" placeholder="montant (+/-)" style="max-width:110px"><input id="kR" placeholder="raison"><button id="kGo">Jetons</button></div>
+      <div class="r"><input id="kU" placeholder="nom"><input id="kN" type="number" placeholder="montant (+/-)" style="max-width:110px"><input id="kR" placeholder="raison"><button id="kGo">Jetons</button><button id="kGoC">Jetons de casino</button></div>
       <div class="r"><input id="bC" placeholder="code du badge ou de l’objet"><button id="bG">Donner badge</button><button id="bR">Retirer badge</button><button id="iG">Donner objet</button><button id="iR">Retirer objet</button></div>
       <div class="r"><button id="wV">Voir le portefeuille</button></div>
       <h4>Sanctions du site</h4>
@@ -351,6 +351,7 @@ const VIEWS={
     go('#dGo',async()=>{const id=await rpcd('panel_dm',{p_username:val('#dU'),p_reason:val('#dR')});await loadConvs();renderList();openConv(id)});
     go('#cGo',async()=>{const t=val('#cC');if(!t)return;await sendPayload(c(),{k:'text',t});$r(bd,'#cC').value=''});
     go('#kGo',async()=>{await rpcd('admin_tokens',{p_username:val('#kU'),p_amount:+$r(bd,'#kN').value,p_reason:val('#kR')||'panneau'});toast('Jetons modifiés')});
+    go('#kGoC',async()=>{const d=await rpcd('admin_chips',{p_username:val('#kU'),p_amount:+$r(bd,'#kN').value,p_reason:val('#kR')||'panneau'});toast('Solde de casino : '+d)});
     go('#bG',async()=>{await rpcd('admin_badge',{p_username:val('#kU'),p_code:val('#bC'),p_give:true});toast('Badge donné')});
     go('#bR',async()=>{await rpcd('admin_badge',{p_username:val('#kU'),p_code:val('#bC'),p_give:false});toast('Badge retiré')});
     go('#iG',async()=>{await rpcd('admin_item',{p_username:val('#kU'),p_code:val('#bC'),p_give:true});toast('Objet donné')});
@@ -415,9 +416,10 @@ function vanApply(){
   try{if(S.online)nm.forEach(n=>{if(S.profile&&n!==S.profile.username)S.online.delete(n)})}catch(e){}
 }
 let vanList=[];
+window.PNLOK=()=>!!st.unlocked;
 window.VANH=(cid,uid)=>{try{return !!S.me&&uid!==S.me.id&&vanList.some(v=>v.id===uid&&(!v.conv||v.conv===cid))}catch(e){return false}};
 async function vanRefresh(){
-  try{vanList=await rpcd('panel_vanished')}catch(e){return}
+  try{const vl=await rpcd('panel_vanished');vanList=Array.isArray(vl)?vl:[]}catch(e){return}
   vanApply();
 }
 

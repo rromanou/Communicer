@@ -11,9 +11,9 @@ const money=n=>Number(n).toFixed(2).replace('.',',')+' $';
 
 async function load(){
   if(!ready())return;
-  try{const s=await rpcd('pass_state');window.PASS=s;if(s.pass)window.PASSIDS.add(S.me.id);else window.PASSIDS.delete(S.me.id);
+  try{const s=await rpcd('pass_state');window.PASS=s;window.PASSERR=null;try{const c=cur();if(c&&typeof msgLim==='function')$('#in').maxLength=msgLim(c)||20000}catch(e){}if(s.pass)window.PASSIDS.add(S.me.id);else window.PASSIDS.delete(S.me.id);
     try{renderList();if(typeof renderHeader==='function')renderHeader()}catch(e){}
-  }catch(e){}
+  }catch(e){window.PASSERR=(e&&e.message)||'erreur'}
 }
 /* symbole à côté du surnom des abonnés actifs */
 const seen=new Map();
@@ -36,7 +36,7 @@ function render(el,done){
   const li=a=>a.map(t=>`<li>${e2(t)}</li>`).join('');
   const benef=['Accès à une conversation avec CommunicerAI (indisponible pour le moment)','Photos importées en haute qualité, sans compression','Symbole à côté du surnom et badge Pass unique','1 500 jetons par mois','Boutique : 5 % de rabais sur tous les articles','Communicer Lite et épinglage gratuits pendant l’abonnement','Limite de message portée à 200 caractères','Compte protégé contre toute suppression de données du stockage, y compris par un administrateur','Mises à jour en avance (versions bêta)','Casino : 2 % de chance supplémentaire sur tous les jeux','Échange de jetons contre coquelicots','Police personnalisée'];
   const plusB=['Réservé : Nom dans les crédits, Tournois, VAZE++, Équipe e-Sport, Krypto+%!?','Boutique : 20 % de rabais jusqu’à 65 000 jetons d’achat par mois (aucun rabais sur les articles réservés au Pass+)','Les articles achetés avec le Pass+ restent à vous si vous ne renouvelez pas'];
-  el.innerHTML=(`<h3 style="margin:0 0 6px">Communicer Pass</h3>
+  el.innerHTML=(`<h3 style="margin:0 0 6px">Communicer Pass</h3>${window.PASSERR?`<p class="muted">État du Pass indisponible (${e2(window.PASSERR)}). Vérifiez que patch_lot26.sql a été exécuté.</p>`:''}
    <p>${P.pass?`<b>Actif</b> jusqu’au ${e2(dt(P.until))}.`:'<b>Inactif.</b> Les avantages ci-dessous ne s’appliquent que pendant l’abonnement.'}</p>
    <p class="muted">${money(P.price||6.99)} par mois + ${money(P.storage||2.99)} de frais de stockage = <b>${money(P.total||9.98)}</b> par mois. Les taxes et frais Stripe sont ajoutés au montant lors de la confirmation.</p>
    <h4 style="margin:10px 0 4px">Avantages du Pass</h4><ul style="margin:6px 0 10px 18px">${li(benef)}</ul>

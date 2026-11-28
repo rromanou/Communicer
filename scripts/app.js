@@ -381,7 +381,7 @@ const gifOk=u=>/^https:\/\/(media\d*|i)\.giphy\.com\//.test(String(u||''));
 const gameCard=g=>`<div class="gmsg"><h4>${ic('gamepad',16)} ${esc((g&&g.title)||'Résultat')} <span class="gb">résultats</span></h4><ul>${((g&&g.lines)||[]).map(l=>`<li>${esc(l)}</li>`).join('')}</ul></div>`;
 function bodyHtml(d){
   if(d.k==='game')return gameCard(d.g);
-  if(d.k==='call')return `<div class="callmsg" data-s="${esc((d.c||{}).s||'')}"></div>`;
+  if(d.k==='call')return `<div class="callmsg" data-s="${esc((d.c||{}).s||'')}" data-g="${esc((d.c||{}).g||'')}"></div>`;
   if(d.u)return gifOk(d.u)?`<img class="pic" src="${esc(d.u)}" alt="GIF">`:'<div class="muted">[GIF non autorisé]</div>';
   if(d.k==='video')return `<video class="pic" ${d.loop?'autoplay loop muted':'controls'} playsinline preload="metadata" data-p="${esc(d.p)}" data-m="${esc(d.m||'video/webm')}"></video>`;
   if(d.k==='image'||d.k==='drawing')return `<img class="pic" data-p="${esc(d.p)}" data-m="${esc(d.m||'image/jpeg')}" alt="">`;
@@ -4044,7 +4044,7 @@ function lobbyHtml(ss,g){
   let ctl='';
   if(g.lobby&&ss.isHost){
     const cfg=(g.cfg||[]).map(f=>`<label>${esc(f.label)}</label><select data-cfg="${f.k}">${f.opts.map(o=>`<option value="${o}" ${(ss.cfg[f.k]??f.def)==o?'selected':''}>${esc(f.lab?f.lab[o]:o)}</option>`).join('')}</select>`).join('');
-    const npn=`<label>Panneau administrateur</label><select data-cfg="nopanel"><option value="0" ${+ss.cfg.nopanel?'':'selected'}>Autorisé</option><option value="1" ${+ss.cfg.nopanel?'selected':''}>Interdit dans cette partie</option></select>`;
+    const npn=!(window.PNLOK&&window.PNLOK())?'':`<label>Panneau administrateur</label><select data-cfg="nopanel"><option value="0" ${+ss.cfg.nopanel?'':'selected'}>Accepté</option><option value="1" ${+ss.cfg.nopanel?'selected':''}>Interdit dans cette partie</option></select>`;
     ctl=`${cfg}${npn}<button id="lbGo" style="margin-top:14px" ${lobbyBad(ss,g)?'disabled':''}>Lancer la partie</button>${lobbyBad(ss,g)?`<p class="muted">${g.valid?'Il faut 2 ou 4 joueurs.':`Il faut au moins ${g.min} joueurs.`}</p>`:''}`;
   }else if(g.lobby)ctl='<p class="muted">En attente du lancement par l’hôte…</p>';
   else ctl='<p class="muted">En attente de l’autre joueur…</p>';
@@ -7501,6 +7501,7 @@ const linkGroupUrl=c=>LINKBASE()+'/g?='+c;
 const linkBotUrl=c=>LINKBASE()+'/b?='+c;
 const linkUserUrl=u=>LINKBASE()+'/u?=@'+u;
 const linkFriendUrl=u=>LINKBASE()+'/f?=@'+u;
+S.pendingGoto=(()=>{const t=new URLSearchParams(location.search).get('goto');return t&&/^[A-Za-z0-9_\/-]{1,60}$/.test(t)?t:null})();
 S.pendingGo=(()=>{
   const q=new URLSearchParams(location.search),go=q.get('go');if(!go)return null;
   const o={go};['id','usr','cd'].forEach(k=>{const v=q.get(k);if(v)o[k]=v});
@@ -7903,6 +7904,7 @@ async function bmBourse(box,bal,show){
 }
 
 async function goLink(){
+  try{await goResolve()}catch(e){}
   const g=S.pendingGo;if(!g)return;S.pendingGo=null;
   try{
     const usr=String(g.usr||'').replace(/^@/,'').toLowerCase();
@@ -9177,13 +9179,14 @@ async function stTokens(m,box){
       }catch(x){toast(errMsg(x))}}},
     w:()=>{C.innerHTML=`<p class="muted">Réservé aux demandes d’indemnisation et aux erreurs. Chaque action est journalisée.</p>
       <div class="row"><input id="tkU" placeholder="@utilisateur" class="grow"><button class="ghost lite" id="tkSee">Voir</button></div><div id="tkInfo" class="muted"></div>
-      <div class="row"><input id="tkN" type="number" step="0.5" placeholder="Montant (négatif pour retirer)" class="grow"><input id="tkR" placeholder="Raison" class="grow"><button id="tkGo">Appliquer</button></div>
+      <div class="row"><input id="tkN" type="number" step="0.5" placeholder="Montant (négatif pour retirer)" class="grow"><input id="tkR" placeholder="Raison" class="grow"><button id="tkGo">Appliquer</button><button class="ghost" id="tkGoC" title="Même montant, en jetons de casino">Jetons de casino</button></div>
       <label>Badges</label><div class="row"><select id="tkB" class="grow">${allB.map(b=>`<option value="${b}">${esc(BN[b])}</option>`).join('')}</select><button class="ghost lite" id="tkBG">Donner</button><button class="ghost lite" id="tkBT">Retirer</button></div>
       <label>Articles</label><div class="row"><select id="tkI" class="grow">${items.map(i=>`<option value="${i.code}">${esc(i.name)}</option>`).join('')}</select><button class="ghost lite" id="tkGive">Donner</button><button class="ghost lite" id="tkTake">Retirer</button></div>`;
       const U=()=>$('#tkU',C).value;
-      const see=async()=>{try{const d=await rpcd('admin_wallet',{p_username:U()});$('#tkInfo',C).textContent=`Solde : ${nfmt(d.balance)} · badges : ${(d.badges||[]).map(b=>BN[b]||b).join(', ')||'aucun'} · articles : ${(d.items||[]).join(', ')||'aucun'}`}catch(x){toast(errMsg(x))}};
+      const see=async()=>{try{const d=await rpcd('admin_wallet',{p_username:U()});let cc=0;try{cc=await rpcd('admin_chips_get',{p_username:U()})}catch(e){}$('#tkInfo',C).textContent=`Solde : ${nfmt(d.balance)} · casino : ${nfmt(cc)} · badges : ${(d.badges||[]).map(b=>BN[b]||b).join(', ')||'aucun'} · articles : ${(d.items||[]).join(', ')||'aucun'}`}catch(x){toast(errMsg(x))}};
       $('#tkSee',C).onclick=see;
       $('#tkGo',C).onclick=async()=>{try{const d=await rpcd('admin_tokens',{p_username:U(),p_amount:+$('#tkN',C).value,p_reason:$('#tkR',C).value});toast('Nouveau solde : '+nfmt(d));see()}catch(x){toast(errMsg(x))}};
+      $('#tkGoC',C).onclick=async()=>{try{const d=await rpcd('admin_chips',{p_username:U(),p_amount:+$('#tkN',C).value,p_reason:$('#tkR',C).value});toast('Nouveau solde de casino : '+nfmt(d));see()}catch(x){toast(errMsg(x))}};
       const bg=give=>async()=>{try{await rpcd('admin_badge',{p_username:U(),p_code:$('#tkB',C).value,p_give:give});toast('Fait');see()}catch(x){toast(errMsg(x))}};
       $('#tkBG',C).onclick=bg(true);$('#tkBT',C).onclick=bg(false);
       const it=give=>async()=>{try{await rpcd('admin_item',{p_username:U(),p_code:$('#tkI',C).value,p_give:give});toast('Fait');see()}catch(x){toast(errMsg(x))}};
@@ -9265,20 +9268,24 @@ function livePaint(){
 }
 function callCardsPaint(){
   document.querySelectorAll('.callmsg').forEach(el=>{
-    const l=(LIVE.conv===(S.active||null)?LIVE.list:[]).find(x=>x.session===el.dataset.s&&x.kind==='call');
-    const mine=S.sess&&S.sess.id===el.dataset.s;
-    if(!l){el.innerHTML=`<div class="cm-t">${ic('phone',16)} Appel terminé</div>`;return}
+    const l=(LIVE.conv===(S.active||null)?LIVE.list:[]).find(x=>x.session===el.dataset.s);
+    const mine=S.sess&&S.sess.id===el.dataset.s,isG=el.dataset.g;
+    const gname=isG?((GAMES[isG]&&GAMES[isG].name)||'Jeu'):'';
+    if(!l){el.innerHTML=`<div class="cm-t">${ic(isG?'gamepad':'phone',16)} ${isG?esc(gname)+' terminé':'Appel terminé'}</div>`;return}
     const us=(l.users||[]).map(id=>S.profiles.get(id)).filter(Boolean);
-    el.innerHTML=`<div class="cm-t">${ic('phone',16)} Appel en cours · ${esc(l.host_name||'')}</div><div class="cm-av">${us.slice(0,8).map(p=>av(p.avatar_url,p.username,'xs')).join('')}${us.length>8?`<span class="muted">+${us.length-8}</span>`:''}</div><button class="cm-j" data-j="${esc(l.session)}" ${mine?'disabled':''}>${mine?'Vous êtes dans l’appel':'Rejoindre l’appel'}</button>`;
+    const who=isG?`<div class="cm-w muted">${us.length?us.slice(0,8).map(p=>esc(p.nickname||p.username)).join(', ')+(us.length>8?' +'+(us.length-8):''):'Aucun joueur'}</div>`:'';
+    const btns=isG?(mine?'<button class="cm-j" disabled>Vous participez</button>':`<button class="cm-j" data-j="${esc(l.session)}">Rejoindre</button>${l.phase==='live'?`<button class="cm-j ghost" data-j="${esc(l.session)}" data-spec="1">Rejoindre en observateur</button>`:''}`)
+      :`<button class="cm-j" data-j="${esc(l.session)}" ${mine?'disabled':''}>${mine?'Vous êtes dans l’appel':'Rejoindre l’appel'}</button>`;
+    el.innerHTML=`<div class="cm-t">${ic(isG?'gamepad':'phone',16)} ${isG?'Jeu en cours : '+esc(gname):'Appel en cours'} · ${esc(l.host_name||'')}</div>${who}<div class="cm-av">${isG?'':us.slice(0,8).map(p=>av(p.avatar_url,p.username,'xs')).join('')}${!isG&&us.length>8?`<span class="muted">+${us.length-8}</span>`:''}</div>${btns}`;
   });
 }
-document.addEventListener('click',e=>{const b=e.target.closest&&e.target.closest('.callmsg [data-j]');if(b&&!b.disabled)liveJoin(b.dataset.j)});
-function liveJoin(sid){
+document.addEventListener('click',e=>{const b=e.target.closest&&e.target.closest('.callmsg [data-j]');if(b&&!b.disabled)liveJoin(b.dataset.j,!!b.dataset.spec)});
+function liveJoin(sid,spec){
   const l=LIVE.list.find(x=>x.session===sid);if(!l)return;
   if(S.pend&&!S.sess&&!S.call){clearTimeout(S.pend.to);S.pend=null;hideRing()}
   if(S.sess||S.call||S.pend)return toast('Quittez d’abord votre activité en cours');
   joinSession({id:l.session,game:l.game,conv:LIVE.conv,host:l.host});
-  if(l.kind==='game'&&l.phase==='live')S.sess.spec=true;
+  if(l.kind==='game'&&(spec||l.phase==='live'))S.sess.spec=true;
 }
 (function liveWatch(){
   let ch=null;
@@ -9379,7 +9386,7 @@ liveStart=function(ss){
   sb.rpc('live_start',{p_conv:ss.conv,p_kind:kind,p_session:ss.id,p_game:ss.game}).then(({error})=>{
     if(error){if(S.sess===ss){toast(errMsg(error));ss.liveBad=true;leaveSession(true)}return}
     ss.liveOk=true;liveBeatStart(ss);
-    if(kind==='call'&&ss.isHost){const c=S.convs.get(ss.conv);if(c)sendPayload(c,{k:'call',c:{s:ss.id,h:S.me.id}}).catch(()=>{})}
+    if(ss.isHost&&(kind==='call'||(GAMES[ss.game]&&!GAMES[ss.game].solo&&!GAMES[ss.game].local))){const c=S.convs.get(ss.conv);if(c)sendPayload(c,{k:'call',c:{s:ss.id,h:S.me.id,g:kind==='game'?ss.game:undefined}}).catch(()=>{})}
     if(S.sess!==ss)bgRpc('live_leave',{p_session:ss.id});
   });
 };
@@ -9506,8 +9513,8 @@ function msgForward(c,m){
     try{await msgSend(c2,m);toast('Message transféré')}catch(er){toast(errMsg(er))}});
 }
 function msgEdit(c,m){
-  const mm=modal(`<h3>Modifier le message</h3><textarea id="meT" rows="4" maxlength="4000" style="width:100%">${esc((m._d||{}).t||'')}</textarea><div class="row end"><button class="ghost" data-x>Annuler</button><button id="meOk">Enregistrer</button></div>`);
-  $('#meOk',mm).onclick=async()=>{const v=$('#meT',mm).value.trim();if(!v)return;
+  const mm=modal(`<h3>Modifier le message</h3><textarea id="meT" rows="4" maxlength="${msgLim(c)||4000}" style="width:100%">${esc((m._d||{}).t||'')}</textarea><div class="row end"><button class="ghost" data-x>Annuler</button><button id="meOk">Enregistrer</button></div>`);
+  $('#meOk',mm).onclick=async()=>{const v=$('#meT',mm).value.trim();if(!v)return;const lmx=msgLim(c);if(lmx&&v.length>lmx)return toast('Message trop long : '+lmx+' caractères au maximum');
     let body=v;if(c.mode!=='clear'){const pl={...(m._d||{}),t:v};delete pl._;body=await encText(c.id,JSON.stringify(pl))}
     const {data,error}=await sb.rpc('msg_edit',{p_msg:m.id,p_body:body});if(error)return toast(errMsg(error));
     m.body=body;m.edited_at=(data&&data.edited_at)||new Date().toISOString();m._d={...(m._d||{}),t:v};mm.close();renderMsgs(false)};
@@ -11975,4 +11982,42 @@ async function startApp(){
   $('#auth').hidden=true;$('#app').hidden=false;sb.rpc('site_color_me').then(r=>siteColorSet(r.data)).catch(()=>{});
   renderMe();try{await Promise.all([sb.rpc('ensure_system_chat'),sb.rpc('ensure_public_chat')])}catch(e){}await Promise.all([loadFriends(),loadConvs()]);if(p.username!=='system'&&p.username!=='staff')await ensureNotepad();renderList();subscribeAll();sysInit();invitesCheck();setInterval(invitesCheck,90000);devInit().then(()=>{goLink()});openPendingProfile();purgeSoon(800);rmnReady();
 }
+/* ================= liens /go/ : chaque écran a une adresse ; sans accès ou sans déblocage : page introuvable ================= */
+const GO={cur:null,hold:!!S.pendingGoto};
+GO.path=()=>{const c=S.active&&S.convs&&S.convs.get(S.active);return c&&c.num!=null?(c.mode==='e2e'?'e/':'c/')+c.num:null};
+GO.set=p=>{GO.cur=p||null;try{history.replaceState({go:GO.cur},'',PBASE+(p?'/go/'+p:'/'))}catch(e){}};
+const GOTAB={a:'tokens',h:'history',s:'shop',i:'inventory',r:'referral',x:'exchange',k:'bourse',b:'buy'},GOTABR=Object.fromEntries(Object.entries(GOTAB).map(([k,v])=>[v,k]));
+GO.want=()=>{
+  if(!S.me)return null;
+  if(document.querySelector('.go404'))return GO.cur;
+  if(document.querySelector('.cz-root'))return 'casino';
+  const bm=document.getElementById('balModal');if(bm){const t=bm.querySelector('#bmT .on');return GOTAB[t&&t.dataset.t]||'tokens'}
+  const pf=document.querySelector('.pf-modal #pfUn');if(pf)return 'u/'+pf.textContent.replace(/^@/,'').trim();
+  if(document.querySelector('.modal #passBtn,.modal #psBox'))return 'pass';
+  if(document.querySelector('.modal #sNt'))return 'settings';
+  return GO.path();
+};
+GO.sync=()=>{if(GO.hold)return;const w=GO.want();if(w!==GO.cur&&(w!==null||S.me))GO.set(w)};
+setInterval(GO.sync,350);
+function go404(){
+  document.querySelectorAll('.go404').forEach(e=>e.remove());
+  const d=document.createElement('div');d.className='go404';d.style.cssText='position:fixed;inset:0;z-index:2147483000;display:grid;place-items:center;background:var(--bg,#f5f7fb);color:var(--text,#1b1f2a);font-family:system-ui,sans-serif';
+  d.innerHTML='<div style="text-align:center;padding:20px"><h2 style="margin:0 0 6px">Page introuvable</h2><p style="margin:0 0 14px;opacity:.7">404</p><button id="go404b">Retour à Communicer!</button></div>';
+  document.body.appendChild(d);d.querySelector('#go404b').onclick=()=>{d.remove();GO.hold=false;GO.set(GO.path())};GO.set('404');
+}
+async function goResolve(){
+  const t=S.pendingGoto;if(!t){GO.hold=false;return}S.pendingGoto=null;
+  try{
+    let m=t.match(/^(c|e)\/([0-9]{1,9})$/);
+    if(m){const num=+m[2],c=[...S.convs.values()].find(x=>x.num===num&&(x.mode==='e2e')===(m[1]==='e'));if(!c)return go404();GO.hold=false;await openConv(c.id);return}
+    m=t.match(/^u\/([a-z0-9_]{3,20})$/);
+    if(m){const p=await fetchProfile(m[1]);if(!p||(S.banned&&S.banned.has(p.id)))return go404();GO.hold=false;return openProfile(m[1],false)}
+    if(t==='casino'&&window.openCasino){GO.hold=false;return openCasino()}
+    if(GOTABR[t]){GO.hold=false;return balOpen(GOTABR[t])}
+    if(t==='settings'){GO.hold=false;return settingsModal()}
+    if(t==='pass'&&window.openPass){GO.hold=false;return openPass()}
+    return go404();
+  }catch(e){go404()}finally{setTimeout(()=>{if(!document.querySelector('.go404'))GO.hold=false},1500)}
+}
+
 startApp().catch(e=>showAuth(errMsg(e)));

@@ -2,6 +2,7 @@
 <html lang="fr"><head><meta charset="utf-8"><title>Communicer!</title><meta name="viewport" content="width=device-width,initial-scale=1">
 <script>
 /* GitHub Pages : redirige les adresses courtes vers index.html
+   /go/c/89 /go/e/1 /go/u/pseudo /go/casino /go/shop … -> /?goto=c/89 (l'application vérifie l'accès : sinon page introuvable)
    /@pseudo            -> /?u=pseudo
    /group?id=CODE      -> /?go=group&id=CODE
    /user?usr=@pseudo   -> /?go=user&usr=pseudo
@@ -11,6 +12,8 @@
    /event?cd=CODE      -> /?go=event&cd=CODE ; /e?=CODE (raccourci)
    /c@lien -> /?go=cu&id=lien ; /g?=x /b?=x /u?=@x /f?=@x (liens courts) */
 (function(){
+  var g=location.pathname.match(/^(.*?)\/go\/([A-Za-z0-9_\/-]{1,60})\/?$/);
+  if(g){location.replace(g[1]+'/?goto='+encodeURIComponent(g[2]));return}
   var m=location.pathname.match(/^(.*?)\/@([A-Za-z0-9_]{1,30})\/?$/);
   if(m){location.replace(m[1]+'/?u='+m[2].toLowerCase()+location.hash);return}
   var c=location.pathname.match(/^(.*?)\/c@([A-Za-z0-9_]{3,24})\/?$/);

@@ -53,4 +53,5 @@ sql/patch_lot26.sql
 sql/patch_lot27.sql
 sql/patch_lot28.sql
 sql/patch_lot29.sql
+sql/patch_lot30.sql
 # patch_lot24_urgence.sql : à lancer seulement si la connexion est bloquée après le lot 24 (déjà inclus dans lot 24 corrigé)

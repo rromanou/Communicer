@@ -470,7 +470,15 @@ V.hall=function(ctx){
       <button class="cz-st" data-go="scanner" type="button" style="--n:#3dd6ff"><div class="cz-sti"><svg viewBox="0 0 90 70"><rect x="14" y="10" width="62" height="40" rx="6" fill="#222a36" stroke="#6d7480" stroke-width="2"/><rect x="20" y="16" width="50" height="22" rx="3" fill="#06141c"/><path d="M22 27h46" stroke="#3dd6ff" stroke-width="2.500" class="cz-laser"/><rect x="30" y="52" width="30" height="10" rx="2" fill="#6d7480"/></svg></div><b>Scanner</b><span class="sub">Vérifier un code</span></button>
       <button class="cz-st" data-go="bank" type="button" style="--n:#7dff8a"><div class="cz-sti"><svg viewBox="0 0 90 70"><path d="M6 24L45 6l39 18z" fill="#d4af37" stroke="#8d6a12"/><rect x="12" y="26" width="8" height="30" fill="#f4ead0"/><rect x="28" y="26" width="8" height="30" fill="#f4ead0"/><rect x="54" y="26" width="8" height="30" fill="#f4ead0"/><rect x="70" y="26" width="8" height="30" fill="#f4ead0"/><rect x="6" y="58" width="78" height="8" rx="2" fill="#d4af37"/></svg></div><b>Banque de ticket</b><span class="sub">Réclamer vos gains</span></button>
     </div></section>
+    <section class="cz-zone cz-zxch"><h4>Échange de jetons</h4>
+      <div class="cz-xinfo">Compte : <b id="czXt">…</b> jetons · Casino : <b id="czXc">…</b> jetons de casino · Taux 1 pour 1</div>
+      <div class="cz-xrow"><select id="czXd2" aria-label="Sens de l’échange"><option value="in">Du compte vers le casino</option><option value="out">Du casino vers le compte</option></select>
+      <input id="czXn2" type="number" inputmode="numeric" min="1" step="1" value="100" aria-label="Montant"><button class="cz-btn gold" id="czXg" type="button">Échanger</button></div>
+    </section>
    </div></div>`;
+  const xRef=async()=>{try{const r=await RPC('casino_chips_me');const t=$('#czXt',el),c=$('#czXc',el);if(t)t.textContent=nfl(r.tokens);if(c)c.textContent=nfl(r.chips);setBal(r.chips)}catch(e){}};
+  xRef();
+  $('#czXg',el).onclick=function(){act('xchg2',async()=>{const n=Math.floor(+$('#czXn2',el).value);if(!(n>=1))return say('Entrez un montant d’au moins 1');const x=await RPC('casino_exchange',{p_dir:$('#czXd2',el).value,p_amount:n});setBal(x.chips);try{if(typeof balRefresh==='function')balRefresh()}catch(e){}AU.chips&&AU.chips(3);say('Échange effectué');xRef()},this)};
   const pigW=$('.cz-pigw',el),potE=$('.pot',el),cdE=$('.cd',el),tvC=$('.tvcode',el)||$('.cz-tvcode',el),tvD=$('.cz-tvcd',el);
   let lastFill=-1;
   const drawLobby=()=>{
@@ -592,7 +600,7 @@ V.poker=function(ctx){
     let h='';
     for(let i=0;i<10;i++){
       const s=st.seats[i],rel=(i-base+10)%10,[x,y]=seatXY(rel,wide),[bx,by]=betXY(rel,wide);
-      if(!s){h+=me.seat==null?`<button class="cz-seat empty" style="left:${x}%;top:${y}%" data-sit="${i}" type="button"><span>S’asseoir</span></button>`:`<div class="cz-seat empty ghostseat" style="left:${x}%;top:${y}%"></div>`;continue}
+      if(!s){if(i===5){continue}h+=me.seat==null?`<button class="cz-seat empty" style="left:${x}%;top:${y}%" data-sit="${i}" type="button"><span>S’asseoir</span></button>`:`<div class="cz-seat empty ghostseat" style="left:${x}%;top:${y}%"></div>`;continue}
       const mine=i===me.seat,turn=sp===i,win=s.winner&&st.phase!=='preflop';
       const cards=(s.cards&&s.cards.length)?cardsH(s.cards,'s'+i,mine?(wide?46:40):(wide?32:26),peeks[i]):'';
       const canWatch=!mine&&inHand&&(s.status==='active'||s.status==='allin');
@@ -727,7 +735,7 @@ V.blackjack=function(ctx){
     let h='';
     for(let i=0;i<10;i++){
       const s=st.seats[i],rel=(i-base+10)%10,[x,y]=seatXY(rel,wide);
-      if(!s){h+=me.seat==null?`<button class="cz-seat empty" style="left:${x}%;top:${y}%" data-sit="${i}" type="button"><span>S’asseoir</span></button>`:`<div class="cz-seat empty ghostseat" style="left:${x}%;top:${y}%"></div>`;continue}
+      if(!s){if(i===5){continue}h+=me.seat==null?`<button class="cz-seat empty" style="left:${x}%;top:${y}%" data-sit="${i}" type="button"><span>S’asseoir</span></button>`:`<div class="cz-seat empty ghostseat" style="left:${x}%;top:${y}%"></div>`;continue}
       const mine=i===me.seat,hd=s.hand,r=hd&&hd.result;
       h+=`<div class="cz-seat ${mine?'mine':''} ${s.status==='playing'?'turn':''} ${r==='win'||r==='blackjack'?'win':''} ${r==='lose'||s.status==='bust'?'folded':''} ${s.kind==='bot'?'isbot':''}" style="left:${x}%;top:${y}%">
         ${s.last&&!r?`<div class="cz-bub">${E(s.last)}</div>`:''}${r?`<div class="cz-bub res ${r}">${BJRES[r]||''}${hd.payout>0?' +'+nf(hd.payout):''}</div>`:''}
